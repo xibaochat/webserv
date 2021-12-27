@@ -53,7 +53,6 @@ int get_r_n_index(char *buffer)
 }
 
 std::map<std::string, std::string> extract_info_from_header(char *buffer)
-//void extract_info_from_header(char *buffer)
 {
 	int len = 0;
 	int i;
