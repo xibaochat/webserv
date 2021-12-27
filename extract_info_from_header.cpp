@@ -1,14 +1,4 @@
-#include <sstream>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <cstring>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <map>
+#include "webserv.hpp"
 
 int has_new_line(char *buffer)
 {
@@ -62,8 +52,8 @@ int get_r_n_index(char *buffer)
 	return 0;
 }
 
-//std::map<std::string, std::string> extract_info_from_header(char *buffer)
-void extract_info_from_header(char *buffer)
+std::map<std::string, std::string> extract_info_from_header(char *buffer)
+//void extract_info_from_header(char *buffer)
 {
 	int len = 0;
 	int i;
@@ -75,7 +65,7 @@ void extract_info_from_header(char *buffer)
 	{
 		i = 0;
 		char str[len + 1];
-		strncpy(str, buffer, len);//cpy rill \r\n
+		strncpy(str, buffer, len);//cpy till \r\n
 		str[len] = '\0';
 		std::string key = get_key_from_line(str, &i);
 		while (str[i] && (str[i] == ':' || str[i] == ' '))
@@ -86,5 +76,5 @@ void extract_info_from_header(char *buffer)
 	}
 	for (std::map<std::string, std::string>::iterator it=header.begin(); it!=header.end(); ++it)
 	 	std::cout << it->first << " => " << it->second << '\n';
-	//return header;
+	return header;
 }

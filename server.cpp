@@ -1,24 +1,4 @@
-#include <sstream>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <cstring>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <map>
-#define GREEN       "\033[33;32m"
-#define YELLOW      "\033[33;33m"
-#define RED         "\033[33;31m"
-#define MAGENTA     "\e[95m"
-#define BLUE        "\033[1;34m"
-#define NC          "\033[0m"
-using namespace std;
-//std::map<std::string, std::string> extract_info_from_header(char *buffer);
-void extract_info_from_header(char *buffer);
-#define PORT 8080
+#include "webserv.hpp"
 
 void init_socket(int &server_fd, struct sockaddr_in &address)
 {
@@ -50,15 +30,6 @@ void bind_and_listen(int &server_fd, struct sockaddr_in &address)
 
 std::string get_client_file(char *buffer)
 {
-	// int new_line = 0;
-	// while (buffer[k] != '\n')
-	// 	k++;
-	// if (buffer[k] == '\n')
-	// 	new_line = 1;
-	// char fst_line[k + new_line + 1];//\n is also include
-	// fst_line[k + new_line] = '\0';
-	// strncpy(fst_line, buffer, k + new_line);
-//	char *data = strstr(fst_line, "/" );
 	char *data = strstr(buffer, "/" );
 	int i = 0;
 	while (data[i] && data[i] != ' ')
@@ -102,14 +73,7 @@ void read_the_file(std::ifstream &myfile, int &total_nb, std::string &total_line
 	myfile.close();
 }
 
-void set_response_content_encoding(std::string &response, std::map<std::string, std::string> client_request)
-{
-	response.append("Content-Encoding: ");
-	response.append(client_request["Accept-Encoding"]);
-	response.append("\r\n");
-}
-
-std::string response_str(std::string &status_code, int &total_nb, std::string &total_line)//, std::map<std::string, std::string> client_request)
+std::string response_str(std::string &status_code, int &total_nb, std::string &total_line, std::map<std::string, std::string> client_request)
 {
 	std::string res;
 	std::ostringstream convert;
@@ -121,14 +85,30 @@ std::string response_str(std::string &status_code, int &total_nb, std::string &t
 	response.append(status_code);
 
 	//connection
-//	response.append("Connection: keep-alive\r\n");
+	response.append("Connection: keep-alive\r\n");
 
 	response.append("content-Type: text/html\r\n");
+	//time
+	response.append("Date: ");
+	get_time(response);
+	response.append("\r\n");
+
+	//server
+	response.append("Server: ");
+	response.append("nginx/1.18.0 (Ubuntu)");
+	response.append("\r\n");
+
+	//Transfer-Encoding
+	response.append("Transfer-Encoding: ");
+	response.append("identity");
+	response.append("\r\n");
+
+
+
+
 //	response.append("Content-Type: text/plain\r\nContent-Length: 12\r\n\nHello world!");
 
-	//content-encoding
-//	set_response_content_encoding(response, client_request);
-
+	//content-encoding| no need to manage
 
 	response.append("Content-Length: ");
 
@@ -179,10 +159,10 @@ int main()
 			status_code = get_status_code_file(myfile, file);//file valid?
 			read_the_file(myfile, total_nb, total_line);//even if not valid, we send 404.html
 		}
-//		std::map<std::string, std::string> client_request = extract_info_from_header(buffer);
-		extract_info_from_header(buffer);
-//		std::string response = response_str(status_code, total_nb, total_line, client_request);
-		std::string response = response_str(status_code, total_nb, total_line);
+		std::map<std::string, std::string> client_request = extract_info_from_header(buffer);
+//		extract_info_from_header(buffer);
+		std::string response = response_str(status_code, total_nb, total_line, client_request);
+//		std::string response = response_str(status_code, total_nb, total_line);
 		const char *new_str = response.c_str() ;
 		send(new_socket , new_str , strlen(new_str), 0);
 		std::cout << "------------------Response message sent-------------------" << std::endl;
