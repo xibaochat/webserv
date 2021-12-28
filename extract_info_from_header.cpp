@@ -52,7 +52,7 @@ int get_r_n_index(char *buffer)
 	return 0;
 }
 
-std::map<std::string, std::string> extract_info_from_header(char *buffer)
+std::map<std::string, std::string> extract_info_from_header(Client_Request &obj, char *buffer)
 {
 	int len = 0;
 	int i;
@@ -73,6 +73,13 @@ std::map<std::string, std::string> extract_info_from_header(char *buffer)
 		header[key] = value;
 		buffer += len + 1 + 1;
 	}
+	header["method"] = obj.get_client_method();
+	header["file"] = obj.get_client_ask_file();
+	header["status_code"] = obj.get_status_code();
+	std::ostringstream ss;
+	ss << obj.get_total_nb();
+	header["total_nb"] = ss.str();
+	header["total_line"] = obj.get_total_line();
 	for (std::map<std::string, std::string>::iterator it=header.begin(); it!=header.end(); ++it)
 	 	std::cout << it->first << " => " << it->second << '\n';
 	return header;

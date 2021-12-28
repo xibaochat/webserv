@@ -73,13 +73,47 @@ void read_the_file(std::ifstream &myfile, Client_Request &obj)
 	myfile.close();
 }
 
-int main()
+// void check_config_file(int ac, char **av)
+// {
+// 	char *path;
+
+// 	if (ac == 1)
+// 		std::ifstream file (DEFAULT_PATH);
+// 	else
+// 	{
+// 		path = av[1];
+// 		std::ifstream file (path);
+// 	}
+// 	if (!file.is_open())
+// 	{
+// 		std::cout << "No config file" << std::endl;
+// 		exit(EXIT_FAILURE);
+// 	}
+// 	file.close();
+// }
+
+void extract_info_from_buffer(Client_Request &obj, char *buffer)
 {
+	std::ifstream myfile;
+	char *ptr = strstr(buffer, " ");
+	std::string method(buffer, 0, ptr - buffer);
+	obj.set_client_method(method);
+	std::cout << BLUE << method << "|" << std::endl;
+	std::string file = get_client_file(buffer);//the file client ask
+	obj.set_client_file(file);
+	std::string status_code = get_status_code_file(myfile, file);//file valid?
+	obj.set_status_code(status_code);
+	read_the_file(myfile, obj);//even if not valid, we send 404.html
+}
+
+int main(int ac, char **av)
+{
+	//###parse nginx conf
+//	check_config_file(ac, av);
 	int server_fd;
 	int new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-	std::ifstream myfile;
 
 	init_socket(server_fd, address);
 
@@ -102,13 +136,10 @@ int main()
 		}
 		else
 		{
-			std::string file = get_client_file(buffer);//the file client ask
-			obj.set_client_file(file);
-			std::string status_code = get_status_code_file(myfile, file);//file valid?
-			obj.set_status_code(status_code);
-			read_the_file(myfile, obj);//even if not valid, we send 404.html
+			std::cout << "[buffer]" << GREEN << buffer << NC << std::endl;
+			extract_info_from_buffer(obj, buffer);
 		}
-		std::map<std::string, std::string> client_req = extract_info_from_header(buffer);
+		std::map<std::string, std::string> client_req = extract_info_from_header(obj, buffer);
 		std::string response = response_str(obj);
 		const char *new_str = response.c_str() ;
 		send(new_socket , new_str , strlen(new_str), 0);
