@@ -14,7 +14,7 @@
 #include <map>
 #include <vector>
 #include <ctime>
-
+#include <algorithm>
 #define PORT 8080
 #define GREEN       "\033[33;32m"
 #define YELLOW      "\033[33;33m"
@@ -25,9 +25,45 @@
 using namespace std;
 class Client_Request;
 std::map<std::string, std::string> extract_info_from_header(Client_Request &o, char *buffer);
+void check_config_file(int ac, char **av);
 void get_time(std::string &response);
 std::string response_str(Client_Request &obj);
 std::string get_client_file(char *buffer);
+
+class Conf
+{
+private:
+	int port;
+	std::string server_name;
+	std::string conf_file;
+	std::map<int, std::vector<std::string> >conf_map;//status code, in vector, they are status_message, error_page
+public:
+	Conf():port(0), conf_file(""), server_name(""){}
+	~Conf(){};
+	Conf(Conf const &s){*this = s;}
+	Conf &operator=(Conf const &src)
+	{
+		this->port = src.port;
+		this->server_name = src.server_name;
+		this->conf_file = src.conf_file;
+		this->conf_map = src.conf_map;
+		return *this;
+	}
+	int get_port()const {return port;}
+	std::string get_server_name() const {return server_name;}
+	std::string get_conf_file() const {return conf_file;}
+	std::map<int, std::vector<std::string> > get_conf_map() const
+	{
+		return this->conf_map;
+	}
+	void set_port(int port){this->port = port;}
+	void set_server_name(std::string f){this->server_name = f;}
+	void set_conf_file(std::string file){this->conf_file = file;}
+	void set_config_map(std::map<int, std::vector<std::string> > src){
+		this->conf_map = src;}
+
+};
+
 
 class Client_Request
 {

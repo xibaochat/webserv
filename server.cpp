@@ -73,32 +73,12 @@ void read_the_file(std::ifstream &myfile, Client_Request &obj)
 	myfile.close();
 }
 
-// void check_config_file(int ac, char **av)
-// {
-// 	char *path;
-
-// 	if (ac == 1)
-// 		std::ifstream file (DEFAULT_PATH);
-// 	else
-// 	{
-// 		path = av[1];
-// 		std::ifstream file (path);
-// 	}
-// 	if (!file.is_open())
-// 	{
-// 		std::cout << "No config file" << std::endl;
-// 		exit(EXIT_FAILURE);
-// 	}
-// 	file.close();
-// }
-
 void extract_info_from_buffer(Client_Request &obj, char *buffer)
 {
 	std::ifstream myfile;
 	char *ptr = strstr(buffer, " ");
 	std::string method(buffer, 0, ptr - buffer);
 	obj.set_client_method(method);
-	std::cout << BLUE << method << "|" << std::endl;
 	std::string file = get_client_file(buffer);//the file client ask
 	obj.set_client_file(file);
 	std::string status_code = get_status_code_file(myfile, file);//file valid?
@@ -109,42 +89,42 @@ void extract_info_from_buffer(Client_Request &obj, char *buffer)
 int main(int ac, char **av)
 {
 	//###parse nginx conf
-//	check_config_file(ac, av);
-	int server_fd;
-	int new_socket;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
+	check_config_file(ac, av);
+	// int server_fd;
+	// int new_socket;
+    // struct sockaddr_in address;
+    // int addrlen = sizeof(address);
 
-	init_socket(server_fd, address);
+	// init_socket(server_fd, address);
 
-	bind_and_listen(server_fd, address);
-    while(1)
-    {
-		std::cout << "\n+++++++ Waiting for new connection ++++++++" << std::endl << std::endl;
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
-        {
-            perror("In accept");
-            exit(EXIT_FAILURE);
-        }
-		Client_Request obj;
-        char buffer[3000] = {0};
-		long nb_read = recv(new_socket, buffer, sizeof(buffer), 0);
-		if (nb_read < 0)
-		{
-			std::cout << "No byte are there to read" << std::endl;
-			exit(EXIT_FAILURE);
-		}
-		else
-		{
-			std::cout << "[buffer]" << GREEN << buffer << NC << std::endl;
-			extract_info_from_buffer(obj, buffer);
-		}
-		std::map<std::string, std::string> client_req = extract_info_from_header(obj, buffer);
-		std::string response = response_str(obj);
-		const char *new_str = response.c_str() ;
-		send(new_socket , new_str , strlen(new_str), 0);
-		std::cout << "------------------Response message sent-------------------" << std::endl;
-        close(new_socket);
-    }
+	// bind_and_listen(server_fd, address);
+    // while(1)
+    // {
+	// 	std::cout << "\n+++++++ Waiting for new connection ++++++++" << std::endl << std::endl;
+    //     if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
+    //     {
+    //         perror("In accept");
+    //         exit(EXIT_FAILURE);
+    //     }
+	// 	Client_Request obj;
+    //     char buffer[3000] = {0};
+	// 	long nb_read = recv(new_socket, buffer, sizeof(buffer), 0);
+	// 	if (nb_read < 0)
+	// 	{
+	// 		std::cout << "No byte are there to read" << std::endl;
+	// 		exit(EXIT_FAILURE);
+	// 	}
+	// 	else
+	// 	{
+	// 		std::cout << "[buffer]" << GREEN << buffer << NC << std::endl;
+	// 		extract_info_from_buffer(obj, buffer);
+	// 	}
+	// 	std::map<std::string, std::string> client_req = extract_info_from_header(obj, buffer);
+	// 	std::string response = response_str(obj);
+	// 	const char *new_str = response.c_str() ;
+	// 	send(new_socket , new_str , strlen(new_str), 0);
+	// 	std::cout << "------------------Response message sent-------------------" << std::endl;
+    //     close(new_socket);
+    // }
     return 0;
 }
