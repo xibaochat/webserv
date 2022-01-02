@@ -1,10 +1,14 @@
 #include "webserv.hpp"
 
-std::string get_file_type(std::string file)
+//type of file that will send to user
+std::string get_file_type(std::string file, Client_Request &obj)
 {
+	std::string type;
+	if (obj.get_status_code() != "200 OK\r\n")
+		return (type = "text/html");
 	size_t pos = file.rfind (".") + 1;
-	std::string type = file.substr(pos);
-	if (type == "html" || type == "css" || type == "png" || "bmp")
+	type = file.substr(pos);
+	if (type == "html" || type == "css" || type == "png" || type == "bmp")
 		type = "text/" + type;
 	else if (type == "js")
 		type = "text/javascript";
@@ -15,6 +19,7 @@ std::string get_file_type(std::string file)
 	return type;
 }
 
+//string of response to client
 std::string response_str(Client_Request &obj)
 {
 	std::map<std::string, std::string> response_header;
@@ -32,8 +37,9 @@ std::string response_str(Client_Request &obj)
 
 	//content-Type
 	response.append("content-Type: ");//text/html\r\n");
-	response.append(get_file_type(obj.get_client_ask_file()));
+	response.append(get_file_type(obj.get_client_ask_file(), obj));
 	response.append("\r\n");
+
 	//time
 	response.append("Date: ");
 	get_time(response);
@@ -48,8 +54,6 @@ std::string response_str(Client_Request &obj)
 	response.append("Transfer-Encoding: ");
 	response.append("identity");
 	response.append("\r\n");
-
-
 //	response.append("Content-Type: text/plain\r\nContent-Length: 12\r\n\nHello world!");
 
 	//content-encoding| no need to manage
@@ -64,8 +68,4 @@ std::string response_str(Client_Request &obj)
 	std::cout << RED << response << std::endl << NC;
 	return response;
 	//return std::string("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\nHello world!");
-
-
-
-
 }
