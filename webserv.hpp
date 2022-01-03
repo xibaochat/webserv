@@ -29,14 +29,20 @@ class Client_Request;
 class Conf;
 
 
-std::map<std::string, std::string> extract_info_from_header(Client_Request &o, char *buffer);
+void extract_info_from_rest_buffer(Client_Request &o, char *buffer);
 Conf manage_config_file(int ac, char **av);
 void get_time(std::string &response);
 std::string response_str(Client_Request &obj);
 std::string get_client_file(char *buffer);
 void check_err_page_validity(std::string file);
+void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf);
+
+void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_conf);
 
 std::map<int, std::string> init_status_code_message_map();
+
+void open_file(std::ifstream &s, int code, Conf &web_conf);
+void read_the_file(std::ifstream &myfile, Client_Request &obj);
 
 //contain port, server_name, all err page
 class Conf
@@ -90,7 +96,7 @@ private:
 	std::string status_code;
 	unsigned long total_nb;
 	std::string total_line;
-
+	std::map<std::string, std::string> client_request;
 public:
 	Client_Request():method(""), file(""), status_code(""), total_nb(0), total_line(""){}
 	~Client_Request(){};
@@ -109,12 +115,23 @@ public:
 	std::string get_status_code(){return this->status_code;}
 	unsigned long get_total_nb(){return this->total_nb;}
 	std::string get_total_line(){return this->total_line;}
+	std::map<std::string, std::string> get_client_request_map(){return client_request;}
 
 	void set_client_method(std::string &src){this->method = src;}
 	void set_client_file(std::string &src){this->file = src;}
 	void set_status_code(std::string &src){this->status_code = src;}
 	void set_total_nb(unsigned long src){this->total_nb = src;}
 	void set_total_line(std::string &src){this->total_line = src;}
+	void set_client_request_map(std::map<std::string, std::string> src)
+	{
+		this->client_request = src;
+	}
+	void display_client_request()
+	{
+		std::map<std::string, std::string> mymap = this->get_client_request_map();
+		for (std::map<std::string, std::string>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
+			std::cout << YELLOW << "client info key: " << NC << it->first << YELLOW << " value" << NC << " => " << it->second<< std::endl;
+	}
 };
 
 #endif

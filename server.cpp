@@ -1,8 +1,5 @@
 #include "webserv.hpp"
 
-/*
-**
- */
 void init_socket(int port, int &server_fd, struct sockaddr_in &address)
 {
 	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -31,6 +28,7 @@ void bind_and_listen(int &server_fd, struct sockaddr_in &address)
     }
 }
 
+/*extract client asked file name */
 std::string get_client_file(char *buffer)
 {
 	char *data = strstr(buffer, "/" );
@@ -44,29 +42,31 @@ std::string get_client_file(char *buffer)
 	return file;
 }
 
-
+void open_file(std::ifstream &myfile, int code, Conf &web_conf)
+{
+	std::string page_path = web_conf.get_conf_err_page_map()[code];
+	myfile.open(page_path.c_str(), std::ios::in);
+}
 
 //file valid? if can open file, return 200 else open err file in conf return err status code
-std::string get_status_code_file(std::ifstream &myfile, std::string &file, Conf &web_conf)
+std::string get_status_nb_message(std::ifstream &myfile, std::string &file, Conf &web_conf)
 {
-	std::string status_code;
+	std::string status_nb_message;
 	std::map<int, std::string> error_code_message_map = init_status_code_message_map();
 	myfile.open(file.c_str(), std::ios::in);
 
 	if (myfile.is_open())
 	{
-		status_code = "200 OK\r\n";
+		status_nb_message = "200 OK\r\n";
 		std::cout << "\nOK\n";
 	}
 	else
 	{
 		int status_code_nb = 404;
-		std::string page_path = web_conf.get_conf_err_page_map()[status_code_nb];
-		status_code = error_code_message_map[status_code_nb] + "\r\n";
-		file = page_path;
-		myfile.open(file.c_str(), std::ios::in);
+		status_nb_message = error_code_message_map[status_code_nb] + "\r\n";
+		open_file(myfile, status_code_nb, web_conf);
 	}
-	return status_code;
+	return status_nb_message;
 }
 
 //read user asked file , if err, read err file from conf
@@ -83,8 +83,12 @@ void read_the_file(std::ifstream &myfile, Client_Request &obj)
 	obj.set_total_line(content_page);
 	myfile.close();
 }
+/*from fst line of buffer, extract info of method; client asked file; and status_code
+**: params (Client_Request) uninitialized obj,
+**(char *)buffer that from client, (Conf) configuration file passed as scd parameter
+ */
 //extract method; client asked file; and status_code of file(file valid?)
-void extract_info_from_buffer(Client_Request &obj, char *buffer, Conf &web_conf)
+void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf)
 {
 	std::ifstream myfile;
 	char *ptr = strstr(buffer, " ");//GET , POST ?
@@ -92,59 +96,27 @@ void extract_info_from_buffer(Client_Request &obj, char *buffer, Conf &web_conf)
 	obj.set_client_method(method);
 	std::string file = get_client_file(buffer);//the file client ask
 	obj.set_client_file(file);
-	std::string status_code = get_status_code_file(myfile, file, web_conf);//file valid?
-	obj.set_status_code(status_code);
+	std::string status_nb_message = get_status_nb_message(myfile, file, web_conf);//file valid?
+	obj.set_status_code(status_nb_message);
 	read_the_file(myfile, obj);//even if not valid, we send 404.html
 }
 
-
-
+/*
+**extract info from configuration file passed as scd argument
+**create and init socket, bind and listen, then exchange with user
+ */
 int main(int ac, char **av)
 {
 	//###parse nginx conf
 	Conf web_conf = manage_config_file(ac, av);
-
-
 	int server_fd;
-	int new_socket;
+
     struct sockaddr_in address;
-    int addrlen = sizeof(address);
-
-
-
-
-
 	init_socket(web_conf.get_port(), server_fd, address);
 	bind_and_listen(server_fd, address);
 	while(1)
     {
-		std::cout << "\n+++++++ Waiting for new connection ++++++++" << std::endl << std::endl;
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
-        {
-            perror("In accept");
-			continue;
-        }
-
-		Client_Request obj;
-        char buffer[3000] = {0};
-		long nb_read = recv(new_socket, buffer, sizeof(buffer), 0);
-		if (nb_read < 0)
-		{
-			// manage_request_error(204);
-			std::cout << "No byte are there to read" << std::endl;
-			continue;
-		}
-		else
-		{
-			std::cout << "[buffer]" << GREEN << buffer << NC << std::endl;
-			extract_info_from_buffer(obj, buffer, web_conf);
-		}
-		std::map<std::string, std::string> client_req = extract_info_from_header(obj, buffer);
-		std::string response = response_str(obj);
-		const char *new_str = response.c_str() ;
-		send(new_socket , new_str , strlen(new_str), 0);
-		std::cout << "------------------Response message sent-------------------" << std::endl;
-        close(new_socket);
+		echange_with_client(server_fd, address, web_conf);
     }
     return 0;
 }

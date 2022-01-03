@@ -5,6 +5,7 @@ std::map<int, std::string> init_status_code_message_map()
     std::map<int, std::string> map;
 
 	map[200] = "200 OK";
+	map[204] = "204 No Content";
     map[400] = "400 Bad Request";
     map[403] = "403 Forbidden";
     map[404] = "404 Not Found";

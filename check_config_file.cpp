@@ -11,13 +11,15 @@ std::string get_conf_file(int ac, char **av)
 {
 	std::string conf_file;
 	if (ac == 1)
-        conf_file = "conf/default.conf";
-    else
-        conf_file = av[1];
+	{
+		conf_file = "conf/default.conf";
+		return conf_file;
+	}
+	conf_file = av[1];
 	return conf_file;
 }
 
-void open_conf(int ac, char **av, std::ifstream &file, Conf &web_conf)
+void open_conf(int ac, char **av, std::ifstream &file)
 {
 	std::string conf_file = get_conf_file(ac, av);
 
@@ -332,7 +334,7 @@ Conf manage_config_file(int ac, char **av)
 	std::vector<std::string>::iterator it;
 
 	// Conf extraction
-	open_conf(ac, av, file, web_conf);//can open file?
+	open_conf(ac, av, file);//can open file?
 	store_elem_in_vec(file, vec);
 	manage_port(vec, web_conf);
 	manage_server_name(vec, web_conf);

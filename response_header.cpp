@@ -65,7 +65,6 @@ std::string response_str(Client_Request &obj)
 	response.append("\n\n");
 	response.append(obj.get_total_line());
 
-	std::cout << RED << response << std::endl << NC;
 	return response;
 	//return std::string("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\nHello world!");
 }

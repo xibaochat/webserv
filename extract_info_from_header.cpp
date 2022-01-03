@@ -52,8 +52,11 @@ int get_r_n_index(char *buffer)
 	return 0;
 }
 
-//create a map to extract and store user request info from buffer
-std::map<std::string, std::string> extract_info_from_header(Client_Request &obj, char *buffer)
+
+/*sauf fst line of buffer, extract info from client, create a map to store them, then this map become attribute in obj
+**:params(Client_Request) incomplete obj, (char*) user
+*/
+void extract_info_from_rest_buffer(Client_Request &obj, char *buffer)
 {
 	int len = 0;
 	int i;
@@ -81,11 +84,5 @@ std::map<std::string, std::string> extract_info_from_header(Client_Request &obj,
 	ss << obj.get_total_nb();
 	header["total_nb"] = ss.str();
 	header["total_line"] = obj.get_total_line();
-	//display map
-	for (std::map<std::string, std::string>::iterator it=header.begin(); it!=header.end(); ++it)
-	{
-		if (it->first != "total_line")
-			std::cout << it->first << " => " << it->second << '\n';
-	}
-	return header;
+	obj.set_client_request_map(header);
 }
