@@ -1,7 +1,11 @@
 #include "webserv.hpp"
 
-/*selon err code, get return page path, and also init obj's file total nb and content
-**:param(int) error_code, (Client_Request) a pure obj without initm, (Conf) cofiguration strtureobj
+/*
+** selon err code, get return page path, and also init obj's file total nb and content
+** :param (int) error_code: code to manage
+** :param (Client_Request) obj: a pure obj without init
+** :param (Conf) web_conf: configuration structure obj
+** return: void
  */
 void send_error_page(int error_code, Client_Request &obj, Conf &web_conf)
 {
@@ -10,7 +14,7 @@ void send_error_page(int error_code, Client_Request &obj, Conf &web_conf)
 	std::string status_nb_message ;
 
 	open_file(ss, error_code, web_conf);
-	read_the_file(ss, obj);
+	set_length_and_content(ss, obj);
 	error_code_message_map = init_status_code_message_map();
 	status_nb_message = error_code_message_map[error_code] + "\r\n";
 	obj.set_status_code(status_nb_message);

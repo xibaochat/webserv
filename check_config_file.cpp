@@ -3,8 +3,9 @@
 //I create a strucutr contains port, serve_name,
 //and a map, key is the int status_code, value is path of error page, Example:  status_code->400, value ->400.html
 
-/*param (int) ac: number of the server's argument
-** :param (char **): server's argument
+/*
+** :param (int) ac: number of the server's argument
+** :param (char **) av: server's argument
 ** :return (std::string) conf_file: path of configuration file
 */
 std::string get_conf_file(int ac, char **av)
@@ -61,9 +62,13 @@ void show_err_message_and_quite(std::string message)
 	exit(EXIT_FAILURE);
 }
 
-/*param (std::string) elem: first word extracted that represent key in the line
+/*
+** Check validity of key, it is in white list or not
+**
+** :param (std::string) elem: first word extracted that represent key in the line
 ** :return (bool)
 */
+
 bool invalid_key(std::string &elem)
 {
 	std::vector<std::string>::iterator it;
@@ -74,10 +79,13 @@ bool invalid_key(std::string &elem)
 	return false;
 }
 
-/*param (std::string) elem: first word extracted that represent key in the line
-**std::vector<std::string> &vec: vec contains all elem from configuration file
+/*
+** Check except key error_page, others are unique or not
+** param (std::string) elem: first word(key) extracted key in the line
+** std::vector<std::string> &vec: vec contains all elem from configuration file
 ** return bool to
-**check except key error_page, others are repested or not
+**
+
 */
 int repeated_key(std::string &elem, std::vector<std::string> &vec)
 {
@@ -94,7 +102,10 @@ int repeated_key(std::string &elem, std::vector<std::string> &vec)
 	return false;
 }
 
-/*check key is valid and it is repeated or not*/
+/*
+**  check key is in white list and it is repeated or not
+*/
+
 void check_key_validity(std::string elem, std::vector<std::string> &vec)
 {
 	std::vector<std::string>::iterator it;
@@ -116,8 +127,9 @@ bool repeated_status_code(std::string &elem, std::vector<std::string> &vec)
 	return false;
 }
 
-/*param (int)i: Nth of word in line, (std::string)elem: extracted word, vec: vector store all elem)
-**check 2nd elem in the line has key: error_page is a nb OR it is already repeated
+/*
+** param (int)i: Nth of word in line, (std::string)elem: extracted word, vec: vector store all elem)
+** check 2nd elem in the line has key: error_page is a nb OR it is already repeated
  */
 void check_line_error_page(int i, std::string &elem, std::vector<std::string> &vec)
 {
@@ -129,8 +141,8 @@ void check_line_error_page(int i, std::string &elem, std::vector<std::string> &v
 		check_err_page_validity(elem);
 }
 /*
-**param(std::string): each line from configuration file
-**return (std::string) each single elem
+** param(std::string): each line from configuration file
+** return (std::string) each single elem
  */
 std::string extract_word_from_line(int &end, std::string &line)
 {
@@ -141,7 +153,8 @@ std::string extract_word_from_line(int &end, std::string &line)
 	return elem;
 }
 
-/*param (string)key: elem in whitelist, (int) i: number of elem in the line
+/*
+** param (string)key: elem in whitelist, (int) i: number of elem in the line
 ** return bool , check line start by key has extra elem or not
 */
 bool has_extra_elem_in_line(std::string &key, int &i)
@@ -188,8 +201,8 @@ int get_transfered_value(std::stringstream &ss, std::vector<std::string>::iterat
 	 return nb;
 }
 /*
-**param (string)key in conf,
-**find (int)value correspons value and check its validity
+** find (int)value corresponds the key(port, max buffer size) and check its validity
+** param: (string&) key in conf
 */
 int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 {
@@ -222,10 +235,12 @@ int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 	return (-1);
 }
 
-/*param vector: a temp vec who contains all elem extracted from conf file, (Conf) web_conf: a structure
-** to store info from confuguration file
-**check port is number and set value
+/*
+** check port is number and set value
+** param vector: a temp vec contains all elem extracted from conf file,
+** (Conf &) web_conf: a structure to store info from confuguration file
  */
+
 void manage_port(std::vector<std::string> &vec, Conf &web_conf)
 {
 	std::vector<std::string>::iterator it;
@@ -234,7 +249,9 @@ void manage_port(std::vector<std::string> &vec, Conf &web_conf)
 	web_conf.set_port(nb_port);
 }
 
-/*check port is number and set value to web_conf*/
+/*
+** check max buffer size is number and store value to web_conf
+*/
 void manage_max_size_request(std::vector<std::string> &vec, Conf &web_conf)
 {
 	 std::vector<std::string>::iterator it;
@@ -244,8 +261,9 @@ void manage_max_size_request(std::vector<std::string> &vec, Conf &web_conf)
 }
 
 /*
-**param: vec: a temp vec who contains all elem extracted from conf
-** extract server_name
+** Extract and return `server_name` if valid
+** param: vec: a temp vec who contains all elem extracted from conf
+**
 */
 void manage_server_name(std::vector<std::string> &vec, Conf &web_conf)
 {
@@ -263,9 +281,11 @@ void manage_server_name(std::vector<std::string> &vec, Conf &web_conf)
 	exit(EXIT_FAILURE);
 }
 
-/*param: (std::string)path_file : the path of error page
-  ** check the path of error page can be opened or not
- */
+/*
+** Check the path of error page can be opened or not
+** param: (std::string)path_file : the path of error page
+*/
+
 void check_err_page_validity(std::string path_file)
 {
 	std::ifstream ifs;
@@ -278,10 +298,14 @@ void check_err_page_validity(std::string path_file)
 	ifs.close();
 }
 /*
-**param: vector::iterator point to "error_page"
-**transfer error status code(string) to form int and check it's validity
+** Extract error status from given string and check it's validity
+** before returning it as Integrer
+**
+** param (vector::iterator) it: vector contraining string to extract code from
+** return (int): extracted status code
+**
  */
-int manage_status_code(std::vector<std::string>::iterator it)
+int extract_status_code(std::vector<std::string>::iterator it)
 {
 	int status_code;
 	std::stringstream sstr;
@@ -294,10 +318,13 @@ int manage_status_code(std::vector<std::string>::iterator it)
 	}
 	return status_code;
 }
+
 /*
-**set map key:(int) status_code, value(string) error_page_path as config_map in Conf obj: web_conf
-**:param: (std::vector)vec temporaire contains all extracted elem,
-**:param: (Conf) structure contains all info of configuration file
+** Extract and store `error_page` conf in a new map,
+** then store the map in the given `web_conf` parameter
+**
+** param (std::vector) vec: vector temporaire containing all extracted elems
+** param (Conf &) web_conf: structure containing all info of configuration file
 */
 void set_err_page_map(std::vector<std::string> &vec, Conf &web_conf)
 {
@@ -306,7 +333,7 @@ void set_err_page_map(std::vector<std::string> &vec, Conf &web_conf)
 	std::vector<std::string>::iterator it;
 	while ((it = std::find(vec.begin(), vec.end(), "error_page")) != vec.end())
 	{
-		status_code = manage_status_code(it);
+		status_code = extract_status_code(it);
 		if (it + 2 != vec.end())
 		{
 			map[status_code] = (*(it + 2));
@@ -317,7 +344,6 @@ void set_err_page_map(std::vector<std::string> &vec, Conf &web_conf)
 }
 
 /*
-**
 ** Validate and Extract configuration from conf file
 **
 ** :param (int) ac: number of the server's argument

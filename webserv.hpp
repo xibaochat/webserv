@@ -31,7 +31,7 @@ class Conf;
 
 void extract_info_from_rest_buffer(Client_Request &o, char *buffer);
 Conf manage_config_file(int ac, char **av);
-void get_time(std::string &response);
+std::string get_time();
 std::string response_str(Client_Request &obj);
 std::string get_client_file(char *buffer);
 void check_err_page_validity(std::string file);
@@ -42,7 +42,7 @@ void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_
 std::map<int, std::string> init_status_code_message_map();
 
 void open_file(std::ifstream &s, int code, Conf &web_conf);
-void read_the_file(std::ifstream &myfile, Client_Request &obj);
+void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
 
 //contain port, server_name, all err page
 class Conf

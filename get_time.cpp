@@ -1,6 +1,6 @@
 #include "webserv.hpp"
 
-void get_time(std::string &response)
+std::string get_time()
 {
 	std::time_t result = std::time(NULL);
     std::string time = std::asctime(std::localtime(&result));
@@ -27,5 +27,5 @@ void get_time(std::string &response)
     date.append(seglist[4]);
     date.append(seglist[3]);
     date.append("GMT");
-    response.append(date);
+	return date;
 }

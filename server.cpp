@@ -28,7 +28,11 @@ void bind_and_listen(int &server_fd, struct sockaddr_in &address)
     }
 }
 
-/*extract client asked file name */
+/*
+**  extract client asked file name from buffer
+**  if no file, by default, file is "cute_cat.html"
+**  return (string)file name
+*/
 std::string get_client_file(char *buffer)
 {
 	char *data = strstr(buffer, "/" );
@@ -48,7 +52,10 @@ void open_file(std::ifstream &myfile, int code, Conf &web_conf)
 	myfile.open(page_path.c_str(), std::ios::in);
 }
 
-//file valid? if can open file, return 200 else open err file in conf return err status code
+/*
+**check file is valid or not
+**return (string)corresponding status maeeage
+*/
 std::string get_status_nb_message(std::ifstream &myfile, std::string &file, Conf &web_conf)
 {
 	std::string status_nb_message;
@@ -57,20 +64,22 @@ std::string get_status_nb_message(std::ifstream &myfile, std::string &file, Conf
 
 	if (myfile.is_open())
 	{
-		status_nb_message = "200 OK\r\n";
+		status_nb_message = "200 OK";
 		std::cout << "\nOK\n";
 	}
 	else
 	{
 		int status_code_nb = 404;
-		status_nb_message = error_code_message_map[status_code_nb] + "\r\n";
+		status_nb_message = error_code_message_map[status_code_nb];
 		open_file(myfile, status_code_nb, web_conf);
 	}
 	return status_nb_message;
 }
 
-//read user asked file , if err, read err file from conf
-void read_the_file(std::ifstream &myfile, Client_Request &obj)
+/*
+** read user asked file, and store total length and content
+*/
+void set_length_and_content(std::ifstream &myfile, Client_Request &obj)
 {
 	std::string line;
 	std::string content_page;
@@ -83,9 +92,11 @@ void read_the_file(std::ifstream &myfile, Client_Request &obj)
 	obj.set_total_line(content_page);
 	myfile.close();
 }
-/*from fst line of buffer, extract info of method; client asked file; and status_code
-**: params (Client_Request) uninitialized obj,
-**(char *)buffer that from client, (Conf) configuration file passed as scd parameter
+
+/*
+** From fst line of buffer, extract info of method; client asked file; and status_code
+** :param (Client_Request) obj: uninitialized obj
+** :param (char *) buffer that from client, (Conf) configuration file passed as scd parameter
  */
 //extract method; client asked file; and status_code of file(file valid?)
 void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf)
@@ -98,7 +109,7 @@ void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, C
 	obj.set_client_file(file);
 	std::string status_nb_message = get_status_nb_message(myfile, file, web_conf);//file valid?
 	obj.set_status_code(status_nb_message);
-	read_the_file(myfile, obj);//even if not valid, we send 404.html
+	set_length_and_content(myfile, obj);//even if not valid, we send 404.html
 }
 
 /*
