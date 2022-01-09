@@ -28,6 +28,10 @@ void send_response(Client_Request &obj, int &new_socket)
 	send(new_socket , new_str , strlen(new_str), 0);
 }
 
+/*
+**main part of programme, accept and recv info, and then extract info from buffer
+**store them to structure Client_Request obj, send response to client
+*/
 void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_conf)
 {
 	std::cout << "\n+++++++ Waiting for new connection ++++++++" << std::endl << std::endl;

@@ -1,4 +1,4 @@
-NAME = ./serve
+NAME = ./webserv
 
 SRC = server.cpp check_config_file.cpp extract_info_from_header.cpp get_time.cpp  response_header.cpp init_status_code_message_map.cpp echange_with_client.cpp
 OBJ = $(SRC:.cpp=.o)
