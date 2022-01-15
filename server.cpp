@@ -1,138 +1,108 @@
+#include "server.hpp"
 #include "webserv.hpp"
 
-void init_socket(int port, int &server_fd, struct sockaddr_in &address)
+Server::Server(Conf &web_conf)
 {
-	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
-        perror("In socket");
-        exit(EXIT_FAILURE);
-    }
-	address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(port);
-
-    memset(address.sin_zero, '\0', sizeof address.sin_zero);
+	this->port = web_conf.get_port();
+	this->serverAddr.sin_family = AF_INET;
+	this->serverAddr.sin_addr.s_addr = INADDR_ANY;
+	this->serverAddr.sin_port = htons(this->port);
+	memset(this->serverAddr.sin_zero, '\0', sizeof this->serverAddr.sin_zero);
+	this->listener = 0;
+	this->epfd = 0;
+	this->error_page_map = web_conf.get_conf_err_page_map();
 }
 
-void bind_and_listen(int &server_fd, struct sockaddr_in &address)
+void Server::Init()
 {
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
-    {
-        perror("In bind");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(server_fd, 10) < 0)
-    {
-        perror("In listen");
-        exit(EXIT_FAILURE);
-    }
+	this->listener = socket(AF_INET, SOCK_STREAM, 0);
+
+	if (this->listener < 0)
+		throw("[ERROR]Failed to create socket");
+	if (bind(this->listener, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr)) < 0)
+		throw("[ERROR]Failed to bind");
+	if (listen(this->listener, 1000) < 0)
+		throw("[ERROR]Listen error");
+	/*the size argument is ignored, but must be greater than zero*/
+	this->epfd = epoll_create(5000);
+	if (this->epfd < 0)
+		throw("[ERROR]epoll create error");
+	this->addfd(this->epfd, this->listener, 1);
 }
 
-std::string get_file(char *data, int i)
+//https://www.researchgate.net/post/What_is_the_role_of_static_function_and_this_pointer_in_C
+
+
+void Server::Close()
 {
-	std::string file(data, 1, i - 1);
-	return file;
+	close(this->listener);
+	close(this->epfd);
 }
 
-/*
-**  extract client asked file name from buffer
-**  if no file, by default, file is "cute_cat.html"
-**  return (string)file name
-*/
-std::string get_client_file(char *buffer)
+void Server::Start(Conf &web_conf)
 {
-	std::string file("cute_cat.html");
-	char *data = strstr(buffer, "/" );
-	int i = 0;
-	while (data[i] && data[i] != ' ')
-		i++;
-
-	if (i != 1)
-		file = get_file(data, i);
-	return file;
-}
-
-void open_file(std::ifstream &myfile, int code, Conf &web_conf)
-{
-	std::string page_path = web_conf.get_conf_err_page_map()[code];
-	myfile.open(page_path.c_str(), std::ios::in);
-}
-
-/*
-**check file is valid or not
-**return (string)corresponding status maeeage
-*/
-std::string get_status_nb_message(std::ifstream &myfile, std::string &file, Conf &web_conf)
-{
-	std::string status_nb_message;
-	std::map<int, std::string> error_code_message_map = init_status_code_message_map();
-	myfile.open(file.c_str(), std::ios::in);
-	if (myfile.is_open())
+	struct epoll_event events[EPOLL_SIZE]; // I write 32 as example, will see after
+	try
 	{
-		status_nb_message = "200 OK";
-		std::cout << "\nOK\n";
+		this->Init();
 	}
+	catch(const char* exception)
+	{
+		std::cerr << exception << std::endl;
+	}
+	while (1)
+	{
+		int epoll_event_count = epoll_wait(this->epfd, events, EPOLL_SIZE, -1);//-1 means will wait all the time
+		if (epoll_event_count < 0)
+		{
+			throw("[ERROR]epoll failure");
+			exit(0);
+		}
+		std::cout << "epoll_events_count = " << epoll_event_count << std::endl;
+		for(int i = 0; i < epoll_event_count; i++)
+		{
+			int sockfd = events[i].data.fd;
+			uint32_t ev = events[i].events;
+			if (sockfd == this->listener)
+				acceptConnect();
+			else if (ev & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))/*err happened*/
+				epoll_ctl(this->epfd, EPOLL_CTL_DEL, sockfd, NULL);
+			else //if (ev & EPOLLIN)
+				handle_client_event(*this, sockfd, web_conf);
+		}
+	}
+	this->Close();
+}
+
+void Server::acceptConnect()
+{
+	struct sockaddr_in client_address;
+	int addrlen = sizeof(struct sockaddr_in);
+	int clientfd = accept(this->listener, (struct sockaddr *)&client_address, (socklen_t*)&addrlen);
+	if (clientfd < 0)
+	{
+		std::cerr << "[ERROR]accpet failure" << std::endl;
+		return ;
+	}
+	addfd(this->epfd, clientfd, true);
+}
+
+void handle_client_event(Server &server, int &clientfd, Conf &web_conf)
+{
+	Client_Request obj;
+	int max_nb = web_conf.get_max_size_request();
+	char buffer[max_nb];
+	memset(buffer, 0, max_nb);
+	long nb_read = recv(clientfd, buffer, sizeof(buffer), 0);
+	if (nb_read < 0)
+        send_error_page(204, obj, web_conf, clientfd);
 	else
 	{
-		int status_code_nb = 404;
-		status_nb_message = error_code_message_map[status_code_nb];
-		open_file(myfile, status_code_nb, web_conf);
+		extract_info_from_first_line_of_buffer(obj, buffer, web_conf);
+		extract_info_from_rest_buffer(obj, buffer);
+		send_response(obj, clientfd);
 	}
-	return status_nb_message;
-}
-
-/*
-** read user asked file, and store total length and content
-*/
-void set_length_and_content(std::ifstream &myfile, Client_Request &obj)
-{
-	std::string line;
-	std::string content_page;
-	while (getline(myfile, line))
-	{
-		line += "\n";
-		content_page += line;
-	}
-	obj.set_total_nb(content_page.length());
-	obj.set_total_line(content_page);
-	myfile.close();
-}
-
-/*
-** From fst line of buffer, extract info of method; client asked file; and status_code
-** :param (Client_Request) obj: uninitialized obj
-** :param (char *) buffer that from client, (Conf) configuration file passed as scd parameter
- */
-//extract method; client asked file; and status_code of file(file valid?)
-void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf)
-{
-	std::ifstream myfile;
-	char *ptr = strstr(buffer, " ");//GET , POST ?
-	std::string method(buffer, 0, ptr - buffer);
-	obj.set_client_method(method);
-	std::string file = get_client_file(buffer);//the file client ask
-	obj.set_client_file(file);
-	std::string status_nb_message = get_status_nb_message(myfile, file, web_conf);//file valid?
-	obj.set_status_code(status_nb_message);
-	set_length_and_content(myfile, obj);//even if not valid, we send 404.html
-}
-
-/*
-**extract info from configuration file passed as scd argument
-**create and init socket, bind and listen, then exchange with user
- */
-int main(int ac, char **av)
-{
-	//###parse nginx conf
-	Conf web_conf = manage_config_file(ac, av);
-	int server_fd;
-
-    struct sockaddr_in address;
-	init_socket(web_conf.get_port(), server_fd, address);
-	bind_and_listen(server_fd, address);
-	while(1)
-    {
-		echange_with_client(server_fd, address, web_conf);
-    }
-    return 0;
+	close(clientfd);
+	(void)server;
+//	epoll_ctl(server.get_epfd(), EPOLL_CTL_DEL, clientfd, NULL);
 }

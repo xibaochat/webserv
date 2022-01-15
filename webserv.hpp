@@ -41,8 +41,11 @@ void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_
 
 std::map<int, std::string> init_status_code_message_map();
 
-void open_file(std::ifstream &s, int code, Conf &web_conf);
+void open_file(std::ifstream &s, std::string pathOA);
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
+
+void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &new_socket);
+void send_response(Client_Request &obj, int &new_socket);
 
 //contain port, server_name, all err page
 class Conf
