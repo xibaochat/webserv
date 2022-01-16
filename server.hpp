@@ -1,7 +1,7 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-#define EPOLL_SIZE 32
+#define EPOLL_SIZE 1024
 
 class Server;
 #include "webserv.hpp"
@@ -13,25 +13,29 @@ class Server;
 #include <list>
 #include <stdint.h>
 
-void handle_client_event(Server &server, int &clientfd, Conf &c);
-
 class Server
 {
 private:
+	std::list<int> list;
 	struct sockaddr_in serverAddr;
 	int listener;
 	int epfd;
 	int port;
 	std::map<int, std::string> error_page_map;
+	Conf  web_conf;
+	std::map<int, std::string> request_map;
+
 public:
-	static void addfd(int epfd, int fd, bool enable_et)
+	void handle_client_event(int &clientfd, Conf &c);
+	void addfd(int fd, bool enable_et)
 	{
 		struct epoll_event ev;
+		memset(&ev, 0, sizeof(struct epoll_event));
 		ev.data.fd = fd;
-		ev.events = EPOLLIN;
+		ev.events = EPOLLIN | EPOLLET;
 		if (enable_et)
 			ev.events = EPOLLIN | EPOLLET;// read edge-triggered let me think a while
-		if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev) < 0)
+		if (epoll_ctl(this->epfd, EPOLL_CTL_ADD, fd, &ev) < 0)
 			throw("[ERROR]Failed to in epoll_ctl");
 		fcntl(fd, F_SETFL, O_NONBLOCK);
 		std::cout << "fd added to epoll" << std::endl;
@@ -44,7 +48,7 @@ public:
 	Server(Server const &src){*this = src;}
 	int get_listener(){return this->listener;}
 	int get_epfd(){return this->epfd;}
-
+	std::map<int, std::string> get_request_map(){return this->request_map;}
 	void acceptConnect();
 };
 

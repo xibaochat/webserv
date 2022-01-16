@@ -26,7 +26,11 @@ void send_response(Client_Request &obj, int &new_socket)
 {
 	std::string response = response_str(obj);
 	const char *new_str = response.c_str();
-	send(new_socket , new_str , strlen(new_str), 0);
+	std::cout << "Start sending repond for `" << RED << new_socket << NC << "`\n";
+	int res = send(new_socket , new_str , strlen(new_str), 0);
+	// todo: MANAGE SEND ERROR HERE
+	std::cout << res << endl;
+	std::cout << "End sending repond for `" << RED << new_socket << NC << "`\n";
 }
 
 /*
@@ -48,6 +52,48 @@ void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &n
 	status_nb_message = error_code_message_map[error_code] + "\r\n";
 	obj.set_status_code(status_nb_message);
 	send_response(obj, new_socket);
+}
+
+/*
+**check file is valid or not
+**return (string)corresponding status maeeage
+*/
+std::string get_status_nb_message(std::ifstream &myfile, std::string &file, Conf &web_conf)
+{
+	std::string status_nb_message;
+	std::map<int, std::string> error_code_message_map = init_status_code_message_map();
+	myfile.open(file.c_str(), std::ios::in);
+	if (myfile.is_open())
+	{
+		status_nb_message = "200 OK";
+		std::cout << "\nOK\n";
+	}
+	else
+	{
+		int status_code_nb = 404;
+		status_nb_message = error_code_message_map[status_code_nb];
+		open_file(myfile, web_conf.get_conf_err_page_map()[status_code_nb]);
+	}
+	return status_nb_message;
+}
+
+/*
+** From fst line of buffer, extract info of method; client asked file; and status_code
+** :param (Client_Request) obj: uninitialized obj
+** :param (char *) buffer that from client, (Conf) configuration file passed as scd parameter
+ */
+//extract method; client asked file; and status_code of file(file valid?)
+void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf)
+{
+	std::ifstream myfile;
+	char *ptr = strstr(buffer, " ");//GET , POST ?
+	std::string method(buffer, 0, ptr - buffer);
+	obj.set_client_method(method);
+	std::string file = get_client_file(buffer);//the file client ask
+	obj.set_client_file(file);
+	std::string status_nb_message = get_status_nb_message(myfile, file, web_conf);//file valid?
+	obj.set_status_code(status_nb_message);
+	set_length_and_content(myfile, obj);//even if not valid, we send 404.html
 }
 
 /*

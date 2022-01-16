@@ -47,52 +47,9 @@ std::string get_client_file(char *buffer)
 	int i = 0;
 	while (data[i] && data[i] != ' ')
 		i++;
-
 	if (i != 1)
 		file = get_file(data, i);
 	return file;
-}
-
-/*
-**check file is valid or not
-**return (string)corresponding status maeeage
-*/
-std::string get_status_nb_message(std::ifstream &myfile, std::string &file, Conf &web_conf)
-{
-	std::string status_nb_message;
-	std::map<int, std::string> error_code_message_map = init_status_code_message_map();
-	myfile.open(file.c_str(), std::ios::in);
-	if (myfile.is_open())
-	{
-		status_nb_message = "200 OK";
-		std::cout << "\nOK\n";
-	}
-	else
-	{
-		int status_code_nb = 404;
-		status_nb_message = error_code_message_map[status_code_nb];
-		open_file(myfile, web_conf.get_conf_err_page_map()[status_code_nb]);
-	}
-	return status_nb_message;
-}
-
-/*
-** From fst line of buffer, extract info of method; client asked file; and status_code
-** :param (Client_Request) obj: uninitialized obj
-** :param (char *) buffer that from client, (Conf) configuration file passed as scd parameter
- */
-//extract method; client asked file; and status_code of file(file valid?)
-void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf)
-{
-	std::ifstream myfile;
-	char *ptr = strstr(buffer, " ");//GET , POST ?
-	std::string method(buffer, 0, ptr - buffer);
-	obj.set_client_method(method);
-	std::string file = get_client_file(buffer);//the file client ask
-	obj.set_client_file(file);
-	std::string status_nb_message = get_status_nb_message(myfile, file, web_conf);//file valid?
-	obj.set_status_code(status_nb_message);
-	set_length_and_content(myfile, obj);//even if not valid, we send 404.html
 }
 
 /*
@@ -114,6 +71,13 @@ int main(int ac, char **av)
 		echange_with_client(server_fd, address, web_conf);
 		}*/
 	Server server(web_conf);
-	server.Start(web_conf);
+	try
+	{
+		server.Start(web_conf);
+	}
+	catch(const char *s)
+	{
+		std::cerr << s << std::endl;
+	}
     return 0;
 }
