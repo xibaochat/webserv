@@ -32,7 +32,10 @@ void Server::Init()
 	this->epfd = epoll_create(5000); //size用来告诉内核这个监听的数目一共有多大
 	if (this->epfd < 0)
 		throw("[ERROR]epoll create error");
-	this->addfd(this->listener, 1);
+
+
+/*this->listener*/
+	this->addfd(this->listener, 0);
 }
 
 //https://www.researchgate.net/post/What_is_the_role_of_static_function_and_this_pointer_in_C
@@ -85,7 +88,11 @@ void Server::Start(Conf &web_conf)
 				acceptConnect();
 			// Something went wrong with an already accepted request stored in the epoll list
 			else if (ev & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))/*err happened*/
+			{
 				epoll_ctl(this->epfd, EPOLL_CTL_DEL, sockfd, NULL);
+				close(sockfd);
+				std::cout << "QUIt+++++++++++++++++++++++++++++++\n";
+			}
 			// A request stored in the epoll list is now ready to receive a response
 			else if (ev & EPOLLIN)
 			{
@@ -101,11 +108,11 @@ void Server::Start(Conf &web_conf)
 				const char *new_str = this->request_map[0].c_str();
 				std::cout << " new str len " << strlen(new_str) << "\n";
 				send(sockfd, new_str , strlen(new_str), 0);
-				close(sockfd);
-				epoll_ctl(this->epfd, EPOLL_CTL_DEL, sockfd, NULL);
+//				close(sockfd);
+//				epoll_ctl(this->epfd, EPOLL_CTL_DEL, sockfd, NULL);
 //				std::map<int, std::string>::iterator it = this->request_map.find(sockfd);
 //				this->request_map.erase(it);
-				exit(0);
+//				exit(0);
 			}
 			std::cout << YELLOW << "INSIDE BELOW\n" << NC;
 		}
@@ -143,7 +150,6 @@ void Server::handle_client_event(int &clientfd, Conf &web_conf)
 	char buffer[max_nb];
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(clientfd, buffer, sizeof(buffer), 0);
-	std::cout << "[buffer]" << GREEN << buffer << NC << std::endl;
 	std::cout << "STARTING HERE `" << clientfd << "`: \n" << buffer << "\n";
 	if (nb_read < 0)
         send_error_page(204, obj, web_conf, clientfd);
@@ -155,10 +161,11 @@ void Server::handle_client_event(int &clientfd, Conf &web_conf)
 		// 	send_response(obj, clientfd);
 		// 	close(clientfd);
 		// 	epoll_ctl(server.get_epfd(), EPOLL_CTL_DEL, clientfd, NULL);
-		 ev.data.fd=clientfd;
+
+/*		ev.data.fd=clientfd;
 		 //设置用于注测的写操作事件
-		 ev.events=EPOLLOUT | EPOLLET;
-		 epoll_ctl(this->epfd,EPOLL_CTL_MOD, clientfd, &ev);
+		ev.events=EPOLLOUT | EPOLLET;
+		epoll_ctl(this->epfd,EPOLL_CTL_MOD, clientfd, &ev);*/
 		 //修改sockfd上要处理的事件为EPOLLOUT
 	}
 }

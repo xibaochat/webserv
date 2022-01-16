@@ -34,7 +34,12 @@ public:
 		ev.data.fd = fd;
 		ev.events = EPOLLIN | EPOLLET;
 		if (enable_et)
-			ev.events = EPOLLIN | EPOLLET;// read edge-triggered let me think a while
+			ev.events = EPOLLIN | EPOLLOUT;// | EPOLLET;// read edge-triggered let me think a while
+		/*When used as an edge-triggered interface, for performance  reasons,  it
+       is  possible  to  add  the  file  descriptor inside the epoll interface
+       (EPOLL_CTL_ADD) once by specifying (EPOLLIN|EPOLLOUT).  This allows you
+       to  avoid  continuously  switching between EPOLLIN and EPOLLOUT calling
+       epoll_ctl(2) with EPOLL_CTL_MOD.*/
 		if (epoll_ctl(this->epfd, EPOLL_CTL_ADD, fd, &ev) < 0)
 			throw("[ERROR]Failed to in epoll_ctl");
 		fcntl(fd, F_SETFL, O_NONBLOCK);
