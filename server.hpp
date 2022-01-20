@@ -26,35 +26,19 @@ private:
 	std::map<int, std::string> request_map;
 
 public:
-	void handle_client_event(int &clientfd, Conf &c);
-	void addfd(int fd, bool enable_et)
-	{
-		struct epoll_event ev;
-		memset(&ev, 0, sizeof(struct epoll_event));
-		ev.data.fd = fd;
-		ev.events = EPOLLIN; // | EPOLLET;
-		if (enable_et)
-			ev.events = EPOLLIN | EPOLLOUT;// | EPOLLET;// read edge-triggered let me think a while
-		/*When used as an edge-triggered interface, for performance  reasons,  it
-       is  possible  to  add  the  file  descriptor inside the epoll interface
-       (EPOLL_CTL_ADD) once by specifying (EPOLLIN|EPOLLOUT).  This allows you
-       to  avoid  continuously  switching between EPOLLIN and EPOLLOUT calling
-       epoll_ctl(2) with EPOLL_CTL_MOD.*/
-		if (epoll_ctl(this->epfd, EPOLL_CTL_ADD, fd, &ev) < 0)
-			throw("[ERROR]Failed to in epoll_ctl");
-		fcntl(fd, F_SETFL, O_NONBLOCK);
-		std::cout << "fd added to epoll" << std::endl;
-	}
+	void handle_client_event(int &clientfd);
+	void addfd(int fd, bool enable_et);
 	Server(Conf &web_conf);
-	~Server(){this->Close();}
+	~Server();
 	void Init();
-	void Close();
+	void Close(int &fd);
 	void Start(Conf &web_conf);
 	Server(Server const &src){*this = src;}
 	int get_listener(){return this->listener;}
 	int get_epfd(){return this->epfd;}
 	std::map<int, std::string> get_request_map(){return this->request_map;}
 	void acceptConnect();
+	void manage_event(struct epoll_event *events, int &epoll_event_count, std::map<int, std::string> &request_map);
 };
 
 /*ref : Level-triggered vs Edge-triggered
