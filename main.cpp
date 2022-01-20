@@ -29,29 +29,6 @@ void bind_and_listen(int &server_fd, struct sockaddr_in &address)
     }
 }
 
-std::string get_file(char *data, int i)
-{
-	std::string file(data, 1, i - 1);
-	return file;
-}
-
-/*
-**  extract client asked file name from buffer
-**  if no file, by default, file is "cute_cat.html"
-**  return (string)file name
-*/
-std::string get_client_file(char *buffer)
-{
-	std::string file("cute_cat.html");
-	char *data = strstr(buffer, "/" );
-	int i = 0;
-	while (data[i] && data[i] != ' ')
-		i++;
-	if (i != 1)
-		file = get_file(data, i);
-	return file;
-}
-
 /*
 **extract info from configuration file passed as scd argument
 **create and init socket, bind and listen, then exchange with user

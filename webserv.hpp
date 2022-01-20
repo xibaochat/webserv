@@ -28,7 +28,7 @@ using namespace std;
 class Client_Request;
 class Conf;
 
-
+std::string get_client_file(char *buffer);
 void extract_info_from_rest_buffer(Client_Request &o, char *buffer);
 Conf manage_config_file(int ac, char **av);
 std::string get_time();

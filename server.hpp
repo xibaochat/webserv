@@ -32,7 +32,7 @@ public:
 		struct epoll_event ev;
 		memset(&ev, 0, sizeof(struct epoll_event));
 		ev.data.fd = fd;
-		ev.events = EPOLLIN | EPOLLET;
+		ev.events = EPOLLIN; // | EPOLLET;
 		if (enable_et)
 			ev.events = EPOLLIN | EPOLLOUT;// | EPOLLET;// read edge-triggered let me think a while
 		/*When used as an edge-triggered interface, for performance  reasons,  it

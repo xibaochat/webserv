@@ -77,6 +77,35 @@ std::string get_status_nb_message(std::ifstream &myfile, std::string &file, Conf
 	return status_nb_message;
 }
 
+std::string get_file(char *data, int i)
+{
+	std::string file(data, 1, i - 1);
+	return file;
+}
+
+/*
+**  extract client asked file name from buffer
+**  if no file, by default, file is "cute_cat.html"
+**  return (string)file name
+*/
+std::string get_client_file(char *buffer)
+{
+	std::string file("cute_cat.html");
+	if (buffer)
+	{
+		char *data = strstr(buffer, "/" );
+		int i = 0;
+		if (data)
+		{
+			while (data[i] && data[i] != ' ')
+				i++;
+			if (i != 1)
+				file = get_file(data, i);
+		}
+	}
+	return file;
+}
+
 /*
 ** From fst line of buffer, extract info of method; client asked file; and status_code
 ** :param (Client_Request) obj: uninitialized obj

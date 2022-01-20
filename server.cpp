@@ -61,7 +61,7 @@ void Server::Start(Conf &web_conf)
 	while (1)
 	{
 		std::cout << YELLOW << "Looking for request\n" << NC;
-		int epoll_event_count = epoll_wait(this->epfd, events, EPOLL_SIZE, 100);
+		int epoll_event_count = epoll_wait(this->epfd, events, EPOLL_SIZE, 1000);
 		if (epoll_event_count < 0)
 		{
 			std::cerr << "[ERROR]epoll failure" << std::endl;
@@ -72,50 +72,61 @@ void Server::Start(Conf &web_conf)
 			std::cout << GREEN << "NO REQUEST\n" << NC;
 			continue;
 		}
-		else
-			// `epoll_event_count` will most likely always be equal to 1, since `epoll_wait`
-			// will return immediatly after receiving an event
-			std::cout << RED << "nb request " << epoll_event_count << "\n" << NC;
+		// else
+		// 	// `epoll_event_count` will most likely always be equal to 1, since `epoll_wait`
+		// 	// will return immediatly after receiving an event
+		// 	std::cout << RED << "nb request " << epoll_event_count << "\n" << NC;
 
 		for(int i = 0; i < epoll_event_count; i++)
 		{
+			// std::cout << "######### " << MAGENTA << "Start looping" << "\n" << NC;
 			int sockfd = events[i].data.fd;
 			uint32_t ev = events[i].events;
 
             // We receive a new request on the socket
 			// We accept it and store new the FD of the request in the epoll list
 			if (sockfd == this->listener)
+			{
+				std::cout << RED << "nb request " << epoll_event_count << "\n" << NC;
+				std::cout << "------------> " << MAGENTA << sockfd << "\n" << NC;
 				acceptConnect();
+			}
 			// Something went wrong with an already accepted request stored in the epoll list
 			else if (ev & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))/*err happened*/
 			{
 				epoll_ctl(this->epfd, EPOLL_CTL_DEL, sockfd, NULL);
 				close(sockfd);
-				std::cout << "QUIt+++++++++++++++++++++++++++++++\n";
+				this->request_map.erase(sockfd);
+				// std::cout << "QUIt+++++++++++++++++++++++++++++++\n";
 			}
 			// A request stored in the epoll list is now ready to receive a response
 			else if (ev & EPOLLIN)
 			{
-				std::cout << sockfd << "Starting to repond: `" << MAGENTA << sockfd << NC << "`\n" << endl;
+				// std::cout << sockfd << "Starting to repond: `" << MAGENTA << sockfd << NC
+						  // << "`\n" << endl;
 				handle_client_event(sockfd, web_conf);
 			}
 			else if (ev && EPOLLOUT)
 			{
 				struct epoll_event evv;
-				std::cout << RED << sockfd << "WRITING\n";
-				std::cout << this->get_request_map()[0] << "\n";
+				// std::cout << RED << sockfd << " WRITING\n";
 //				send_response(obj, clientfd);
-				const char *new_str = this->request_map[0].c_str();
-				std::cout << " new str len " << strlen(new_str) << "\n";
-				send(sockfd, new_str , strlen(new_str), 0);
-//				close(sockfd);
-//				epoll_ctl(this->epfd, EPOLL_CTL_DEL, sockfd, NULL);
-//				std::map<int, std::string>::iterator it = this->request_map.find(sockfd);
-//				this->request_map.erase(it);
+				std::map<int, std::string>::iterator it;
+				it = this->request_map.find(sockfd);
+				if (it != this->request_map.end())
+				{
+					const char *new_str = (*it).second.c_str();
+					send((*it).first, new_str , strlen(new_str), 0);
+
+					close(sockfd);
+					epoll_ctl(this->epfd, EPOLL_CTL_DEL, sockfd, NULL);
+					this->request_map.erase(sockfd);
+
+				}
+			}
 //				exit(0);
 			}
-			std::cout << YELLOW << "INSIDE BELOW\n" << NC;
-		}
+		// std::cout << YELLOW << "INSIDE BELOW\n" << NC;
 	}
 	this->Close();
 }
@@ -132,7 +143,7 @@ void Server::acceptConnect()
 	}
 	try
 	{
-		std::cout << "Adding new fd in list: `" << BLUE << clientfd << NC << "`\n" << endl;
+		// std::cout << "Adding new fd in list: `" << BLUE << clientfd << NC << "`\n" << endl;
 		this->addfd(clientfd, true);
 	}
 	catch(const char* e)
@@ -150,14 +161,15 @@ void Server::handle_client_event(int &clientfd, Conf &web_conf)
 	char buffer[max_nb];
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(clientfd, buffer, sizeof(buffer), 0);
-	std::cout << "STARTING HERE `" << clientfd << "`: \n" << buffer << "\n";
+	// std::cout << "STARTING HERE `" << clientfd << "`: \n" << buffer << "\n";
 	if (nb_read < 0)
         send_error_page(204, obj, web_conf, clientfd);
 	else
 	{
 		extract_info_from_first_line_of_buffer(obj, buffer, web_conf);
 		extract_info_from_rest_buffer(obj, buffer);
-		this->request_map[0] = response_str(obj);
+		request_map.insert(std::pair<int, std::string> (clientfd, response_str(obj)));
+
 		// 	send_response(obj, clientfd);
 		// 	close(clientfd);
 		// 	epoll_ctl(server.get_epfd(), EPOLL_CTL_DEL, clientfd, NULL);
