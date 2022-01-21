@@ -97,9 +97,7 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count, st
 		else if (ev & EPOLLIN)
 			this->handle_client_event(sockfd);
 		else if (ev && EPOLLOUT)/*send content to request*/
-		{
 			send_content_to_request(sockfd, request_map);
-		}
 	}
 }
 
