@@ -155,19 +155,18 @@ void Server::acceptConnect()
  */
 void Server::handle_client_event(int &request_fd)
 {
-	struct epoll_event ev;
 	Client_Request obj;
-	memset(&ev, 0, sizeof(struct epoll_event));
 	int max_nb = this->web_conf.get_max_size_request();
 	char buffer[max_nb];
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
+	std::cout << GREEN << buffer << NC << "\n";
 	if (nb_read < 0)
         send_error_page(204, obj, this->web_conf, request_fd);
 	else
 	{
 		extract_info_from_first_line_of_buffer(obj, buffer, this->web_conf);
 		extract_info_from_rest_buffer(obj, buffer);
-		request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
+		this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
 	}
 }

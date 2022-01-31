@@ -13,5 +13,6 @@ std::map<int, std::string> init_status_code_message_map()
     _map[410] = "410 Gone";
     _map[413] = "413 Request Entity Too Large";
     _map[500] = "500 Internal Server Error";
+	_map[503] = "503 Service Unavailable";
     return _map;
 }

@@ -55,25 +55,28 @@ void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &n
 }
 
 /*
-**check file is valid or not
+**check file is valid or not; by default, status_nb_message is "200 OK"in the constructor;
+**if file not exist, ->404; if exist but no open right, ->503; and from map to obtain
+**status error message
 **return (string)corresponding status maeeage
 */
 std::string get_status_nb_message(std::ifstream &myfile, std::string &file, Conf &web_conf)
 {
+	int status_code_nb = 200;
 	std::string status_nb_message;
-	std::map<int, std::string> error_code_message_map = init_status_code_message_map();
+	std::map<int, std::string> status_code_message_map = init_status_code_message_map();
 	myfile.open(file.c_str(), std::ios::in);
-	if (myfile.is_open())
+	if (access(file.c_str(), F_OK) != 0)//file does not exist
+		status_code_nb = 404;
+	//no right to open
+	else if (!myfile.is_open())
+		status_code_nb = 503;
+	if (status_code_nb != 200)
 	{
-		status_nb_message = "200 OK";
-		std::cout << "\nOK\n";
-	}
-	else
-	{
-		int status_code_nb = 404;
-		status_nb_message = error_code_message_map[status_code_nb];
 		open_file(myfile, web_conf.get_conf_err_page_map()[status_code_nb]);
+		cout << web_conf.get_conf_err_page_map()[status_code_nb] << "\n";
 	}
+	status_nb_message = status_code_message_map[status_code_nb];
 	return status_nb_message;
 }
 

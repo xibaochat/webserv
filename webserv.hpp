@@ -101,7 +101,7 @@ private:
 	std::string total_line;
 	std::map<std::string, std::string> client_request;
 public:
-	Client_Request():method(""), file(""), status_code(""), total_nb(0), total_line(""){}
+	Client_Request():method(""), file(""), status_code("200 OK"), total_nb(0), total_line(""){}
 	~Client_Request(){};
 	Client_Request(Client_Request const &src){*this = src;}
 	Client_Request &operator=(Client_Request const &src)
