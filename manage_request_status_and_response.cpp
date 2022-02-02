@@ -118,7 +118,8 @@ void manage_executable_file(Client_Request &obj)
 		std::cout << ret << "\n";
 		free(arr[0]);
 		free(arr[1]);
-		exit(0);
+		obj.set_total_nb(ret.length());
+		obj.set_total_line(ret);
 	}
 }
 
@@ -146,8 +147,4 @@ void manage_request_status(Client_Request &obj, Conf &web_conf)
 	{
 		manage_executable_file(obj);
 	}
-
-
-
-
 }
