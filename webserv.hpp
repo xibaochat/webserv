@@ -15,6 +15,8 @@
 #include <vector>
 #include <ctime>
 #include <algorithm>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define GREEN       "\033[33;32m"
 #define YELLOW      "\033[33;33m"
@@ -41,7 +43,9 @@ void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_
 
 std::map<int, std::string> init_status_code_message_map();
 
-void open_file(std::ifstream &s, std::string pathOA);
+void open_file(std::ifstream &s, std::string path);
+void manage_request_status(Client_Request &obj, Conf &web_conf);
+
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
 
 void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &new_socket);
@@ -96,33 +100,41 @@ class Client_Request
 private:
 	std::string method;
 	std::string file;
-	std::string status_code;
+	std::string f_extension;
+	int 		status_code_nb;
+	std::string status_code_message;
 	unsigned long total_nb;
 	std::string total_line;
 	std::map<std::string, std::string> client_request;
 public:
-	Client_Request():method(""), file(""), status_code("200 OK"), total_nb(0), total_line(""){}
+	Client_Request():method("GET"), file(""), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), total_line(""){}
 	~Client_Request(){};
 	Client_Request(Client_Request const &src){*this = src;}
 	Client_Request &operator=(Client_Request const &src)
 	{
 		this->method = src.method;
 		this->file = src.file;
-		this->status_code = src.status_code;
+		this->f_extension = src.f_extension;
+		this->status_code_nb = src.status_code_nb;
+		this->status_code_message = src.status_code_message;
 		this->total_nb = src.total_nb;
 		this->total_line = src.total_line;
 		return *this;
 	}
 	std::string get_client_method(){return this->method;}
 	std::string get_client_ask_file(){return this->file;}
-	std::string get_status_code(){return this->status_code;}
+	std::string get_file_extension(){return this->f_extension;}
+	int get_status_code_nb(){return this->status_code_nb;}
+	std::string get_status_code_message(){return this->status_code_message;}
 	unsigned long get_total_nb(){return this->total_nb;}
 	std::string get_total_line(){return this->total_line;}
 	std::map<std::string, std::string> get_client_request_map(){return client_request;}
 
 	void set_client_method(std::string &src){this->method = src;}
 	void set_client_file(std::string &src){this->file = src;}
-	void set_status_code(std::string &src){this->status_code = src;}
+	void set_file_extension(std::string src){this->f_extension = src;}
+	void set_status_code_nb(int src){this->status_code_nb = src;}
+	void set_status_code_message(std::string &src){this->status_code_message = src;}
 	void set_total_nb(unsigned long src){this->total_nb = src;}
 	void set_total_line(std::string &src){this->total_line = src;}
 	void set_client_request_map(std::map<std::string, std::string> src)

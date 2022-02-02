@@ -1,27 +1,5 @@
 #include "webserv.hpp"
 
-void open_file(std::ifstream &myfile, std::string path)
-{
-	myfile.open(path.c_str(), std::ios::in);
-}
-
-/*
-** read user asked file, and store total length and content
-*/
-void set_length_and_content(std::ifstream &myfile, Client_Request &obj)
-{
-	std::string line;
-	std::string content_page;
-	while (getline(myfile, line))
-	{
-		line += "\n";
-		content_page += line;
-	}
-	obj.set_total_nb(content_page.length());
-	obj.set_total_line(content_page);
-	myfile.close();
-}
-
 void send_response(Client_Request &obj, int &new_socket)
 {
 	std::string response = response_str(obj);
@@ -50,34 +28,8 @@ void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &n
 	set_length_and_content(ss, obj);
 	error_code_message_map = init_status_code_message_map();
 	status_nb_message = error_code_message_map[error_code] + "\r\n";
-	obj.set_status_code(status_nb_message);
+	obj.set_status_code_message(status_nb_message);
 	send_response(obj, new_socket);
-}
-
-/*
-**check file is valid or not; by default, status_nb_message is "200 OK"in the constructor;
-**if file not exist, ->404; if exist but no open right, ->503; and from map to obtain
-**status error message
-**return (string)corresponding status maeeage
-*/
-std::string get_status_nb_message(std::ifstream &myfile, std::string &file, Conf &web_conf)
-{
-	int status_code_nb = 200;
-	std::string status_nb_message;
-	std::map<int, std::string> status_code_message_map = init_status_code_message_map();
-	myfile.open(file.c_str(), std::ios::in);
-	if (access(file.c_str(), F_OK) != 0)//file does not exist
-		status_code_nb = 404;
-	//no right to open
-	else if (!myfile.is_open())
-		status_code_nb = 503;
-	if (status_code_nb != 200)
-	{
-		open_file(myfile, web_conf.get_conf_err_page_map()[status_code_nb]);
-		cout << web_conf.get_conf_err_page_map()[status_code_nb] << "\n";
-	}
-	status_nb_message = status_code_message_map[status_code_nb];
-	return status_nb_message;
 }
 
 std::string get_file(char *data, int i)
@@ -117,48 +69,9 @@ std::string get_client_file(char *buffer)
 //extract method; client asked file; and status_code of file(file valid?)
 void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf)
 {
-	std::ifstream myfile;
 	char *ptr = strstr(buffer, " ");//GET , POST ?
 	std::string method(buffer, 0, ptr - buffer);
 	obj.set_client_method(method);
 	std::string file = get_client_file(buffer);//the file client ask
 	obj.set_client_file(file);
-	std::string status_nb_message = get_status_nb_message(myfile, file, web_conf);//file valid?
-	obj.set_status_code(status_nb_message);
-	set_length_and_content(myfile, obj);//even if not valid, we send 404.html
-}
-
-/*
-**main part of programme, accept and recv info, and then extract info from buffer
-**store them to structure Client_Request obj, send response to client
-*/
-void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_conf)
-{
-	std::cout << "\n+++++++ Waiting for new connection ++++++++" << std::endl << std::endl;
-	Client_Request obj;
-	int new_socket;
-	int addrlen = sizeof(address);
-	int max_nb = web_conf.get_max_size_request();
-	char buffer[max_nb];
-	memset(buffer, 0, max_nb);
-	if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
-	{
-		//need to send as a file to browser
-		perror("In accept");
-		return ;
-	}
-	long nb_read = recv(new_socket, buffer, sizeof(buffer), 0);
-	if (nb_read < 0)
-	{
-		send_error_page(204, obj, web_conf, new_socket);
-		close(new_socket);
-		return ;
-	}
-	std::cout << "[buffer]" << GREEN << buffer << NC << std::endl;
-	extract_info_from_first_line_of_buffer(obj, buffer, web_conf);
-	extract_info_from_rest_buffer(obj, buffer);
-
-	obj.display_client_request();
-	send_response(obj, new_socket);
-	close(new_socket);
 }

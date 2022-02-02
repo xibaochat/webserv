@@ -79,7 +79,9 @@ void extract_info_from_rest_buffer(Client_Request &obj, char *buffer)
 	}
 	header["method"] = obj.get_client_method();
 	header["file"] = obj.get_client_ask_file();
-	header["status_code"] = obj.get_status_code();
+	header["status_code_nb"] = std::to_string(obj.get_status_code_nb());
+	header["status_code_message"] = obj.get_status_code_message();
+	header["extension"] = obj.get_file_extension();
 	std::ostringstream ss;
 	ss << obj.get_total_nb();
 	header["total_nb"] = ss.str();
