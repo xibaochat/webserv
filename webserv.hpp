@@ -106,6 +106,7 @@ private:
 	unsigned long total_nb;
 	std::string total_line;
 	std::map<std::string, std::string> client_request;
+	std::map<std::string, std::string> cgi_output;
 public:
 	Client_Request():method("GET"), file(""), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), total_line(""){}
 	~Client_Request(){};
@@ -128,7 +129,8 @@ public:
 	std::string get_status_code_message(){return this->status_code_message;}
 	unsigned long get_total_nb(){return this->total_nb;}
 	std::string get_total_line(){return this->total_line;}
-	std::map<std::string, std::string> get_client_request_map(){return client_request;}
+	std::map<std::string, std::string> get_client_request_map(){return this->client_request;}
+	std::map<std::string, std::string> get_cgi_output_map(){return this->cgi_output;}
 
 	void set_client_method(std::string &src){this->method = src;}
 	void set_client_file(std::string &src){this->file = src;}
@@ -137,9 +139,13 @@ public:
 	void set_status_code_message(std::string &src){this->status_code_message = src;}
 	void set_total_nb(unsigned long src){this->total_nb = src;}
 	void set_total_line(std::string &src){this->total_line = src;}
-	void set_client_request_map(std::map<std::string, std::string> src)
+	void set_client_request_map(std::map<std::string, std::string> &src)
 	{
 		this->client_request = src;
+	}
+	void set_cgi_output_map(std::map<std::string, std::string> src)
+	{
+		this->cgi_output = src;
 	}
 	void display_client_request()
 	{

@@ -1,5 +1,34 @@
 #include "webserv.hpp"
 
+void store_header_key_value_in_map(std::string &header_line, std::map<std::string, std::string> &header_map)
+{
+	size_t i = header_line.find(":");
+	std::string header = header_line.substr(0, i);
+	header_map[header] = header_line.erase(0, i + 1);
+}
+
+std::map<std::string, std::string> extract_header_from_str(std::string &str)
+{
+	std::map<std::string, std::string> header_map;
+    std::string delimiter = "\r\n";
+
+    size_t pos = 0;
+    std::string header_line;
+    while ((pos = str.find(delimiter)) != std::string::npos)
+	{
+		if (!pos)
+		{
+			str.erase(0, pos + delimiter.length());
+			continue ;
+		}
+		header_line = str.substr(0, pos);
+		//extract header and value then store them in a map
+		store_header_key_value_in_map(header_line, header_map);
+        str.erase(0, pos + delimiter.length());
+    }
+	return header_map;
+}
+
 void open_file(std::ifstream &myfile, std::string path)
 {
     myfile.open(path.c_str(), std::ios::in);
@@ -95,6 +124,7 @@ void manage_executable_file(Client_Request &obj)
 	int status;
 	int link[2];
 	char *arr[3];
+	std::map<std::string, std::string> f_header_map;
 	arr[0] = strdup("/usr/bin/python3");
 	arr[1] = strdup(obj.get_client_ask_file().c_str());
 	arr[2] = NULL;
@@ -118,8 +148,13 @@ void manage_executable_file(Client_Request &obj)
 		std::cout << ret << "\n";
 		free(arr[0]);
 		free(arr[1]);
+		//tract header and its value from output of the file
+		f_header_map = extract_header_from_str(ret);
+		obj.set_cgi_output_map(f_header_map);
+		//after extract, ret is only content without header
 		obj.set_total_nb(ret.length());
 		obj.set_total_line(ret);
+
 	}
 }
 
