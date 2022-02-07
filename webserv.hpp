@@ -18,13 +18,14 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+
 #define GREEN       "\033[33;32m"
 #define YELLOW      "\033[33;33m"
 #define RED         "\033[33;31m"
 #define MAGENTA     "\e[95m"
 #define BLUE        "\033[1;34m"
 #define NC          "\033[0m"
-
+#define ERR_SEND  "Something went wrong when sending response"
 
 using namespace std;
 class Client_Request;
@@ -43,7 +44,7 @@ void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_
 
 std::map<int, std::string> init_status_code_message_map();
 
-void open_file(std::ifstream &s, std::string path);
+int open_file(std::ifstream &s, std::string path);
 void manage_request_status(Client_Request &obj, Conf &web_conf);
 
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);

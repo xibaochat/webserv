@@ -29,11 +29,13 @@ std::string response_str(Client_Request &obj)
 	std::map<std::string, std::string> cgi_output = obj.get_cgi_output_map();
 	std::string res("HTTP/1.1 ");
 	res += obj.get_status_code_message();
+	res += "\r\n";
 	response_header["Connection"] = "keep-alive";
 	response_header["Content-Type"] = get_file_type(obj);
 	response_header["Date"] = get_time();
 	response_header["Server"] = "nginx/1.18.0 (Ubuntu)";
 	response_header["Transfer-Encoding"] = "identity";
+
 	//ecrazer the map frommcgi ouput
 	for (std::map<std::string, std::string>::iterator it=cgi_output.begin(); it!=cgi_output.end(); ++it)
 	{

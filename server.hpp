@@ -39,6 +39,7 @@ public:
 	std::map<int, std::string> get_request_map(){return this->request_map;}
 	void acceptConnect();
 	void manage_event(struct epoll_event *events, int &epoll_event_count, std::map<int, std::string> &request_map);
+	void send_content_to_request(int &fd);
 };
 
 /*ref : Level-triggered vs Edge-triggered

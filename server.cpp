@@ -52,17 +52,17 @@ Server::~Server()
 	close(this->epfd);
 }
 
-void send_content_to_request(int &request_fd, std::map<int, std::string> &request_map)
+void Server::send_content_to_request(int &request_fd)
 {
 	std::map<int, std::string>::iterator it;
-	it = request_map.find(request_fd);
+	it = this->request_map.find(request_fd);
 	if (it != request_map.end())
 	{
 		const char *new_str = (*it).second.c_str();
-		send((*it).first, new_str , strlen(new_str), 0);
-		close(request_fd);
-		request_map.erase(request_fd);
+		if (send((*it).first, new_str, strlen(new_str), 0) < 0)
+			std::cout << RED << ERR_SEND << NC << std::endl;
 	}
+	this->Close(request_fd);
 }
 /*loop for each event, manage the cas: new request(add request fd to epoll interest list);
   error or interrupt(close fd); read the request(read from buffer and store reponse in map);
@@ -87,7 +87,7 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count, st
 			}
 			catch(const char *s)
 			{
-					std::cerr << s << std::endl;
+				std::cerr << s << std::endl;
 			}
 		}
 		/* sth went wrong in the epoll monitoring list*/
@@ -97,7 +97,7 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count, st
 		else if (ev & EPOLLIN)
 			this->handle_client_event(sockfd);
 		else if (ev && EPOLLOUT)/*send content to request*/
-			send_content_to_request(sockfd, request_map);
+			this->send_content_to_request(sockfd);
 	}
 }
 
@@ -112,7 +112,10 @@ void Server::Start(Conf &web_conf)
 		int epoll_event_count = epoll_wait(this->epfd, events, EPOLL_SIZE, 1000);
 		/*err manage*/
 		if (epoll_event_count < 0)
-			throw("[ERROR]epoll failure");
+		{
+			std::cout << RED << "epoll_wait error occurs" << NC << std::endl;
+			continue ;
+		}
 		if (epoll_event_count == 0)
 		{
 			std::cout << GREEN << "NO REQUEST\n" << NC;
@@ -161,7 +164,7 @@ void Server::handle_client_event(int &request_fd)
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
 	std::cout << GREEN << buffer << NC << "\n";
-	if (nb_read < 0)
+	if (nb_read <= 0)
 	{
         send_error_page(204, obj, this->web_conf, request_fd);
 		this->Close(request_fd);
