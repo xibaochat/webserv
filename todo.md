@@ -14,7 +14,7 @@ every feature is working during evaluation.
 <!-- * add error management when opening HTTP error HTML templates -->
 <!-- * manage return value for `send` in `send_content_to_request` -->
 <!-- * add  `this->Close(request_fd)` in `send_content_to_request` -->
-* what are `compilation re-link issues` ?
+<!-- * what are `compilation re-link issues` ? -->
 * validate `HTTP status code` for:
   - file permission error
   - file does not exist (CGI & static html)

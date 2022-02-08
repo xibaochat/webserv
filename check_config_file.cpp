@@ -35,7 +35,7 @@ void open_conf(int ac, char **av, std::ifstream &file)
 void remove_fst_white_space(std::string &line)
 {
 	std::size_t i = 0;
-	while (line[i] && line[i] == ' ')
+	while (line[i] && (line[i] == ' ' || line[i] == 9))
 		i++;
 	if (i)
 		line.erase(0, i);
@@ -72,7 +72,7 @@ void show_err_message_and_quite(std::string message)
 bool invalid_key(std::string &elem)
 {
 	std::vector<std::string>::iterator it;
-	std::string arr[] = {"port", "server_name", "max_size_request", "error_page"};
+	std::string arr[] = {"port", "root", "server_name", "max_size_request", "error_page"};
     std::vector<std::string> key_vec(arr, arr + sizeof(arr)/ sizeof(std::string));
 	if ((it = std::find(key_vec.begin(), key_vec.end(), elem)) == key_vec.end())
 		return true;
@@ -187,7 +187,7 @@ void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec)
 			line.erase(0, end + 1);
 		}
 		if (has_extra_elem_in_line(key, i))
-			show_err_message_and_quite("extra info in the line of " + key);
+			show_err_message_and_quite("Starting webserver: failed because of " + key + " in the configuration");
 	}
 }
 
@@ -281,6 +281,21 @@ void manage_server_name(std::vector<std::string> &vec, Conf &web_conf)
 	exit(EXIT_FAILURE);
 }
 
+
+void manage_root(std::vector<std::string> &vec, Conf &web_conf)
+{
+	std::vector<string>::iterator it;
+	if ((it = std::find(vec.begin(), vec.end(), "root")) != vec.end())
+	{
+		if ((it + 1) != vec.end())
+		{
+			web_conf.set_root((*(it + 1)));
+			vec.erase(it, it + 2);
+			return ;
+		}
+	}
+}
+
 /*
 ** Check the path of error page can be opened or not
 ** param: (std::string)path_file : the path of error page
@@ -364,6 +379,7 @@ Conf manage_config_file(int ac, char **av)
 	store_elem_in_vec(file, vec);
 	manage_port(vec, web_conf);
 	manage_server_name(vec, web_conf);
+	manage_root(vec, web_conf);
 	manage_max_size_request(vec, web_conf);
 	set_err_page_map(vec, web_conf);
 	file.close();

@@ -61,8 +61,9 @@ void Server::send_content_to_request(int &request_fd)
 		const char *new_str = (*it).second.c_str();
 		if (send((*it).first, new_str, strlen(new_str), 0) < 0)
 			std::cout << RED << ERR_SEND << NC << std::endl;
+		this->Close(request_fd);
 	}
-	this->Close(request_fd);
+
 }
 /*loop for each event, manage the cas: new request(add request fd to epoll interest list);
   error or interrupt(close fd); read the request(read from buffer and store reponse in map);
@@ -144,11 +145,12 @@ void Server::addfd(int fd, bool enable_et)
 
 /*create a new fd and add to the interest list
  */
-void Server::acceptConnect()
+void Server::acceptConnect(int fd)
 {
 	struct sockaddr_in client_address;
 	int addrlen = sizeof(struct sockaddr_in);
-	int request_fd = accept(this->listener, (struct sockaddr *)&client_address, (socklen_t*)&addrlen);
+//	int request_fd = accept(this->listener, (struct sockaddr *)&client_address, (socklen_t*)&addrlen);
+	int request_fd = accept(fd, (struct sockaddr *)&client_address, (socklen_t*)&addrlen);
 	if (request_fd < 0)
 		throw("[ERROR]accpet failure");
 	this->addfd(request_fd, true);

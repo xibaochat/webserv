@@ -8,15 +8,9 @@ CC = clang++
 
 CFLAGS = #-Wall -Wextra -Werror -std=c++98
 
-all: $(NAME)
-#@$(CC) $(CFLAGS) $(SRC) -c
-#	@$(CC) $(OBJ) -o $(NAME)
-
-
-$(NAME):
+all:
 	@$(CC) $(CFLAGS) $(SRC) -c
 	@$(CC) $(OBJ) -o $(NAME)
-
 
 clean:
 	@/bin/rm -f $(OBJ)

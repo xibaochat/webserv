@@ -84,5 +84,7 @@ void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, C
 	std::string method(buffer, 0, ptr - buffer);
 	obj.set_client_method(method);
 	std::string file = get_client_file(buffer);//the file client ask
+	file = web_conf.get_root() + "/" + file;
+	std::cout << "file demande est " << file << "\n";
 	obj.set_client_file(file);
 }
