@@ -21,3 +21,4 @@ fclean: clean
 	@/bin/rm -f *#
 
 re: fclean all
+.PHONY: all clean fclean re

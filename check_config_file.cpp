@@ -35,7 +35,7 @@ void open_conf(int ac, char **av, std::ifstream &file)
 void remove_fst_white_space(std::string &line)
 {
 	std::size_t i = 0;
-	while (line[i] && line[i] == ' ')
+	while (line[i] && (line[i] == ' ' || line[i] == 9))
 		i++;
 	if (i)
 		line.erase(0, i);
@@ -72,7 +72,7 @@ void show_err_message_and_quite(std::string message)
 bool invalid_key(std::string &elem)
 {
 	std::vector<std::string>::iterator it;
-	std::string arr[] = {"port", "server_name", "max_size_request", "error_page"};
+	std::string arr[] = {"listen", "server_name", "max_size_request", "error_page", "location"};
     std::vector<std::string> key_vec(arr, arr + sizeof(arr)/ sizeof(std::string));
 	if ((it = std::find(key_vec.begin(), key_vec.end(), elem)) == key_vec.end())
 		return true;
@@ -111,9 +111,7 @@ void check_key_validity(std::string elem, std::vector<std::string> &vec)
 	std::vector<std::string>::iterator it;
 
 	if (invalid_key(elem))
-		show_err_message_and_quite("Key word" + elem + " in file is invalid");
-	if (repeated_key(elem, vec))
-		show_err_message_and_quite("Repeated key:" + elem + " in conf file");
+		show_err_message_and_quite("Key word " + elem + " in file is invalid");
 }
 
 bool repeated_status_code(std::string &elem, std::vector<std::string> &vec)
@@ -159,21 +157,29 @@ std::string extract_word_from_line(int &end, std::string &line)
 */
 bool has_extra_elem_in_line(std::string &key, int &i)
 {
+	if (key == "location")
+		return false;
 	if ((key == "error_page" && i != 3) || ((key != "error_page") && i != 2))
+	{
+		cout << YELLOW << key << " " << i << NC << "\n";
 		return true;
+	}
 	return false;
 }
 
-void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec)
+void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::map<std::string, std::string> &m)
 {
 	std::string line, key, elem;
 	int end = 0;
 
 	while (getline(file, line))
 	{
+		if (line == "")
+			continue;
 		int i = 0;
 		while(line.length() > 0)
 		{
+			cout << line << " :" << i << "\n";
 			i++;
 			elem = extract_word_from_line(end, line);
 			if (i == 1) // check key in the white list or not
@@ -181,13 +187,19 @@ void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec)
 				check_key_validity(elem, vec);
 				key = elem;
 			}
+			if (key == "location")
+			{
+				cout << BLUE << line << NC << "\n";
+				manage_root(file, line, m);
+				break;
+			}
 			if (key == "error_page")
 				check_line_error_page(i, elem, vec);
 			vec.push_back(elem);
 			line.erase(0, end + 1);
 		}
 		if (has_extra_elem_in_line(key, i))
-			show_err_message_and_quite("extra info in the line of " + key);
+			show_err_message_and_quite("Starting webserver: failed because of " + key + " in the configuration");
 	}
 }
 
@@ -244,7 +256,7 @@ int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 void manage_port(std::vector<std::string> &vec, Conf &web_conf)
 {
 	std::vector<std::string>::iterator it;
-	std::string key("port");
+	std::string key("listen");
 	int nb_port = manage_key_correspond_value(key, vec);
 	web_conf.set_port(nb_port);
 }
@@ -279,6 +291,71 @@ void manage_server_name(std::vector<std::string> &vec, Conf &web_conf)
 	}
 	std::cout << "Invalide serve name in conf" << std::endl;
 	exit(EXIT_FAILURE);
+}
+
+std::string get_location_path(std::string &line)
+{
+	int end = 0;
+	int i = 0;
+	std::string elem, path;
+	while (line.length() > 0)
+	{
+		elem = extract_word_from_line(end, line);
+		if (i == 1)
+			path = elem;
+		if (i == 2 && elem != "{")
+			show_err_message_and_quite("[Error]Wrong format in location in config file");
+		line.erase(0, end + 1);
+		i++;
+	}
+	if (i != 3)
+		show_err_message_and_quite("[Error]Wrong format in location in config file");
+	return path;
+}
+
+std::string get_root(std::string &line)
+{
+	int end = 0;
+	int i = 0;
+	std::string elem, path;
+	while (line.length() > 0)
+	{
+		elem = extract_word_from_line(end, line);
+		if (i == 1)
+			path = elem;
+		line.erase(0, end + 1);
+		i++;
+	}
+	std::string::size_type pos = path.find(';');
+    if (pos != std::string::npos)
+        path =  path.substr(0, pos);
+	if (i != 2)
+		show_err_message_and_quite("[Error]Wrong format in location in config file");
+	return path;
+}
+
+void manage_root(std::ifstream &file, std::string &line, std::map<std::string, std::string> &m)
+{
+	int end = 0;
+	int i = 0;
+	std::string elem, path, root;
+
+	std::cout << YELLOW << line << NC << "\n";
+	path = get_location_path(line);
+	while (getline(file, line))
+	{
+		i = 0;
+		if (line == "")
+			break;
+		if (line == "}")
+			continue;
+		elem = extract_word_from_line(end, line);
+		if (elem == "location")
+			path = get_location_path(line);
+		else if (elem == "root")
+			root = get_root(line);
+		m[path] = root;
+	}
 }
 
 /*
@@ -358,10 +435,12 @@ Conf manage_config_file(int ac, char **av)
 	std::ifstream file;
 	std::string conf_file;
 	std::vector<std::string>::iterator it;
+	std::map<std::string, std::string> m;
 
 	// Conf extraction
 	open_conf(ac, av, file);//can open file?
-	store_elem_in_vec(file, vec);
+	store_elem_in_vec(file, vec, m);
+	web_conf.set_root(m);
 	manage_port(vec, web_conf);
 	manage_server_name(vec, web_conf);
 	manage_max_size_request(vec, web_conf);

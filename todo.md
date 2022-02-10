@@ -9,12 +9,12 @@ every feature is working during evaluation.
 # Correction
 
 * OSX only ?
-* make sure we always remove request fd from epoll list when an error occured:
-	add `this->Close(request_fd)` inside `send_error_page` function
-* add error management when opening HTTP error HTML templates
-* manage return value for `send` in `send_content_to_request`
-* add  `this->Close(request_fd)` in `send_content_to_request`
-* what are `compilation re-link issues` ?
+<!-- * make sure we always remove request fd from epoll list when an error occured: -->
+<!-- 	add `this->Close(request_fd)` inside `send_error_page` function() -->
+<!-- * add error management when opening HTTP error HTML templates -->
+<!-- * manage return value for `send` in `send_content_to_request` -->
+<!-- * add  `this->Close(request_fd)` in `send_content_to_request` -->
+<!-- * what are `compilation re-link issues` ? -->
 * validate `HTTP status code` for:
   - file permission error
   - file does not exist (CGI & static html)
@@ -28,7 +28,7 @@ every feature is working during evaluation.
 	  -> if does not apply to headers : what is the beahvior with 1 billion headers
 * have a dynamic buffer when reading request (may be influence by previous bullet point)
 * manage routes configuration:
-  - add alterntaives directories for specific routes
+  <!-- - add alterntaives directories for specific routes -->
   - limit request type (`POST`, `GET`...)
   - turn on or off directory listing
   - define an HTTP redirection

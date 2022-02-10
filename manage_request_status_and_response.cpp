@@ -29,9 +29,12 @@ std::map<std::string, std::string> extract_header_from_str(std::string &str)
 	return header_map;
 }
 
-void open_file(std::ifstream &myfile, std::string path)
+int open_file(std::ifstream &myfile, std::string path)
 {
     myfile.open(path.c_str(), std::ios::in);
+	if (!myfile.is_open())
+		return 1;
+	return 0;
 }
 
 /*
@@ -68,16 +71,24 @@ void set_request_status_nb_message(int status_nb, Client_Request &obj)
 	obj.set_status_code_message(status_nb_message);
 }
 
-int manage_extension_err_status(Client_Request &obj)
+//if it is not python, ex:php && file exist, status code is 501
+int manage_cgi_based_file(Client_Request &obj)
 {
-	std::string f_extension_list[8]={"py", "html", "css", "png", "bmp", "js", "jpeg", "jpg"};
+	std::string f_extension_list[1]={"php"};
+	//"html", "css", "png", "bmp", "js", "jpeg", "jpg"};
 	std::string file = obj.get_client_ask_file();
 	std::string extension = file.substr(file.find_last_of(".") + 1);
 	obj.set_file_extension(extension);
-	if (extension_is_not_exist(f_extension_list, extension, 8))
+	if (!extension_is_not_exist(f_extension_list, extension, 1))
 	{
-		obj.set_status_code_nb(501);
-		set_request_status_nb_message(501, obj);
+		std::ifstream fs;
+		fs.open(file.c_str());
+		if (fs.is_open())
+		{
+			obj.set_status_code_nb(501);
+			set_request_status_nb_message(501, obj);
+			fs.close();
+		}
 		return (1);
 	}
 	return (0);
@@ -86,12 +97,22 @@ int manage_extension_err_status(Client_Request &obj)
 int file_not_exist(Client_Request &obj)
 {
 	std::string file = obj.get_client_ask_file();
-	if (access(file.c_str(), F_OK) != 0)
+	cout << MAGENTA << file << NC << endl;
+	// if (access(file.c_str(), F_OK) != 0)
+	// {
+	// 	obj.set_status_code_nb(404);
+	// 	set_request_status_nb_message(404, obj);
+	// 	return (1);
+	// }
+	fstream fileStream;
+	fileStream.open(file);
+	if (fileStream.fail())
 	{
-		obj.set_status_code_nb(404);
-		set_request_status_nb_message(404, obj);
-		return (1);
+		cout << "fail??\n";
+		return 1;
 	}
+    // file could not be open
+	cout << MAGENTA << "exist??" << NC << endl;
 	return (0);
 }
 
@@ -242,12 +263,24 @@ void manage_executable_file(Client_Request &obj)
 void manage_request_status(Client_Request &obj, Conf &web_conf)
 {
 	std::ifstream myfile;
-	//error file
-	if (manage_extension_err_status(obj) || file_not_exist(obj) || file_no_permission(obj))
+	int ret = 0;
+	/*error file, if error html in Conf cannot be open and read, we send a static error
+	 message */
+	if (file_not_exist(obj) || manage_cgi_based_file(obj) || file_no_permission(obj))
 	{
 		int status_code_nb = obj.get_status_code_nb();
-		open_file(myfile, web_conf.get_conf_err_page_map()[status_code_nb]);
-        set_length_and_content(myfile, obj);
+		ret = open_file(myfile, web_conf.get_conf_err_page_map()[status_code_nb]);
+		if (ret)
+		{
+			std::string str("Error 404 : Not Found");
+			obj.set_status_code_nb(404);
+			set_request_status_nb_message(404, obj);
+			obj.set_total_nb(str.length());
+			obj.set_total_line(str);
+			myfile.close();
+		}
+		else
+			set_length_and_content(myfile, obj);
 	}
 	//readable file
 	else if (file_is_text_based(obj.get_file_extension()))
