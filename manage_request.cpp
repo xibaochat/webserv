@@ -45,7 +45,7 @@ void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &n
 
 std::string get_file(char *data, int i)
 {
-	std::string file(data, 1, i - 1);
+	std::string file(data, 0, i);
 	return file;
 }
 
@@ -56,7 +56,7 @@ std::string get_file(char *data, int i)
 */
 std::string get_client_file(char *buffer)
 {
-	std::string file("cute_cat.html");
+	std::string file;
 	if (buffer)
 	{
 		char *data = strstr(buffer, "/" );
@@ -66,7 +66,7 @@ std::string get_client_file(char *buffer)
 			while (data[i] && data[i] != ' ')
 				i++;
 			if (i != 1)
-				file = get_file(data, i);
+				file += get_file(data, i);
 		}
 	}
 	return file;
@@ -80,11 +80,11 @@ std::string get_client_file(char *buffer)
 //extract method; client asked file; and status_code of file(file valid?)
 void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf)
 {
+	std::map<std::string, std::string> loc_root = web_conf.get_root();
 	char *ptr = strstr(buffer, " ");//GET , POST ?
 	std::string method(buffer, 0, ptr - buffer);
 	obj.set_client_method(method);
 	std::string file = get_client_file(buffer);//the file client ask
-	file = web_conf.get_root() + "/" + file;
-	std::cout << "file demande est " << file << "\n";
+	std::cout << BLUE << "[ORIGIN]" << file << NC << endl;
 	obj.set_client_file(file);
 }

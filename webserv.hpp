@@ -31,6 +31,7 @@ using namespace std;
 class Client_Request;
 class Conf;
 
+std::string extract_word_from_line(int &end, std::string &line);
 std::string get_client_file(char *buffer);
 void extract_info_from_rest_buffer(Client_Request &o, char *buffer);
 Conf manage_config_file(int ac, char **av);
@@ -51,18 +52,18 @@ void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
 
 void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &new_socket);
 void send_response(Client_Request &obj, int &new_socket);
-
+void manage_root(std::ifstream &file, std::string &line, std::map<std::string, std::string> &m);
 //contain port, server_name, all err page
 class Conf
 {
 private:
 	int port;
-	std::string root;
+	std::map<std::string, std::string> root;
 	int max_size_request;
 	std::string server_name;
 	std::map<int, std::string>conf_map;//status code, error_page_path
 public:
-	Conf():port(0), max_size_request(3000), server_name(""){root = std::string(getcwd(NULL, 0));}
+	Conf():port(0), max_size_request(3000), server_name(""){}
 	~Conf(){};
 	Conf(Conf const &s){*this = s;}
 	Conf &operator=(Conf const &src)
@@ -76,7 +77,7 @@ public:
 	}
 	void manage_item_value(std::string &item, std::vector<std::string> &vec);
 	int get_port()const {return port;}
-	std::string get_root() const{return this->root;}
+	std::map<std::string, std::string> get_root() const{return this->root;}
 	int get_max_size_request() const{return max_size_request;}
 	std::string get_server_name() const {return server_name;}
 	std::map<int, std::string> get_conf_err_page_map() const
@@ -85,19 +86,21 @@ public:
 	}
 	void set_max_size_request(int n){this->max_size_request = n;}
 	void set_port(int port){this->port = port;}
-	void set_root(std::string r){this->root = r;}
+	void set_root(std::map<std::string, std::string>&r){this->root = r;}
 	void set_server_name(std::string f){this->server_name = f;}
 	void set_config_map(std::map<int, std::string> src){
 		this->conf_map = src;}
 	void display_conf_file_debug()
 	{
 		std::cout << "port " << this->get_port() << std::endl;
-		std::cout << "root " << this->get_root() << std::endl;
-		std::cout << "max_size_request " << this->get_max_size_request() << std::endl;
+			std::cout << "max_size_request " << this->get_max_size_request() << std::endl;
 		std::cout << "server_name " << this->get_server_name() << std::endl;
 		std::map<int, std::string> mymap = this->get_conf_err_page_map();
 		for (std::map<int, std::string>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
 			std::cout << "status code: " << it->first << " corresponding page path" << " => " << it->second<< std::endl;
+		std::map<std::string, std::string> m = this->get_root();
+		for (std::map<std::string, std::string>::iterator it=m.begin(); it!=m.end(); ++it)
+			std::cout << "location: " << it->first << " root" << " => " << it->second<< std::endl;
 	}
 };
 

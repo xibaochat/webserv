@@ -28,7 +28,7 @@ every feature is working during evaluation.
 	  -> if does not apply to headers : what is the beahvior with 1 billion headers
 * have a dynamic buffer when reading request (may be influence by previous bullet point)
 * manage routes configuration:
-  - add alterntaives directories for specific routes
+  <!-- - add alterntaives directories for specific routes -->
   - limit request type (`POST`, `GET`...)
   - turn on or off directory listing
   - define an HTTP redirection

@@ -97,12 +97,22 @@ int manage_cgi_based_file(Client_Request &obj)
 int file_not_exist(Client_Request &obj)
 {
 	std::string file = obj.get_client_ask_file();
-	if (access(file.c_str(), F_OK) != 0)
+	cout << MAGENTA << file << NC << endl;
+	// if (access(file.c_str(), F_OK) != 0)
+	// {
+	// 	obj.set_status_code_nb(404);
+	// 	set_request_status_nb_message(404, obj);
+	// 	return (1);
+	// }
+	fstream fileStream;
+	fileStream.open(file);
+	if (fileStream.fail())
 	{
-		obj.set_status_code_nb(404);
-		set_request_status_nb_message(404, obj);
-		return (1);
+		cout << "fail??\n";
+		return 1;
 	}
+    // file could not be open
+	cout << MAGENTA << "exist??" << NC << endl;
 	return (0);
 }
 
