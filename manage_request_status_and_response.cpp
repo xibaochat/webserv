@@ -139,32 +139,111 @@ int file_is_text_based(std::string type)
 	return (0);
 }
 
+char	**get_cgi_env(Client_Request &obj)
+{
+	std::vector<string> env;
+	char	**_env;
+	
+	std::string	script_filename = (std::string("SCRIPT_FILENAME=") + obj.get_client_ask_file());
+	std::string	request_method = (std::string("REQUEST_METHOD=") + obj.get_client_method());
+
+	env.push_back("GATEWAY_INTERFACE=CGI/1.1");
+	env.push_back("SERVER_PROTOCOL=HTTP/1.1");
+	env.push_back("REDIRECT_STATUS=200");
+	env.push_back(script_filename.c_str());
+	env.push_back(request_method.c_str());
+
+	if (obj.get_client_method() == "GET")
+	{
+		std::string	query_string = (std::string("QUERY_STRING=") + "Wait query_string");
+		env.push_back(query_string.c_str());
+	}
+	else if (obj.get_client_method() == "POST")
+	{
+		std::cout << "POST" << std::endl;
+		env.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");
+		env.push_back("CONTENT_LENGTH=7");
+	}
+	_env = static_cast<char**>(malloc(sizeof(char *) * (env.size() + 1)));
+	for (size_t i = 0; i < env.size(); i++)
+	{
+		_env[i] = strdup(env[i].c_str());
+		//std::cout << _env[i] << std::endl;
+	}
+	_env[env.size()] = NULL;
+	return (_env);
+}
+
 void manage_executable_file(Client_Request &obj)
 {
 	int status;
-	int link[2];
+	int cgi_out[2];
+	int	cgi_in[2];
 	char *arr[3];
 	std::map<std::string, std::string> f_header_map;
+	
 	arr[0] = strdup("/usr/bin/python3");
 	arr[1] = strdup(obj.get_client_ask_file().c_str());
 	arr[2] = NULL;
-	char *env[] = {NULL};
-	pipe(link);
+
+	if (pipe(cgi_out) == -1)
+		std::cout << "cgi_out error" << std::endl;
+	if (obj.get_client_method() == "POST")
+	{
+		if (pipe(cgi_in) == -1)
+			std::cout << "cgi_in error" << std::endl;
+		if (write(cgi_in[1], "abc=123", 7) == -1)	//Need change "abc=123" after get body
+			std::cout << "write error" << std::endl;
+	}
+
 	char foo[4096] = {0};
 	pid_t pid = fork();
-	if (pid == 0)
+	if (pid < 0)
+		std::cout << "Fork error!" << std::endl;
+	else if (pid == 0)
 	{
-		dup2(link[1], STDOUT_FILENO);
-		close(link[0]);
-		close(link[1]);
-		execve(arr[0], arr, env);
+		char **env = get_cgi_env(obj);
+
+		if (obj.get_client_method() == "POST")
+		{
+			
+			close(cgi_in[1]);
+			if (dup2(cgi_in[0], STDIN_FILENO) == -1)
+			{
+				std::cout << "cgi_in dup2 error" << std::endl;
+			}
+		}
+		close(cgi_out[0]);
+		if (dup2(cgi_out[1], STDOUT_FILENO) == -1)
+		{
+			std::cout << "cgi_out dup2 error" << std::endl;
+		}
+		if (execve(arr[0], arr, env) == -1)
+		{
+			std::cout << "execve error" << std::endl;
+		}
+		for (int i = 0; env[i]; i++)
+		{
+			free(env[i]);
+			env[i] = NULL;
+		}
+		free(env);
 	}
 	else
 	{
 		waitpid(pid, &status, 0);
-		int nb_read = read(link[0], foo, sizeof(foo));
+		close(cgi_out[1]);
+		if (obj.get_client_method() == "POST")
+		{
+			close(cgi_in[0]);
+		}
+		int nb_read = read(cgi_out[0], foo, sizeof(foo));
+		if (nb_read == -1)
+		{
+			std::cout << "read error" << std::endl;
+		}
 		std::string ret(foo, nb_read);
-		close(link[0]);
+		close(cgi_out[0]);
 		std::cout << ret << "\n";
 		free(arr[0]);
 		free(arr[1]);
