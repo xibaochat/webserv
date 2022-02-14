@@ -158,14 +158,27 @@ void Server::acceptConnect(int fd)
 
 int check_substring(std::string str1, std::string str2)
 {
-    int i;
+    int i = 0;
     int c = 0; // counter for substring
-    for( i=0; i < str1.length();i++)
+	while (i < str1.length())
     {
+		if (str1[i] == '/')
+		{
+			i++;
+			continue;
+		}
+		if (str2[c] == '/')
+		{
+			c++;
+			continue;
+		}
         if( c == str2.length() )
             return 1;
         if(str2[c] == str1[i])
             c++;
+		else
+			return 0;
+		i++;
     }
 	if (c == str1.length())
 		return 1;
@@ -173,23 +186,39 @@ int check_substring(std::string str1, std::string str2)
     //checking if the substring is present or not
 }
 
-void reset_file_full_path(Client_Request &obj, Conf &web_conf)
+root get_most_match_root(std::string file, std::map<std::string, root> loc_root)
 {
-	std::map<std::string, std::string> loc_root = web_conf.get_root();
-	std::string file = obj.get_client_ask_file();
-    for (std::map<std::string, std::string>::iterator it=loc_root.begin(); it!=loc_root.end(); ++it)
+	int loc_len = 0;
+	std::string key;
+	for (std::map<std::string, root>::iterator it=loc_root.begin(); it!=loc_root.end(); ++it)
     {
-		cout << RED << file << " " << it->first << " " << check_substring(file, it->first) << "\n";
-        if (it->first != "/" && check_substring(file, it->first))
+		if (it->first != "/" && check_substring(file, it->first))
         {
-            file = it->second + file;
-			obj.set_client_file(file);
-			return ;
+			if (it->first.length() > loc_len)
+			{
+				loc_len = it->first.length();
+				key = it->first;
+			}
         }
     }
-	file = loc_root["/"] + obj.get_client_ask_file();
-	obj.set_client_file(file);
-	return ;
+	if(!key.size())
+		key = "/";
+	return loc_root[key];
+}
+
+root find_match_root(Client_Request &obj, Conf &web_conf)
+{
+	std::map<std::string, root> loc_root = web_conf.m_location;
+	std::string file = obj.get_client_ask_file();
+	root r = get_most_match_root(file, loc_root);
+	return r;
+}
+
+void reset_file_full_path(root &r, Client_Request &obj)
+{
+	std::string file = obj.get_client_ask_file();
+	std::string full_path = r.path_root + file;
+	obj.set_client_file(full_path);
 }
 
 /*read from the buffer and store the request fd and reponse in the map
@@ -211,9 +240,10 @@ void Server::handle_client_event(int &request_fd)
 	{
 		extract_info_from_first_line_of_buffer(obj, buffer, this->web_conf);
 		extract_info_from_rest_buffer(obj, buffer);
-		reset_file_full_path(obj, this->web_conf);
+		root r = find_match_root(obj, this->web_conf);
+		reset_file_full_path(r, obj);
 		std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
-		manage_request_status(obj, this->web_conf);
+		manage_request_status(r, obj, this->web_conf);
 		this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
 	}
 }

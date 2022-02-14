@@ -1,6 +1,6 @@
 NAME = ./webserv
 
-SRC = main.cpp check_config_file.cpp extract_info_from_header.cpp get_time.cpp  response_header.cpp init_status_code_message_map.cpp manage_request.cpp server.cpp manage_request_status_and_response.cpp
+SRC = main.cpp check_config_file.cpp extract_info_from_header.cpp get_time.cpp  response_header.cpp init_status_code_message_map.cpp manage_request.cpp server.cpp manage_request_status_and_response.cpp utile.cpp
 
 OBJ = $(SRC:.cpp=.o)
 

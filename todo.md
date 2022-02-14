@@ -26,10 +26,10 @@ every feature is working during evaluation.
   -> does `MSR` apply to headers or only body ?
 	  -> if apply to headers : adapt `handle_client_event` function
 	  -> if does not apply to headers : what is the beahvior with 1 billion headers
-* have a dynamic buffer when reading request (may be influence by previous bullet point)
+* //have a dynamic buffer when reading request (may be influence by previous bullet point)
 * manage routes configuration:
   <!-- - add alterntaives directories for specific routes -->
-  - limit request type (`POST`, `GET`...)
+  <!-- - limit request type (`POST`, `GET`...) -->
   - turn on or off directory listing
   - define an HTTP redirection
   - default file to answer if the request is a directory

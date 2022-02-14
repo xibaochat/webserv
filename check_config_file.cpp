@@ -72,7 +72,7 @@ void show_err_message_and_quite(std::string message)
 bool invalid_key(std::string &elem)
 {
 	std::vector<std::string>::iterator it;
-	std::string arr[] = {"listen", "server_name", "max_size_request", "error_page", "location"};
+	std::string arr[] = {"listen", "server_name", "max_size_request", "error_page", "location", "allow_methods"};
     std::vector<std::string> key_vec(arr, arr + sizeof(arr)/ sizeof(std::string));
 	if ((it = std::find(key_vec.begin(), key_vec.end(), elem)) == key_vec.end())
 		return true;
@@ -167,7 +167,7 @@ bool has_extra_elem_in_line(std::string &key, int &i)
 	return false;
 }
 
-void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::map<std::string, std::string> &m)
+void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::map<std::string, root> &m)
 {
 	std::string line, key, elem;
 	int end = 0;
@@ -179,7 +179,6 @@ void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::
 		int i = 0;
 		while(line.length() > 0)
 		{
-			cout << line << " :" << i << "\n";
 			i++;
 			elem = extract_word_from_line(end, line);
 			if (i == 1) // check key in the white list or not
@@ -308,7 +307,7 @@ std::string get_location_path(std::string &line)
 		line.erase(0, end + 1);
 		i++;
 	}
-	if (i != 3)
+	if (i != 3)//location is composed of 3 part, -> location PATH {
 		show_err_message_and_quite("[Error]Wrong format in location in config file");
 	return path;
 }
@@ -334,7 +333,30 @@ std::string get_root(std::string &line)
 	return path;
 }
 
-void manage_root(std::ifstream &file, std::string &line, std::map<std::string, std::string> &m)
+std::set<std::string> set_method(std::string &line)
+{
+	int i = 0;
+	int end = 0;
+	std::string elem;
+	std::set<std::string> methods_set;
+	std::string::size_type pos;
+	while (line.length() > 0)
+	{
+		elem = extract_word_from_line(end, line);
+		if (i >= 1)
+		{
+			pos = elem.find(';');
+			if (pos != std::string::npos)
+				elem =  elem.substr(0, pos);
+			methods_set.insert(elem);
+		}
+		line.erase(0, end + 1);
+		i++;
+	}
+	return methods_set;
+}
+
+void manage_root(std::ifstream &file, std::string &line, std::map<std::string, root> &m)
 {
 	int end = 0;
 	int i = 0;
@@ -351,10 +373,16 @@ void manage_root(std::ifstream &file, std::string &line, std::map<std::string, s
 			continue;
 		elem = extract_word_from_line(end, line);
 		if (elem == "location")
+		{
 			path = get_location_path(line);
+		}
 		else if (elem == "root")
+		{
 			root = get_root(line);
-		m[path] = root;
+			m[path].path_root = root;
+		}
+		else if (elem == "AllowMethods")
+			m[path].allow_methods = set_method(line);
 	}
 }
 
@@ -435,12 +463,12 @@ Conf manage_config_file(int ac, char **av)
 	std::ifstream file;
 	std::string conf_file;
 	std::vector<std::string>::iterator it;
-	std::map<std::string, std::string> m;
+	std::map<std::string, root> m;
 
 	// Conf extraction
 	open_conf(ac, av, file);//can open file?
 	store_elem_in_vec(file, vec, m);
-	web_conf.set_root(m);
+	web_conf.m_location = m;
 	manage_port(vec, web_conf);
 	manage_server_name(vec, web_conf);
 	manage_max_size_request(vec, web_conf);
