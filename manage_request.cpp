@@ -81,7 +81,7 @@ std::string get_client_file(char *buffer)
 //extract method; client asked file; and status_code of file(file valid?)
 void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf)
 {
-	std::map<std::string, root> loc_root = web_conf.m_location;
+	std::map<std::string, route> loc_root = web_conf.m_location;
 	char *ptr = strstr(buffer, " ");//GET , POST ?
 	std::string method(buffer, 0, ptr - buffer);
 	obj.set_client_method(method);

@@ -72,7 +72,7 @@ void show_err_message_and_quite(std::string message)
 bool invalid_key(std::string &elem)
 {
 	std::vector<std::string>::iterator it;
-	std::string arr[] = {"listen", "server_name", "max_size_request", "error_page", "location", "allow_methods"};
+	std::string arr[] = {"listen", "server_name", "max_size_request", "error_page", "location"};
     std::vector<std::string> key_vec(arr, arr + sizeof(arr)/ sizeof(std::string));
 	if ((it = std::find(key_vec.begin(), key_vec.end(), elem)) == key_vec.end())
 		return true;
@@ -167,7 +167,7 @@ bool has_extra_elem_in_line(std::string &key, int &i)
 	return false;
 }
 
-void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::map<std::string, root> &m)
+void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::map<std::string, route> &m)
 {
 	std::string line, key, elem;
 	int end = 0;
@@ -188,8 +188,7 @@ void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::
 			}
 			if (key == "location")
 			{
-				cout << BLUE << line << NC << "\n";
-				manage_root(file, line, m);
+				manage_route(file, line, m);
 				break;
 			}
 			if (key == "error_page")
@@ -356,13 +355,12 @@ std::set<std::string> set_method(std::string &line)
 	return methods_set;
 }
 
-void manage_root(std::ifstream &file, std::string &line, std::map<std::string, root> &m)
+void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m)
 {
 	int end = 0;
 	int i = 0;
 	std::string elem, path, root;
 
-	std::cout << YELLOW << line << NC << "\n";
 	path = get_location_path(line);
 	while (getline(file, line))
 	{
@@ -382,7 +380,15 @@ void manage_root(std::ifstream &file, std::string &line, std::map<std::string, r
 			m[path].path_root = root;
 		}
 		else if (elem == "AllowMethods")
-			m[path].allow_methods = set_method(line);
+		{
+			if (!m[path].allow_methods.size())
+				m[path].allow_methods = set_method(line);
+			else
+			{
+				std::cerr << "[ERROR] AllowMethods is doubled in config" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+		}
 	}
 }
 
@@ -463,7 +469,7 @@ Conf manage_config_file(int ac, char **av)
 	std::ifstream file;
 	std::string conf_file;
 	std::vector<std::string>::iterator it;
-	std::map<std::string, root> m;
+	std::map<std::string, route> m;
 
 	// Conf extraction
 	open_conf(ac, av, file);//can open file?

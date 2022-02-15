@@ -32,11 +32,11 @@
 #define ERR_SEND  "Something went wrong when sending response"
 
 using namespace std;
-typedef struct s_root
+typedef struct s_route
 {
 	std::string path_root;
 	std::set<std::string> allow_methods;
-}              root;
+}              route;
 
 class Client_Request;
 class Conf;
@@ -57,15 +57,14 @@ void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_
 std::map<int, std::string> init_status_code_message_map();
 
 int open_file(std::ifstream &s, std::string path);
-void manage_request_status(root &r, Client_Request &obj, Conf &web_conf);
+void manage_request_status(route &r, Client_Request &obj, Conf &web_conf);
 
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
 
 void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &new_socket);
 void send_response(Client_Request &obj, int &new_socket);
-void manage_root(std::ifstream &file, std::string &line, std::map<std::string, std::string> &m);
+void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m);
 
-void manage_root(std::ifstream &file, std::string &line, std::map<std::string, root> &m);
 //contain port, server_name, all err page
 class Conf
 {
@@ -76,7 +75,7 @@ public:
 	std::string server_name;
 	std::map<int, std::string>conf_map;//status code, error_page_path
 public:
-	std::map<std::string, root> m_location;
+	std::map<std::string, route> m_location;
 	Conf():port(0), max_size_request(3000), server_name(""){}
 	~Conf(){};
 	Conf(Conf const &s){*this = s;}
@@ -90,7 +89,7 @@ public:
 		return *this;
 	}
 	int get_port()const {return port;}
-	std::map<std::string, root> get_m_location() const{return this->m_location;}
+	std::map<std::string, route> get_m_location() const{return this->m_location;}
 	int get_max_size_request() const{return max_size_request;}
 	std::string get_server_name() const {return server_name;}
 	std::map<int, std::string> get_conf_err_page_map() const
@@ -99,7 +98,7 @@ public:
 	}
 	void set_max_size_request(int n){this->max_size_request = n;}
 	void set_port(int port){this->port = port;}
-	void set_m_location(std::map<std::string, root> &r){this->m_location = r;}
+	void set_m_location(std::map<std::string, route> &r){this->m_location = r;}
 	void set_server_name(std::string f){this->server_name = f;}
 	void set_config_map(std::map<int, std::string> src){
 		this->conf_map = src;}
@@ -110,8 +109,8 @@ public:
 		std::map<int, std::string> mymap = this->get_conf_err_page_map();
 		for (std::map<int, std::string>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
 			std::cout << "status code: " << it->first << " corresponding page path" << " => " << it->second<< std::endl;
-		std::map<std::string, root> m = this->get_m_location();
-		for (std::map<std::string, root>::iterator it=m.begin(); it!=m.end(); ++it)
+		std::map<std::string, route> m = this->get_m_location();
+		for (std::map<std::string, route>::iterator it=m.begin(); it!=m.end(); ++it)
 		{
 			std::cout << "location: " << RED << it->first << "  ";
 			cout <<  NC << " path_root" << " => " << BLUE << it->second.path_root << NC <<  "methods => \n";

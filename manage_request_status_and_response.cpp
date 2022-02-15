@@ -178,7 +178,7 @@ void manage_executable_file(Client_Request &obj)
 	}
 }
 
-int method_is_not_allow(root &r, Client_Request &obj)
+int method_is_not_allow(route &r, Client_Request &obj)
 {
 	std::set<string>::iterator it;
 	std::string method = obj.get_client_method();
@@ -232,7 +232,7 @@ int check_f_permi_existence(Client_Request &obj)
 **check file is valid or not; by default, status_nb_message is "200 OK"in the constructor;
 **if file has unaccepted extension->501, if file not exist, ->404; if exist but no open right, ->503; and from map to obtain status error message
 */
-void manage_request_status(root &r, Client_Request &obj, Conf &web_conf)
+void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 {
 	std::ifstream myfile;
 	int ret = 0;
