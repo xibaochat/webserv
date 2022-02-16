@@ -72,7 +72,7 @@ void show_err_message_and_quite(std::string message)
 bool invalid_key(std::string &elem)
 {
 	std::vector<std::string>::iterator it;
-	std::string arr[] = {"listen", "server_name", "max_size_request", "error_page", "location"};
+	std::string arr[] = {"listen", "server_name", "error_page", "location"};
     std::vector<std::string> key_vec(arr, arr + sizeof(arr)/ sizeof(std::string));
 	if ((it = std::find(key_vec.begin(), key_vec.end(), elem)) == key_vec.end())
 		return true;
@@ -218,8 +218,8 @@ int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 {
 	std::vector<std::string>::iterator it;
 	std::stringstream ss;
-	int nb;
 	std::string message_error;
+	int nb;
 
 	if ((it = std::find(vec.begin(), vec.end(), key)) != vec.end())
 	{
@@ -232,16 +232,13 @@ int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 				show_err_message_and_quite(message_error);
 			}
 			nb = get_transfered_value(ss, it);
-			if (nb > 0)
+			if (nb >= 1 && nb <= 65535)
 			{
 				vec.erase(it, it + 2);
 				return nb;
 			}
 		}
 	}
-	ss << "No " << key << " number";
-	message_error = ss.str();
-	show_err_message_and_quite(message_error);
 	return (-1);
 }
 
@@ -255,20 +252,30 @@ void manage_port(std::vector<std::string> &vec, Conf &web_conf)
 {
 	std::vector<std::string>::iterator it;
 	std::string key("listen");
-	int nb_port = manage_key_correspond_value(key, vec);
-	web_conf.set_port(nb_port);
+	int nb_port;
+	std::stringstream ss;
+	std::string message_error;
+
+	if ((it = std::find(vec.begin(), vec.end(), "listen")) == vec.end())
+	{
+		ss << "No " << key << " number";
+		message_error = ss.str();
+		show_err_message_and_quite(message_error);
+	}
+	while ((nb_port = manage_key_correspond_value(key, vec)) != -1)
+		web_conf.port.insert(nb_port);
 }
 
 /*
 ** check max buffer size is number and store value to web_conf
 */
-void manage_max_size_request(std::vector<std::string> &vec, Conf &web_conf)
-{
-	 std::vector<std::string>::iterator it;
-	 std::string key("max_size_request");
-	 int max_size_request  = manage_key_correspond_value(key,  vec);
-	 web_conf.set_max_size_request(max_size_request);
-}
+// void manage_max_size_request(std::vector<std::string> &vec, Conf &web_conf)
+// {
+// 	 std::vector<std::string>::iterator it;
+// 	 std::string key("max_size_request");
+// 	 int max_size_request  = manage_key_correspond_value(key,  vec);
+// 	 web_conf.set_max_size_request(max_size_request);
+// }
 
 /*
 ** Extract and return `server_name` if valid
@@ -389,6 +396,11 @@ void manage_route(std::ifstream &file, std::string &line, std::map<std::string, 
 				exit(EXIT_FAILURE);
 			}
 		}
+		else
+		{
+			std::cerr << "[ERROR] Inaccpeted element in config" << std::endl;
+			exit(EXIT_FAILURE);
+		}
 	}
 }
 
@@ -473,11 +485,14 @@ Conf manage_config_file(int ac, char **av)
 
 	// Conf extraction
 	open_conf(ac, av, file);//can open file?
+
+	// std::map<std::int, std::string> servers;
+	// servers = extract_servers_as_string(file);
 	store_elem_in_vec(file, vec, m);
 	web_conf.m_location = m;
 	manage_port(vec, web_conf);
 	manage_server_name(vec, web_conf);
-	manage_max_size_request(vec, web_conf);
+//	manage_max_size_request(vec, web_conf);
 	set_err_page_map(vec, web_conf);
 	file.close();
 

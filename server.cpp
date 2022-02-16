@@ -5,11 +5,20 @@
 Server::Server(Conf &web_conf)
 {
 	this->port = web_conf.get_port();
-	memset(this->serverAddr.sin_zero, '\0', sizeof this->serverAddr.sin_zero);
-	this->serverAddr.sin_family = AF_INET;
-	this->serverAddr.sin_addr.s_addr = INADDR_ANY;
-	this->serverAddr.sin_port = htons(this->port);
-	this->listener = 0;
+	this->serverAddr = new struct sockaddr_in[this->port.size()];
+
+	int i = 0;
+	std::set<int>::iterator it=this->port.begin();
+	while(it!=this->port.end())
+	{
+		memset(this->serverAddr[i].sin_zero, '\0', sizeof this->serverAddr[i].sin_zero);
+		this->serverAddr[i].sin_family = AF_INET;
+		this->serverAddr[i].sin_addr.s_addr = INADDR_ANY;
+		this->serverAddr[i].sin_port = htons(*it);
+		it++;
+		i++;
+	}
+	this->listener = new int[this->port.size()];
 	this->epfd = 0;
 	this->error_page_map = web_conf.get_conf_err_page_map();
 	this->web_conf = web_conf;
@@ -19,24 +28,29 @@ Server::Server(Conf &web_conf)
 void Server::Init()
 {
 	int opt = 1;
-	this->listener = socket(AF_INET, SOCK_STREAM, 0);
-	if (this->listener < 0)
-		throw("[ERROR]Failed to create socket fd");
-	/*even stop the program and restart it, the port is still available.*/
-	if (setsockopt(this->listener, SOL_SOCKET, SO_REUSEADDR, (const void*)&opt, sizeof(int)) < 0)
-		throw("setsockopt(SO_REUSEADDR) failed");
-	if (this->listener < 0)
-		throw("[ERROR]Failed to create socket");
-	if (bind(this->listener, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr)) < 0)
-		throw("[ERROR]Failed to bind");
-	if (listen(this->listener, 5000) < 0) //maximum length to which the  queue  of pending  connections  for sockfd may grow
-		throw("[ERROR]Listen error");
+	int size = this->port.size();
+	int i = 0;
+
 	/*the size argument is ignored, but must be greater than zero*/
 	this->epfd = epoll_create(5000);
 	if (this->epfd < 0)
 		throw("[ERROR]epoll create error");
-	/*add this->listener to interest list of epoll*/
-	this->addfd(this->listener, 0);
+	while (i < size)
+	{
+		this->listener[i] = socket(AF_INET, SOCK_STREAM, 0);
+		if (this->listener[i] < 0)
+			throw("[ERROR]Failed to create socket fd");
+	/*even stop the program and restart it, the port is still available.*/
+		if (setsockopt(this->listener[i], SOL_SOCKET, SO_REUSEADDR, (const void*)&opt, sizeof(int)) < 0)
+			throw("setsockopt(SO_REUSEADDR) failed");
+		if (bind(this->listener[i], (struct sockaddr *)&this->serverAddr[i], sizeof(this->serverAddr[i])) < 0)
+			throw("[ERROR]Failed to bind");
+		if (listen(this->listener[i], 5000) < 0) //maximum length to which the  queue  of pending  connections  for sockfd may grow
+			throw("[ERROR]Listen error");
+		/*add this->listener to interest list of epoll*/
+		this->addfd(this->listener[i], 0);
+		i++;
+	}
 }
 
 void Server::Close(int &sockfd)
@@ -48,8 +62,12 @@ void Server::Close(int &sockfd)
 
 Server::~Server()
 {
-	close(this->listener);
+	int i = this->port.size();
+	while (--i >= 0)
+		close(this->listener[i]);
 	close(this->epfd);
+	delete [] this->serverAddr;
+	delete [] this->listener;
 }
 
 void Server::send_content_to_request(int &request_fd)
@@ -64,6 +82,17 @@ void Server::send_content_to_request(int &request_fd)
 		this->Close(request_fd);
 	}
 
+}
+
+int Server::fd_is_in_listener(int fd)
+{
+	int i = this->port.size();
+	while (--i >= 0)
+	{
+		if (fd == this->listener[i])
+			return 1;
+	}
+	return 0;
 }
 /*loop for each event, manage the cas: new request(add request fd to epoll interest list);
   error or interrupt(close fd); read the request(read from buffer and store reponse in map);
@@ -80,11 +109,12 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count, st
 		uint32_t ev = events[i].events;
 		/* We receive a new request on the socket
 		   We accept it and store new the FD of the request in the epoll interet list*/
-		if (sockfd == this->listener)
+		//if (sockfd == this->listener)
+		if (fd_is_in_listener(sockfd))
 		{
 			try
 			{
-				this->acceptConnect();
+				this->acceptConnect(sockfd);
 			}
 			catch(const char *s)
 			{
@@ -138,18 +168,17 @@ void Server::addfd(int fd, bool enable_et)
 		//to  avoid  continuously  switching between EPOLLIN and EPOLLOUT calling
 		ev.events = EPOLLIN | EPOLLOUT;
 	if (epoll_ctl(this->epfd, EPOLL_CTL_ADD, fd, &ev) < 0)
-			throw("[ERROR]Failed to in epoll_ctl");
+		throw("[ERROR]Failed to in epoll_ctl");
 	fcntl(fd, F_SETFL, O_NONBLOCK);
 	std::cout << "fd added to epoll" << std::endl;
 }
 
 /*create a new fd and add to the interest list
  */
-void Server::acceptConnect(int fd)
+void Server::acceptConnect(int &fd)
 {
 	struct sockaddr_in client_address;
 	int addrlen = sizeof(struct sockaddr_in);
-//	int request_fd = accept(this->listener, (struct sockaddr *)&client_address, (socklen_t*)&addrlen);
 	int request_fd = accept(fd, (struct sockaddr *)&client_address, (socklen_t*)&addrlen);
 	if (request_fd < 0)
 		throw("[ERROR]accpet failure");
@@ -226,7 +255,7 @@ void reset_file_full_path(route &r, Client_Request &obj)
 void Server::handle_client_event(int &request_fd)
 {
 	Client_Request obj;
-	int max_nb = this->web_conf.get_max_size_request();
+	int max_nb = 3000;
 	char buffer[max_nb];
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);

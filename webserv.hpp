@@ -70,25 +70,26 @@ class Conf
 {
 //in fact, no need to put as privee
 public:
-	int port;
+	std::set<int> port;
 	int max_size_request;
 	std::string server_name;
 	std::map<int, std::string>conf_map;//status code, error_page_path
 public:
 	std::map<std::string, route> m_location;
-	Conf():port(0), max_size_request(3000), server_name(""){}
+	Conf(){};
 	~Conf(){};
 	Conf(Conf const &s){*this = s;}
 	Conf &operator=(Conf const &src)
 	{
 		this->port = src.port;
-		this->max_size_request = src.max_size_request;
+//		this->max_size_request = src.max_size_request;
 		this->m_location = src.m_location;
 		this->server_name = src.server_name;
 		this->conf_map = src.conf_map;
 		return *this;
 	}
-	int get_port()const {return port;}
+
+	std::set<int> get_port()const {return port;}
 	std::map<std::string, route> get_m_location() const{return this->m_location;}
 	int get_max_size_request() const{return max_size_request;}
 	std::string get_server_name() const {return server_name;}
@@ -97,14 +98,15 @@ public:
 		return this->conf_map;
 	}
 	void set_max_size_request(int n){this->max_size_request = n;}
-	void set_port(int port){this->port = port;}
+	void set_port(std::set<int> port){this->port = port;}
 	void set_m_location(std::map<std::string, route> &r){this->m_location = r;}
 	void set_server_name(std::string f){this->server_name = f;}
 	void set_config_map(std::map<int, std::string> src){
 		this->conf_map = src;}
 	void display_conf_file_debug()
 	{
-		std::cout << "port " << this->port << std::endl;
+		for (std::set<int>::iterator it=port.begin(); it!=port.end(); ++it)
+			std::cout << "port " << *it << std::endl;
 		std::cout << "server_name " << this->server_name << std::endl;
 		std::map<int, std::string> mymap = this->get_conf_err_page_map();
 		for (std::map<int, std::string>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
