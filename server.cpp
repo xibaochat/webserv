@@ -135,7 +135,17 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count, st
 void Server::Start(Conf &web_conf)
 {
 	struct epoll_event events[EPOLL_SIZE];
-	this->Init();
+	try
+	{
+		this->Init();
+	}
+	catch(const char *s)
+	{
+		delete [] this->serverAddr;
+		delete [] this->listener;
+		std::cerr << s << std::endl;
+		exit(EXIT_FAILURE);
+	}
 	while (1)
 	{
 		std::cout << YELLOW << "Looking for request" << NC << std::endl;
