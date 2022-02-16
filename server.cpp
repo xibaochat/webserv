@@ -145,12 +145,11 @@ void Server::addfd(int fd, bool enable_et)
 
 /*create a new fd and add to the interest list
  */
-void Server::acceptConnect(int fd)
+void Server::acceptConnect()
 {
 	struct sockaddr_in client_address;
 	int addrlen = sizeof(struct sockaddr_in);
-//	int request_fd = accept(this->listener, (struct sockaddr *)&client_address, (socklen_t*)&addrlen);
-	int request_fd = accept(fd, (struct sockaddr *)&client_address, (socklen_t*)&addrlen);
+	int request_fd = accept(this->listener, (struct sockaddr *)&client_address, (socklen_t*)&addrlen);
 	if (request_fd < 0)
 		throw("[ERROR]accpet failure");
 	this->addfd(request_fd, true);
