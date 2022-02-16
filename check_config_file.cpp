@@ -72,7 +72,7 @@ void show_err_message_and_quite(std::string message)
 bool invalid_key(std::string &elem)
 {
 	std::vector<std::string>::iterator it;
-	std::string arr[] = {"listen", "server_name", "max_size_request", "error_page", "location"};
+	std::string arr[] = {"listen", "server_name", "error_page", "location"};
     std::vector<std::string> key_vec(arr, arr + sizeof(arr)/ sizeof(std::string));
 	if ((it = std::find(key_vec.begin(), key_vec.end(), elem)) == key_vec.end())
 		return true;
@@ -167,7 +167,7 @@ bool has_extra_elem_in_line(std::string &key, int &i)
 	return false;
 }
 
-void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::map<std::string, std::string> &m)
+void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::map<std::string, route> &m)
 {
 	std::string line, key, elem;
 	int end = 0;
@@ -179,7 +179,6 @@ void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::
 		int i = 0;
 		while(line.length() > 0)
 		{
-			cout << line << " :" << i << "\n";
 			i++;
 			elem = extract_word_from_line(end, line);
 			if (i == 1) // check key in the white list or not
@@ -189,8 +188,7 @@ void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::
 			}
 			if (key == "location")
 			{
-				cout << BLUE << line << NC << "\n";
-				manage_root(file, line, m);
+				manage_route(file, line, m);
 				break;
 			}
 			if (key == "error_page")
@@ -220,8 +218,8 @@ int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 {
 	std::vector<std::string>::iterator it;
 	std::stringstream ss;
-	int nb;
 	std::string message_error;
+	int nb;
 
 	if ((it = std::find(vec.begin(), vec.end(), key)) != vec.end())
 	{
@@ -234,16 +232,13 @@ int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 				show_err_message_and_quite(message_error);
 			}
 			nb = get_transfered_value(ss, it);
-			if (nb > 0)
+			if (nb >= 1 && nb <= 65535)
 			{
 				vec.erase(it, it + 2);
 				return nb;
 			}
 		}
 	}
-	ss << "No " << key << " number";
-	message_error = ss.str();
-	show_err_message_and_quite(message_error);
 	return (-1);
 }
 
@@ -257,20 +252,30 @@ void manage_port(std::vector<std::string> &vec, Conf &web_conf)
 {
 	std::vector<std::string>::iterator it;
 	std::string key("listen");
-	int nb_port = manage_key_correspond_value(key, vec);
-	web_conf.set_port(nb_port);
+	int nb_port;
+	std::stringstream ss;
+	std::string message_error;
+
+	if ((it = std::find(vec.begin(), vec.end(), "listen")) == vec.end())
+	{
+		ss << "No " << key << " number";
+		message_error = ss.str();
+		show_err_message_and_quite(message_error);
+	}
+	while ((nb_port = manage_key_correspond_value(key, vec)) != -1)
+		web_conf.port.insert(nb_port);
 }
 
 /*
 ** check max buffer size is number and store value to web_conf
 */
-void manage_max_size_request(std::vector<std::string> &vec, Conf &web_conf)
-{
-	 std::vector<std::string>::iterator it;
-	 std::string key("max_size_request");
-	 int max_size_request  = manage_key_correspond_value(key,  vec);
-	 web_conf.set_max_size_request(max_size_request);
-}
+// void manage_max_size_request(std::vector<std::string> &vec, Conf &web_conf)
+// {
+// 	 std::vector<std::string>::iterator it;
+// 	 std::string key("max_size_request");
+// 	 int max_size_request  = manage_key_correspond_value(key,  vec);
+// 	 web_conf.set_max_size_request(max_size_request);
+// }
 
 /*
 ** Extract and return `server_name` if valid
@@ -308,7 +313,7 @@ std::string get_location_path(std::string &line)
 		line.erase(0, end + 1);
 		i++;
 	}
-	if (i != 3)
+	if (i != 3)//location is composed of 3 part, -> location PATH {
 		show_err_message_and_quite("[Error]Wrong format in location in config file");
 	return path;
 }
@@ -334,13 +339,35 @@ std::string get_root(std::string &line)
 	return path;
 }
 
-void manage_root(std::ifstream &file, std::string &line, std::map<std::string, std::string> &m)
+std::set<std::string> set_method(std::string &line)
+{
+	int i = 0;
+	int end = 0;
+	std::string elem;
+	std::set<std::string> methods_set;
+	std::string::size_type pos;
+	while (line.length() > 0)
+	{
+		elem = extract_word_from_line(end, line);
+		if (i >= 1)
+		{
+			pos = elem.find(';');
+			if (pos != std::string::npos)
+				elem =  elem.substr(0, pos);
+			methods_set.insert(elem);
+		}
+		line.erase(0, end + 1);
+		i++;
+	}
+	return methods_set;
+}
+
+void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m)
 {
 	int end = 0;
 	int i = 0;
 	std::string elem, path, root;
 
-	std::cout << YELLOW << line << NC << "\n";
 	path = get_location_path(line);
 	while (getline(file, line))
 	{
@@ -351,10 +378,29 @@ void manage_root(std::ifstream &file, std::string &line, std::map<std::string, s
 			continue;
 		elem = extract_word_from_line(end, line);
 		if (elem == "location")
+		{
 			path = get_location_path(line);
+		}
 		else if (elem == "root")
+		{
 			root = get_root(line);
-		m[path] = root;
+			m[path].path_root = root;
+		}
+		else if (elem == "AllowMethods")
+		{
+			if (!m[path].allow_methods.size())
+				m[path].allow_methods = set_method(line);
+			else
+			{
+				std::cerr << "[ERROR] AllowMethods is doubled in config" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+		}
+		else
+		{
+			std::cerr << "[ERROR] Inaccpeted element in config" << std::endl;
+			exit(EXIT_FAILURE);
+		}
 	}
 }
 
@@ -435,15 +481,18 @@ Conf manage_config_file(int ac, char **av)
 	std::ifstream file;
 	std::string conf_file;
 	std::vector<std::string>::iterator it;
-	std::map<std::string, std::string> m;
+	std::map<std::string, route> m;
 
 	// Conf extraction
 	open_conf(ac, av, file);//can open file?
+
+	// std::map<std::int, std::string> servers;
+	// servers = extract_servers_as_string(file);
 	store_elem_in_vec(file, vec, m);
-	web_conf.set_root(m);
+	web_conf.m_location = m;
 	manage_port(vec, web_conf);
 	manage_server_name(vec, web_conf);
-	manage_max_size_request(vec, web_conf);
+//	manage_max_size_request(vec, web_conf);
 	set_err_page_map(vec, web_conf);
 	file.close();
 

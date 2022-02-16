@@ -97,37 +97,38 @@ int manage_cgi_based_file(Client_Request &obj)
 int file_not_exist(Client_Request &obj)
 {
 	std::string file = obj.get_client_ask_file();
-	cout << MAGENTA << file << NC << endl;
-	// if (access(file.c_str(), F_OK) != 0)
-	// {
-	// 	obj.set_status_code_nb(404);
-	// 	set_request_status_nb_message(404, obj);
-	// 	return (1);
-	// }
 	fstream fileStream;
 	fileStream.open(file);
 	if (fileStream.fail())
 	{
-		cout << "fail??\n";
+		obj.set_status_code_nb(404);
 		return 1;
 	}
     // file could not be open
-	cout << MAGENTA << "exist??" << NC << endl;
+	fileStream.close();
 	return (0);
 }
 
 int file_no_permission(Client_Request &obj)
 {
-	std::ifstream myfile;
 	std::string file = obj.get_client_ask_file();
-	myfile.open(file.c_str(), std::ios::in);
-	if (!myfile.is_open())
+	if (access(file.c_str(), W_OK) != 0)
 	{
-		obj.set_status_code_nb(503);
-		set_request_status_nb_message(503, obj);
+		fstream fileStream;
+		fileStream.open(file);
+		if (fileStream.fail())
+		{
+			obj.set_status_code_nb(404);
+			set_request_status_nb_message(404, obj);
+			fileStream.close();
+		}
+		else
+		{
+			obj.set_status_code_nb(403);
+			set_request_status_nb_message(403, obj);
+		}
 		return (1);
 	}
-	myfile.close();
 	return (0);
 }
 
@@ -256,17 +257,68 @@ void manage_executable_file(Client_Request &obj)
 	}
 }
 
+int method_is_not_allow(route &r, Client_Request &obj)
+{
+	std::set<string>::iterator it;
+	std::string method = obj.get_client_method();
+	for (it = r.allow_methods.begin(); it != r.allow_methods.end(); ++it)
+	{
+		if (*it == method)
+			return 0;
+	}
+	obj.set_status_code_nb(405);
+	set_request_status_nb_message(405, obj);
+	return 1;
+}
+
+int check_f_permi_existence(Client_Request &obj)
+{
+	 struct stat sb;
+	 std::string file = obj.get_client_ask_file();
+
+	 stat(file.c_str(), &sb);
+	 if (!S_ISREG(sb.st_mode))//directory
+	 {
+		 obj.set_status_code_nb(404);
+		 set_request_status_nb_message(404, obj);
+		 return 1;
+	 }
+	 struct passwd *pw = getpwuid(sb.st_uid);
+	 struct group  *gr = getgrgid(sb.st_gid);
+	//no permission
+	 if (!(pw && (sb.st_mode & S_IRUSR))
+		 || !(gr && (sb.st_mode & S_IRGRP))
+		 || !(sb.st_mode & S_IROTH))
+	 {
+		 obj.set_status_code_nb(403);
+		 set_request_status_nb_message(403, obj);
+		 return 1;
+	 }
+	 if (stat(file.c_str(), &sb) == -1)
+	 {
+		 cout << GREEN << "enter" << NC << "\n";
+		 obj.set_status_code_nb(404);
+		 set_request_status_nb_message(404, obj);
+		 return 1;
+	 }
+	 return 0;
+}
+//https://stackoverflow.com/questions/4908043/what-is-the-best-way-to-check-a-files-existence-and-file-permissions-in-linux-u/4908070
+//https://stackoverflow.com/questions/8812959/how-to-read-linux-file-permission-programmatically-in-c-c
+//https://stackoverflow.com/questions/4553012/checking-if-a-file-is-a-directory-or-just-a-file
+
 /*
 **check file is valid or not; by default, status_nb_message is "200 OK"in the constructor;
 **if file has unaccepted extension->501, if file not exist, ->404; if exist but no open right, ->503; and from map to obtain status error message
 */
-void manage_request_status(Client_Request &obj, Conf &web_conf)
+void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 {
 	std::ifstream myfile;
 	int ret = 0;
+
 	/*error file, if error html in Conf cannot be open and read, we send a static error
 	 message */
-	if (file_not_exist(obj) || manage_cgi_based_file(obj) || file_no_permission(obj))
+	if (method_is_not_allow(r, obj) || check_f_permi_existence(obj) || manage_cgi_based_file(obj))
 	{
 		int status_code_nb = obj.get_status_code_nb();
 		ret = open_file(myfile, web_conf.get_conf_err_page_map()[status_code_nb]);

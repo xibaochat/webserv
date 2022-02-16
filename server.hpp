@@ -15,17 +15,17 @@ class Server;
 
 class Server
 {
-private:
-	std::list<int> list;
-	struct sockaddr_in serverAddr;
-	int listener;
+public:
+	struct sockaddr_in *serverAddr;
+	int *listener;
 	int epfd;
-	int port;
+	std::set<int> port;
 	std::map<int, std::string> error_page_map;
 	Conf  web_conf;
 	std::map<int, std::string> request_map;
 
 public:
+	int fd_is_in_listener(int fd);
 	void handle_client_event(int &clientfd);
 	void addfd(int fd, bool enable_et);
 	Server(Conf &web_conf);
@@ -34,10 +34,10 @@ public:
 	void Close(int &fd);
 	void Start(Conf &web_conf);
 	Server(Server const &src){*this = src;}
-	int get_listener(){return this->listener;}
+	int* get_listener(){return this->listener;}
 	int get_epfd(){return this->epfd;}
 	std::map<int, std::string> get_request_map(){return this->request_map;}
-	void acceptConnect();
+	void acceptConnect(int &fd);
 	void manage_event(struct epoll_event *events, int &epoll_event_count, std::map<int, std::string> &request_map);
 	void send_content_to_request(int &fd);
 };

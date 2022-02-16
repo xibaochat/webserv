@@ -11,13 +11,6 @@ int main(int ac, char **av)
 	Conf web_conf = manage_config_file(ac, av);
 
 	Server server(web_conf);
-	try
-	{
-		server.Start(web_conf);
-	}
-	catch(const char *s)
-	{
-		std::cerr << s << std::endl;
-	}
+	server.Start(web_conf);
     return 0;
 }

@@ -17,6 +17,10 @@
 #include <algorithm>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <pwd.h>
+#include <grp.h>
+#include <sys/stat.h>
+#include <set>
 
 
 #define GREEN       "\033[33;32m"
@@ -28,9 +32,16 @@
 #define ERR_SEND  "Something went wrong when sending response"
 
 using namespace std;
+typedef struct s_route
+{
+	std::string path_root;
+	std::set<std::string> allow_methods;
+}              route;
+
 class Client_Request;
 class Conf;
 
+int count_words(std::string str);
 std::string extract_word_from_line(int &end, std::string &line);
 std::string get_client_file(char *buffer);
 void extract_info_from_rest_buffer(Client_Request &o, char *buffer);
@@ -46,38 +57,40 @@ void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_
 std::map<int, std::string> init_status_code_message_map();
 
 int open_file(std::ifstream &s, std::string path);
-void manage_request_status(Client_Request &obj, Conf &web_conf);
+void manage_request_status(route &r, Client_Request &obj, Conf &web_conf);
 
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
 
 void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &new_socket);
 void send_response(Client_Request &obj, int &new_socket);
-void manage_root(std::ifstream &file, std::string &line, std::map<std::string, std::string> &m);
+void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m);
+
 //contain port, server_name, all err page
 class Conf
 {
-private:
-	int port;
-	std::map<std::string, std::string> root;
+//in fact, no need to put as privee
+public:
+	std::set<int> port;
 	int max_size_request;
 	std::string server_name;
 	std::map<int, std::string>conf_map;//status code, error_page_path
 public:
-	Conf():port(0), max_size_request(3000), server_name(""){}
+	std::map<std::string, route> m_location;
+	Conf(){};
 	~Conf(){};
 	Conf(Conf const &s){*this = s;}
 	Conf &operator=(Conf const &src)
 	{
 		this->port = src.port;
-		this->root = src.root;
-		this->max_size_request = src.max_size_request;
+//		this->max_size_request = src.max_size_request;
+		this->m_location = src.m_location;
 		this->server_name = src.server_name;
 		this->conf_map = src.conf_map;
 		return *this;
 	}
-	void manage_item_value(std::string &item, std::vector<std::string> &vec);
-	int get_port()const {return port;}
-	std::map<std::string, std::string> get_root() const{return this->root;}
+
+	std::set<int> get_port()const {return port;}
+	std::map<std::string, route> get_m_location() const{return this->m_location;}
 	int get_max_size_request() const{return max_size_request;}
 	std::string get_server_name() const {return server_name;}
 	std::map<int, std::string> get_conf_err_page_map() const
@@ -85,22 +98,28 @@ public:
 		return this->conf_map;
 	}
 	void set_max_size_request(int n){this->max_size_request = n;}
-	void set_port(int port){this->port = port;}
-	void set_root(std::map<std::string, std::string>&r){this->root = r;}
+	void set_port(std::set<int> port){this->port = port;}
+	void set_m_location(std::map<std::string, route> &r){this->m_location = r;}
 	void set_server_name(std::string f){this->server_name = f;}
 	void set_config_map(std::map<int, std::string> src){
 		this->conf_map = src;}
 	void display_conf_file_debug()
 	{
-		std::cout << "port " << this->get_port() << std::endl;
-			std::cout << "max_size_request " << this->get_max_size_request() << std::endl;
-		std::cout << "server_name " << this->get_server_name() << std::endl;
+		for (std::set<int>::iterator it=port.begin(); it!=port.end(); ++it)
+			std::cout << "port " << *it << std::endl;
+		std::cout << "server_name " << this->server_name << std::endl;
 		std::map<int, std::string> mymap = this->get_conf_err_page_map();
 		for (std::map<int, std::string>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
 			std::cout << "status code: " << it->first << " corresponding page path" << " => " << it->second<< std::endl;
-		std::map<std::string, std::string> m = this->get_root();
-		for (std::map<std::string, std::string>::iterator it=m.begin(); it!=m.end(); ++it)
-			std::cout << "location: " << it->first << " root" << " => " << it->second<< std::endl;
+		std::map<std::string, route> m = this->get_m_location();
+		for (std::map<std::string, route>::iterator it=m.begin(); it!=m.end(); ++it)
+		{
+			std::cout << "location: " << RED << it->first << "  ";
+			cout <<  NC << " path_root" << " => " << BLUE << it->second.path_root << NC <<  "methods => \n";
+			std::set<string>::iterator itt;
+			for (itt=it->second.allow_methods.begin(); itt!=it->second.allow_methods.end(); ++itt)
+				std::cout << YELLOW << *itt << "\n";
+		}
 	}
 };
 
