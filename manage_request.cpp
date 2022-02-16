@@ -56,7 +56,7 @@ std::string get_file(char *data, int i)
 */
 std::string get_client_file(char *buffer)
 {
-	std::string file("/");
+	std::string file("/cute_cat.html");
 	if (buffer)
 	{
 		char *data = strstr(buffer, "/" );
