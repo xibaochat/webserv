@@ -16,10 +16,10 @@
 			<br />
 			<a style="font-size: 12px;" href="http://www.fillster.com/myspace-pictures/" target="_blank">Myspace Pictures</a>
 		</center>
-		<form action = "/file_upload.py" method = "POST">
+		<form action = "/file_upload.py" method = "POST" enctype="multipart/form-data">
 		First Name: <input type = "text" name = "first_name"><br />
-		Last Name: <input type = "text" name = "last_name" />
-		
+		Last Name: <input type = "text" name = "last_name" /> <br />
+		<input type="file" id="upload" name="upload_file" /> <br />
 		<input type = "submit" value = "Submit" />
 		</form>
 	</body>
