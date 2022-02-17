@@ -60,6 +60,8 @@ int open_file(std::ifstream &s, std::string path);
 void manage_request_status(route &r, Client_Request &obj, Conf &web_conf);
 
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
+void	delete_request(Client_Request &obj);
+void set_request_status_nb_message(int status_nb, Client_Request &obj);
 
 void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &new_socket);
 void send_response(Client_Request &obj, int &new_socket);

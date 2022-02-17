@@ -334,6 +334,8 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 		else
 			set_length_and_content(myfile, obj);
 	}
+	else if (obj.get_client_method() == "DELETE")
+		delete_request(obj);
 	//readable file
 	else if (file_is_text_based(obj.get_file_extension()))
 	{

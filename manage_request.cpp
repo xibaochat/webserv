@@ -43,6 +43,20 @@ void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &n
 	}
 }
 
+void	delete_request(Client_Request &obj)
+{
+	int msg;
+	std::string file = obj.get_client_ask_file();
+
+	if (remove(file.c_str()) == 0)
+		msg = 204;
+	else
+		msg = 403;
+	obj.set_status_code_nb(msg);
+	set_request_status_nb_message(msg, obj);
+}
+
+
 std::string get_file(char *data, int i)
 {
 	std::string file(data, 0, i);
