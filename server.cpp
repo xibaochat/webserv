@@ -195,35 +195,35 @@ void Server::acceptConnect(int &fd)
 	this->addfd(request_fd, true);
 }
 
-int check_substring(std::string str1, std::string str2)
-{
-    int i = 0;
-    int c = 0; // counter for substring
-	while (i < str1.length())
-    {
-		if (str1[i] == '/')
-		{
-			i++;
-			continue;
-		}
-		if (str2[c] == '/')
-		{
-			c++;
-			continue;
-		}
-        if( c == str2.length() )
-            return 1;
-        if(str2[c] == str1[i])
-            c++;
-		else
-			return 0;
-		i++;
-    }
-	if (c == str1.length())
-		return 1;
-    return 0;
-    //checking if the substring is present or not
-}
+// int check_substring(std::string str1, std::string str2)
+// {
+//     int i = 0;
+//     int c = 0; // counter for substring
+// 	while (i < str1.length())
+//     {
+// 		if (str1[i] == '/')
+// 		{
+// 			i++;
+// 			continue;
+// 		}
+// 		if (str2[c] == '/')
+// 		{
+// 			c++;
+// 			continue;
+// 		}
+//         if( c == str2.length() )
+//             return 1;
+//         if(str2[c] == str1[i])
+//             c++;
+// 		else
+// 			return 0;
+// 		i++;
+//     }
+// 	if (c == str1.length())
+// 		return 1;
+//     return 0;
+//     //checking if the substring is present or not
+// }
 
 route get_most_match_route(std::string file, std::map<std::string, route> loc_root)
 {
@@ -255,8 +255,19 @@ route find_match_route(Client_Request &obj, Conf &web_conf)
 
 void reset_file_full_path(route &r, Client_Request &obj)
 {
+	std::string full_path("/");
 	std::string file = obj.get_client_ask_file();
-	std::string full_path = r.path_root + file;
+	std::vector<std::string> v = extract_words_in_vector(file);
+	for (std::vector<std::string>::iterator it = v.begin() ; it != v.end(); ++it)
+	{
+		full_path += *it;
+		if (it != v.end() - 1)
+			full_path += "/";
+	}
+	// if (v.size() > 1 && file[file.size() - 1] == '/')//client ask a dir
+	// 	full_path += '/';
+	obj.clean_relative_path = full_path;
+	full_path = r.path_root + file;
 	obj.set_client_file(full_path);
 }
 

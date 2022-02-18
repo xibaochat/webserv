@@ -362,6 +362,26 @@ std::set<std::string> set_method(std::string &line)
 	return methods_set;
 }
 
+void manage_auto_index(int &end, std::string &path, std::string &line, std::map<std::string, route> &m)
+{
+	if (line != AUTO_ON && line != AUTO_OFF)
+	{
+		std::cerr << "[ERROR]autoindex in config file is wrong" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (m[path].auto_index_time == 0)
+	{
+		if (line == "autoindex on;")
+			m[path].auto_index = true;
+		else
+			m[path].auto_index = false;
+		m[path].auto_index_time = 1;
+		return ;
+	}
+	std::cerr << "[ERROR]autoindex in config file is doubled" << std::endl;
+	exit(EXIT_FAILURE);
+}
+
 void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m)
 {
 	int end = 0;
@@ -386,6 +406,8 @@ void manage_route(std::ifstream &file, std::string &line, std::map<std::string, 
 			root = get_root(line);
 			m[path].path_root = root;
 		}
+		else if (elem == "autoindex")
+			manage_auto_index(end, path, line, m);
 		else if (elem == "AllowMethods")
 		{
 			if (!m[path].allow_methods.size())

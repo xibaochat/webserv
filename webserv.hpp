@@ -10,7 +10,10 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <string>
+#include <dirent.h>
+#include <time.h>
 #include <map>
 #include <vector>
 #include <ctime>
@@ -30,17 +33,29 @@
 #define BLUE        "\033[1;34m"
 #define NC          "\033[0m"
 #define ERR_SEND  "Something went wrong when sending response"
+#define AUTO_ON     "autoindex on;"
+#define AUTO_OFF    "autoindex off;"
+
 
 using namespace std;
 typedef struct s_route
 {
+	s_route()
+	{
+		this->auto_index = false;
+		auto_index_time = 0;
+	}
 	std::string path_root;
 	std::set<std::string> allow_methods;
+	bool auto_index;
+	int  auto_index_time;
 }              route;
 
 class Client_Request;
 class Conf;
 
+std::vector<std::string> extract_words_in_vector(std::string &s);
+int check_substring(std::string s, std::string s1);
 int count_words(std::string str);
 std::string extract_word_from_line(int &end, std::string &line);
 std::string get_client_file(char *buffer);
@@ -64,6 +79,7 @@ void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
 void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &new_socket);
 void send_response(Client_Request &obj, int &new_socket);
 void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m);
+std::string get_file_output(Client_Request &o);
 
 //contain port, server_name, all err page
 class Conf
@@ -116,6 +132,7 @@ public:
 		{
 			std::cout << "location: " << RED << it->first << "  ";
 			cout <<  NC << " path_root" << " => " << BLUE << it->second.path_root << NC <<  "methods => \n";
+			cout << "autoindex " << it->second.auto_index << "\n";
 			std::set<string>::iterator itt;
 			for (itt=it->second.allow_methods.begin(); itt!=it->second.allow_methods.end(); ++itt)
 				std::cout << YELLOW << *itt << "\n";
@@ -126,9 +143,12 @@ public:
 //user method, asked file, file status_code
 class Client_Request
 {
-private:
+public:
+	bool dir_list;
+	std::string origin_path;//in url
 	std::string method;
-	std::string file;
+	std::string clean_relative_path;//remove extra / from url
+	std::string file;//full path
 	std::string f_extension;
 	int 		status_code_nb;
 	std::string status_code_message;
@@ -137,13 +157,14 @@ private:
 	std::map<std::string, std::string> client_request;
 	std::map<std::string, std::string> cgi_output;
 public:
-	Client_Request():method("GET"), file(""), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), total_line(""){}
+	Client_Request():method("GET"), file(""), dir_list(false), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), total_line(""), origin_path(""){}
 	~Client_Request(){};
 	Client_Request(Client_Request const &src){*this = src;}
 	Client_Request &operator=(Client_Request const &src)
 	{
 		this->method = src.method;
 		this->file = src.file;
+		this->origin_path = src.origin_path;
 		this->f_extension = src.f_extension;
 		this->status_code_nb = src.status_code_nb;
 		this->status_code_message = src.status_code_message;

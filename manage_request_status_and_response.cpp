@@ -192,20 +192,11 @@ int method_is_not_allow(route &r, Client_Request &obj)
 	return 1;
 }
 
-int check_f_permi_existence(Client_Request &obj)
+//in fact, if file not exist, return 0
+int no_permission(struct stat &sb, Client_Request &obj)
 {
-	 struct stat sb;
-	 std::string file = obj.get_client_ask_file();
-
-	 stat(file.c_str(), &sb);
-	 if (!S_ISREG(sb.st_mode))//directory
-	 {
-		 obj.set_status_code_nb(404);
-		 set_request_status_nb_message(404, obj);
-		 return 1;
-	 }
-	 struct passwd *pw = getpwuid(sb.st_uid);
-	 struct group  *gr = getgrgid(sb.st_gid);
+	struct passwd *pw = getpwuid(sb.st_uid);
+	struct group  *gr = getgrgid(sb.st_gid);
 	//no permission
 	 if (!(pw && (sb.st_mode & S_IRUSR))
 		 || !(gr && (sb.st_mode & S_IRGRP))
@@ -215,14 +206,35 @@ int check_f_permi_existence(Client_Request &obj)
 		 set_request_status_nb_message(403, obj);
 		 return 1;
 	 }
+	 return 0;
+}
+
+int check_f_permi_existence(route &r, Client_Request &obj)
+{
+	 struct stat sb;
+	 std::string file = obj.get_client_ask_file();
+	 stat(file.c_str(), &sb);
+
+	 if (!S_ISREG(sb.st_mode))//directory
+	 {
+		 if (r.auto_index == false)
+		 {
+			 obj.set_status_code_nb(403);
+			 set_request_status_nb_message(403, obj);
+			 return 1;
+		 }
+		 obj.dir_list = true;
+		 obj.clean_relative_path += "/";
+		 obj.file + "/";
+	 }
+	 //cannot open the file
 	 if (stat(file.c_str(), &sb) == -1)
 	 {
-		 cout << GREEN << "enter" << NC << "\n";
 		 obj.set_status_code_nb(404);
 		 set_request_status_nb_message(404, obj);
 		 return 1;
 	 }
-	 return 0;
+	 return (no_permission(sb, obj));
 }
 //https://stackoverflow.com/questions/4908043/what-is-the-best-way-to-check-a-files-existence-and-file-permissions-in-linux-u/4908070
 //https://stackoverflow.com/questions/8812959/how-to-read-linux-file-permission-programmatically-in-c-c
@@ -239,7 +251,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 
 	/*error file, if error html in Conf cannot be open and read, we send a static error
 	 message */
-	if (method_is_not_allow(r, obj) || check_f_permi_existence(obj) || manage_cgi_based_file(obj))
+	if (method_is_not_allow(r, obj) || check_f_permi_existence(r, obj) || manage_cgi_based_file(obj))
 	{
 		int status_code_nb = obj.get_status_code_nb();
 		ret = open_file(myfile, web_conf.get_conf_err_page_map()[status_code_nb]);
@@ -254,6 +266,23 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 		}
 		else
 			set_length_and_content(myfile, obj);
+	}
+	else if (obj.dir_list == true) //dir listing
+	{
+		obj.f_extension = "html";
+		//origin path is the short path affiche in the html file, full_path is place to open dir
+		try
+		{
+			std::string auto_index_output = get_file_output(obj);
+			obj.set_total_nb(auto_index_output.length());
+			obj.set_total_line(auto_index_output);
+		}
+		catch (const char* msg)
+		{
+			std::cerr << msg << std::endl;
+			obj.set_status_code_nb(404);
+            set_request_status_nb_message(404, obj);
+		}
 	}
 	//readable file
 	else if (file_is_text_based(obj.get_file_extension()))

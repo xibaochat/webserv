@@ -67,7 +67,6 @@ std::string get_client_file(char *buffer)
 				i++;
 			if (i != 1)//i == 1 means only /
 				file = get_file(data, i);
-
 		}
 	}
 	return file;
@@ -86,6 +85,7 @@ void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, C
 	std::string method(buffer, 0, ptr - buffer);
 	obj.set_client_method(method);
 	std::string file = get_client_file(buffer);//the file client ask
+	obj.origin_path = file;
 	std::cout << BLUE << "[ORIGIN]" << file << NC << endl;
 	obj.set_client_file(file);
 }
