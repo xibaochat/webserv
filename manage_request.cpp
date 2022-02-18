@@ -68,11 +68,14 @@ std::string get_file(char *data, int i)
 **  if no file, by default, file is "cute_cat.html"
 **  return (string)file name
 */
-std::string get_client_file(char *buffer)
+std::string get_client_file(char *buffer, Client_Request &obj)
 {
+	std::string path;
 	std::string file("/cute_cat.html");
+	std::string	query_string;
+
 	if (buffer)
-	{
+	{																
 		char *data = strstr(buffer, "/" );
 		int i = 0;
 		if (data)
@@ -80,8 +83,18 @@ std::string get_client_file(char *buffer)
 			while (data[i] && data[i] != ' ')
 				i++;
 			if (i != 1)//i == 1 means only /
-				file = get_file(data, i);
-
+			{
+				path = string(data, i);
+				std::string::size_type pos = path.find("?");
+				if (pos != std::string::npos)
+				{
+					file = get_file(data, pos);
+					query_string = string(data, pos + 1, i - pos);
+					obj.set_query_string(query_string);
+				}
+				else
+					file = get_file(data, i);
+			}
 		}
 	}
 	return file;
@@ -99,7 +112,7 @@ void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, C
 	char *ptr = strstr(buffer, " ");//GET , POST ?
 	std::string method(buffer, 0, ptr - buffer);
 	obj.set_client_method(method);
-	std::string file = get_client_file(buffer);//the file client ask
+	std::string file = get_client_file(buffer, obj);//the file client ask
 	std::cout << BLUE << "[ORIGIN]" << file << NC << endl;
 	obj.set_client_file(file);
 }

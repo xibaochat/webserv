@@ -144,6 +144,9 @@ char	**get_cgi_env(Client_Request &obj)
 {
 	std::vector<string> env;
 	char	**_env;
+	std::map<std::string, std::string> request;
+
+	request = obj.get_client_request_map();
 	
 	std::string	script_filename = (std::string("SCRIPT_FILENAME=") + obj.get_client_ask_file());
 	std::string	request_method = (std::string("REQUEST_METHOD=") + obj.get_client_method());
@@ -156,14 +159,16 @@ char	**get_cgi_env(Client_Request &obj)
 
 	if (obj.get_client_method() == "GET")
 	{
-		std::string	query_string = (std::string("QUERY_STRING=") + "Wait query_string");
+		std::string	query_string = (std::string("QUERY_STRING=") + obj.get_query_string());
 		env.push_back(query_string.c_str());
+		//env.push_back("CONTENT_LENGTH=0");
 	}
 	else if (obj.get_client_method() == "POST")
 	{
-		std::cout << "POST" << std::endl;
-		env.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");
-		env.push_back("CONTENT_LENGTH=7");
+		std::string content_length = (std::string("CONTENT_LENGTH=") + request["Content-Length"]);
+		std::string	content_type = (std::string("CONTENT_TYPE=") + request["Content-Type"]);
+		env.push_back(content_type.c_str());
+		env.push_back(content_length.c_str());
 	}
 	_env = static_cast<char**>(malloc(sizeof(char *) * (env.size() + 1)));
 	for (size_t i = 0; i < env.size(); i++)
@@ -182,10 +187,13 @@ void manage_executable_file(Client_Request &obj)
 	int	cgi_in[2];
 	char *arr[3];
 	std::map<std::string, std::string> f_header_map;
+	std::map<std::string, std::string> request;
 	
 	arr[0] = strdup("/usr/bin/python3");
 	arr[1] = strdup(obj.get_client_ask_file().c_str());
 	arr[2] = NULL;
+
+	request = obj.get_client_request_map();
 
 	if (pipe(cgi_out) == -1)
 		std::cout << "cgi_out error" << std::endl;
@@ -193,7 +201,7 @@ void manage_executable_file(Client_Request &obj)
 	{
 		if (pipe(cgi_in) == -1)
 			std::cout << "cgi_in error" << std::endl;
-		if (write(cgi_in[1], "abc=123", 7) == -1)	//Need change "abc=123" after get body
+		if (write(cgi_in[1], request["body"].c_str(), atoi(request["Content-Length"].c_str())) == -1)	//Need change "abc=123" after get body
 			std::cout << "write error" << std::endl;
 	}
 
