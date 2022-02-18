@@ -159,8 +159,9 @@ char	**get_cgi_env(Client_Request &obj)
 
 	if (obj.get_client_method() == "GET")
 	{
-		std::string	query_string = (std::string("QUERY_STRING=") + "Wait query_string");
+		std::string	query_string = (std::string("QUERY_STRING=") + obj.get_query_string());
 		env.push_back(query_string.c_str());
+		//env.push_back("CONTENT_LENGTH=0");
 	}
 	else if (obj.get_client_method() == "POST")
 	{
