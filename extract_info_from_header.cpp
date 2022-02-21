@@ -43,7 +43,7 @@ std::string get_value_from_line(char *str)
 int get_r_n_index(char *buffer)
 {
 	int i = 0;
-	while (buffer[i])
+	while (buffer[i] && buffer[i] != '\n')
 	{
 		if (i > 0 && buffer[i] == '\r' && buffer[i + 1] && buffer[i + 1] == '\n')
 			return i;
@@ -77,6 +77,8 @@ void extract_info_from_rest_buffer(Client_Request &obj, char *buffer)
 		header[key] = value;
 		buffer += len + 1 + 1;
 	}
+	if (buffer[0] && buffer[0] == '\r' && buffer[1] && buffer[1] == '\n')
+		header["body"] = string(buffer + 2, atoi(header["Content-Length"].c_str()));
 	header["method"] = obj.get_client_method();
 	header["file"] = obj.get_client_ask_file();
 	header["status_code_nb"] = std::to_string(obj.get_status_code_nb());

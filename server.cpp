@@ -276,7 +276,7 @@ void reset_file_full_path(route &r, Client_Request &obj)
 void Server::handle_client_event(int &request_fd)
 {
 	Client_Request obj;
-	int max_nb = 3000;
+	int max_nb = 3000000;
 	char buffer[max_nb];
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);

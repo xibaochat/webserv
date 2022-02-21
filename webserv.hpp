@@ -75,6 +75,8 @@ int open_file(std::ifstream &s, std::string path);
 void manage_request_status(route &r, Client_Request &obj, Conf &web_conf);
 
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
+void	delete_request(Client_Request &obj);
+void set_request_status_nb_message(int status_nb, Client_Request &obj);
 
 void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &new_socket);
 void send_response(Client_Request &obj, int &new_socket);
@@ -148,7 +150,8 @@ public:
 	std::string origin_path;//in url
 	std::string method;
 	std::string clean_relative_path;//remove extra / from url
-	std::string file;//full path
+	std::string file;
+	std::string	query_string;
 	std::string f_extension;
 	int 		status_code_nb;
 	std::string status_code_message;
@@ -179,6 +182,7 @@ public:
 	std::string get_status_code_message(){return this->status_code_message;}
 	unsigned long get_total_nb(){return this->total_nb;}
 	std::string get_total_line(){return this->total_line;}
+	std::string	get_query_string(){return this->query_string;}
 	std::map<std::string, std::string> get_client_request_map(){return this->client_request;}
 	std::map<std::string, std::string> get_cgi_output_map(){return this->cgi_output;}
 
@@ -189,6 +193,7 @@ public:
 	void set_status_code_message(std::string &src){this->status_code_message = src;}
 	void set_total_nb(unsigned long src){this->total_nb = src;}
 	void set_total_line(std::string &src){this->total_line = src;}
+	void set_query_string(std::string &src){this->query_string = src;}
 	void set_client_request_map(std::map<std::string, std::string> &src)
 	{
 		this->client_request = src;
