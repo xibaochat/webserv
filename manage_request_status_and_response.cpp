@@ -311,8 +311,6 @@ int check_f_permi_existence(route &r, Client_Request &obj)
 			 return 1;
 		 }
 		 obj.dir_list = true;
-		 obj.clean_relative_path += "/";
-		 obj.file + "/";
 	 }
 	 //cannot open the file
 	 if (stat(file.c_str(), &sb) == -1)
