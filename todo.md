@@ -30,15 +30,15 @@ every feature is working during evaluation.
 * manage routes configuration:
   <!-- - add alterntaives directories for specific routes -->
   <!-- - limit request type (`POST`, `GET`...) -->
-  - turn on or off directory listing
+  <!-- - turn on or off directory listing -->
   - define an HTTP redirection
-  - default file to answer if the request is a directory
+  <!-- - default file to answer if the request is a directory -->
   - make the route able to accept uploaded files and configure where it should
 be saved
   - make the route able to accept uploaded files and configure where it should
 be saved
   - CGI
-* see behavior with invalid type requests (ex: `not POST`)
+<!-- * see behavior with invalid type requests (ex: `not POST`) -->
 * POST :
   - upload files
   - data passed to CGI
