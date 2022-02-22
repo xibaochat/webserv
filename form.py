@@ -2,14 +2,21 @@
 import cgi, cgitb
 cgitb.enable()
 input_data = cgi.FieldStorage()
-# name = input_data.getvalue('fname')
-# print("Name of the user is:",name)
+keys = input_data.keys()
 
-first_name = input_data["first_name"].value
-last_name = input_data["last_name"].value
+if 'first_name' in keys:
+  first_name = input_data["first_name"].value.strip()
+else:
+  first_name = ""
+if not first_name:
+  first_name = "empty"
 
-#print(first_name)
-#print(last_name)
+if 'last_name' in keys:
+  last_name = input_data["last_name"].value.strip()
+else:
+  last_name = ""
+if not last_name:
+  last_name = "empty"
 
 print('Content-Type:text/html\r\n\r\n')
 print('<html>\n')
