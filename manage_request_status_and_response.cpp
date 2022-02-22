@@ -180,7 +180,7 @@ char	**get_cgi_env(Client_Request &obj)
 	return (_env);
 }
 
-void manage_executable_file(Client_Request &obj)
+int	manage_executable_file(Client_Request &obj)
 {
 	int status;
 	int cgi_out[2];
@@ -206,13 +206,12 @@ void manage_executable_file(Client_Request &obj)
 	}
 
 	char foo[4096] = {0};
+	char **env = get_cgi_env(obj);
 	pid_t pid = fork();
 	if (pid < 0)
 		std::cout << "Fork error!" << std::endl;
 	else if (pid == 0)
 	{
-		char **env = get_cgi_env(obj);
-
 		if (obj.get_client_method() == "POST")
 		{
 
@@ -229,19 +228,27 @@ void manage_executable_file(Client_Request &obj)
 		}
 		if (execve(arr[0], arr, env) == -1)
 		{
-			std::cout << "execve error" << std::endl;
+			std::cerr << "execve error" << std::endl;
 		}
+	}
+	else
+	{
+		waitpid(pid, &status, 0);
+		close(cgi_out[1]);
 		for (int i = 0; env[i]; i++)
 		{
 			free(env[i]);
 			env[i] = NULL;
 		}
 		free(env);
-	}
-	else
-	{
-		waitpid(pid, &status, 0);
-		close(cgi_out[1]);
+		if (WIFEXITED(status) && WEXITSTATUS(status))
+		{
+			close(cgi_out[0]);
+			close(cgi_in[0]);
+			free(arr[0]);
+			free(arr[1]);
+			return (1);
+		}
 		if (obj.get_client_method() == "POST")
 		{
 			close(cgi_in[0]);
@@ -263,6 +270,7 @@ void manage_executable_file(Client_Request &obj)
 		obj.set_total_nb(ret.length());
 		obj.set_total_line(ret);
 	}
+	return (0);
 }
 
 int method_is_not_allow(route &r, Client_Request &obj)
@@ -332,6 +340,7 @@ int check_f_permi_existence(route &r, Client_Request &obj)
 void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 {
 	std::ifstream myfile;
+	std::map<int, std::string> error_map = web_conf.get_conf_err_page_map();
 	int ret = 0;
 
 	/*error file, if error html in Conf cannot be open and read, we send a static error
@@ -339,7 +348,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 	if (method_is_not_allow(r, obj) || check_f_permi_existence(r, obj) || manage_cgi_based_file(obj))
 	{
 		int status_code_nb = obj.get_status_code_nb();
-		ret = open_file(myfile, web_conf.get_conf_err_page_map()[status_code_nb]);
+		ret = open_file(myfile, error_map[status_code_nb]);
 		if (ret)
 		{
 			std::string str("Error 404 : Not Found");
@@ -379,6 +388,25 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 	}
 	else if (obj.get_file_extension() == "py")
 	{
-		manage_executable_file(obj);
+		if (manage_executable_file(obj))
+		{
+			int status_code_nb = 500;
+			ret = open_file(myfile, error_map[status_code_nb]);
+			if (ret)
+			{
+				std::cerr << "Static error message" << std::endl;
+				std::string str("Error 500 : Internal Server Error");
+				obj.set_status_code_nb(500);
+				set_request_status_nb_message(500, obj);
+				obj.set_total_nb(str.length());
+				obj.set_total_line(str);
+				myfile.close();
+			}
+			else
+			{
+				std::cerr << "A file, theoretically!" << std::endl;
+				set_length_and_content(myfile, obj);
+			}
+		}
 	}
 }
