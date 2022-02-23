@@ -9,7 +9,6 @@ cgitb.enable()
 data = cgi.FieldStorage()
 
 fileitem = data['upload_file']
-print(fileitem.filename)
 
 if fileitem.filename:
 	fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
