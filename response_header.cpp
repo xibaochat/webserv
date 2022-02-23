@@ -14,7 +14,7 @@ std::string get_file_type(Client_Request &obj)
 	else if (type == "jpeg" || type == "jpg")
 		type = "image/jpeg";
 	else
-		type = "text/plain";
+		type = "text/html";
 	return type;
 }
 

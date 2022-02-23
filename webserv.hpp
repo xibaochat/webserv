@@ -81,6 +81,10 @@ void set_request_status_nb_message(int status_nb, Client_Request &obj);
 void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &new_socket);
 void send_response(Client_Request &obj, int &new_socket);
 void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m);
+int method_is_not_allow(route &r, Client_Request &obj);
+int extension_is_not_exist(std::string *mylist, std::string extension, int size);
+int check_f_permi_existence(route &r, Client_Request &obj);
+int file_is_text_based(std::string type);
 std::string get_file_output(Client_Request &o);
 
 //contain port, server_name, all err page
