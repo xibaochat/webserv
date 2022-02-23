@@ -19,6 +19,16 @@ fclean: clean
 	@/bin/rm -f $(NAME)
 	@/bin/rm -f *~
 	@/bin/rm -f *#
+	@/bin/rm -f client
+	@/bin/rm -rf test_this/root
+
+test_setup: all
+	@rm -rf test_this/root
+	@mkdir -p test_this/root
+	@cp test_this/index/* test_this/root/
+	@cp test_this/root/index_example.html test_this/root/index_permission.html
+	@chmod 000 test_this/root/index_permission.html
+	@clang++ -o client test_this/client.cpp
 
 re: fclean all
 .PHONY: all clean fclean re

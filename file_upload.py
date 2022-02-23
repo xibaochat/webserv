@@ -7,6 +7,7 @@ import cgitb
 cgitb.enable()
 
 data = cgi.FieldStorage()
+keys = data.keys()
 
 fileitem = data['upload_file']
 
@@ -15,15 +16,40 @@ if fileitem.filename:
 	open('/tmp/' + fn, 'wb').write(fileitem.file.read())
 	message = 'The file "' + fn + '" was uploaded successfully'
 
+if 'description' in keys:
+  description = data["description"].value.strip()
 else:
-	message = 'No file was uploaded'
+  description = ""
+if not description:
+  description = "empty"
 
-print('Content-Type:text/html\r\n\r\n')
-print('<html>\n')
-print('<head>\n')
-print('<title>Hello World - First CGI Program</title>\n')
-print('</head>\n')
-print('<body>\n')
-print('<h2>haha' + message + ' This is my first CGI program</h2>\n')
-print('</body>\n')
-print('</html>\n')
+if (len(data) == 0):
+	print('Content-Type:text/html\r\n\r\n')
+	print('<html>\n')
+	print('<head>\n')
+	print('<title>ERROR - First CGI Program</title>\n')
+	print('</head>\n')
+	print('<body>\n')
+	print('<h2>Error' + ' This is my first CGI program</h2>\n')
+	print('</body>\n')
+	print('</html>\n')
+else:
+	fileitem = data['upload_file']
+	if fileitem.filename:
+		fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
+		open('/tmp/' + fn, 'wb').write(fileitem.file.read())
+		message = 'The file "' + fn + '" was uploaded successfully'
+	else:
+		message = 'No file was uploaded'
+
+	print('Content-Type:text/html\r\n\r\n')
+	print('<html>\n')
+	print('<head>\n')
+	print('<title>Hello World - First CGI Program</title>\n')
+	print('</head>\n')
+	print('<body>\n')
+	print('<h2>This is my first CGI program</h2>\n')
+	print('<h2>' + message + '</h2>\n')
+	print('<h2>Description of the file is ' + description + '</h2>\n')
+	print('</body>\n')
+	print('</html>\n')
