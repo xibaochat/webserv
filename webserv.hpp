@@ -78,7 +78,7 @@ void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
 void	delete_request(Client_Request &obj);
 void set_request_status_nb_message(int status_nb, Client_Request &obj);
 
-void send_error_page(int error_code, Client_Request &obj, Conf &web_conf, int &new_socket);
+void set_error(Client_Request &obj, Conf &web_conf, int status_code_nb);
 void send_response(Client_Request &obj, int &new_socket);
 void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m);
 int method_is_not_allow(route &r, Client_Request &obj);

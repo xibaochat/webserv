@@ -195,38 +195,10 @@ void Server::acceptConnect(int &fd)
 	this->addfd(request_fd, true);
 }
 
-// int check_substring(std::string str1, std::string str2)
-// {
-//     int i = 0;
-//     int c = 0; // counter for substring
-// 	while (i < str1.length())
-//     {
-// 		if (str1[i] == '/')
-// 		{
-// 			i++;
-// 			continue;
-// 		}
-// 		if (str2[c] == '/')
-// 		{
-// 			c++;
-// 			continue;
-// 		}
-//         if( c == str2.length() )
-//             return 1;
-//         if(str2[c] == str1[i])
-//             c++;
-// 		else
-// 			return 0;
-// 		i++;
-//     }
-// 	if (c == str1.length())
-// 		return 1;
-//     return 0;
-//     //checking if the substring is present or not
-// }
-
-route get_most_match_route(std::string file, std::map<std::string, route> loc_root)
+route get_matching_route(Client_Request &obj, Conf &web_conf)
 {
+	std::map<std::string, route> loc_root = web_conf.m_location;
+	std::string file = obj.get_client_ask_file();
 	int loc_len = 0;
 	std::string key;
 	for (std::map<std::string, route>::iterator it=loc_root.begin(); it!=loc_root.end(); ++it)
@@ -243,14 +215,6 @@ route get_most_match_route(std::string file, std::map<std::string, route> loc_ro
 	if(!key.size())
 		key = "/";
 	return loc_root[key];
-}
-
-route find_match_route(Client_Request &obj, Conf &web_conf)
-{
-	std::map<std::string, route> loc_root = web_conf.m_location;
-	std::string file = obj.get_client_ask_file();
-	route r = get_most_match_route(file, loc_root);
-	return r;
 }
 
 void reset_file_full_path(route &r, Client_Request &obj)
@@ -276,21 +240,22 @@ void reset_file_full_path(route &r, Client_Request &obj)
 void Server::handle_client_event(int &request_fd)
 {
 	Client_Request obj;
-	int max_nb = 3000000;
+	int max_nb = 65536;
 	char buffer[max_nb];
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
 	std::cout << GREEN << buffer << NC << "\n";
 	if (nb_read <= 0)
 	{
-        send_error_page(204, obj, this->web_conf, request_fd);
+		set_error(obj, this->web_conf, 204);
+		send_response(obj, request_fd);
 		this->Close(request_fd);
 	}
 	else
 	{
 		extract_info_from_first_line_of_buffer(obj, buffer, this->web_conf);
 		extract_info_from_rest_buffer(obj, buffer);
-		route r = find_match_route(obj, this->web_conf);
+		route r = get_matching_route(obj, this->web_conf);
 		reset_file_full_path(r, obj);
 		std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
 		manage_request_status(r, obj, this->web_conf);
