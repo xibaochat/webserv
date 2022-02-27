@@ -386,7 +386,7 @@ void manage_route(std::ifstream &file, std::string &line, std::map<std::string, 
 {
 	int end = 0;
 	int i = 0;
-	std::string elem, path, root;
+	std::string elem, path, root, upload_root;
 
 	path = get_location_path(line);
 	while (getline(file, line))
@@ -418,9 +418,14 @@ void manage_route(std::ifstream &file, std::string &line, std::map<std::string, 
 				exit(EXIT_FAILURE);
 			}
 		}
+		else if (elem == "upload_dir")
+		{
+			upload_root = get_root(line);
+			m[path].path_upload_root = upload_root;
+		}
 		else
 		{
-			std::cerr << "[ERROR] Inaccpeted element in config" << std::endl;
+			std::cerr << "[ERROR] Inaccpeted element in config" << elem << std::endl;
 			exit(EXIT_FAILURE);
 		}
 	}

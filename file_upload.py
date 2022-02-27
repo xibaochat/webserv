@@ -9,13 +9,6 @@ cgitb.enable()
 data = cgi.FieldStorage()
 keys = data.keys()
 
-fileitem = data['upload_file']
-
-if fileitem.filename:
-	fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
-	open('/tmp/' + fn, 'wb').write(fileitem.file.read())
-	message = 'The file "' + fn + '" was uploaded successfully'
-
 if 'description' in keys:
   description = data["description"].value.strip()
 else:
@@ -35,10 +28,15 @@ if (len(data) == 0):
 	print('</html>\n')
 else:
 	fileitem = data['upload_file']
+	upload_dir = os.getenv("UPLOAD_DIR")
+
+	if not os.path.exists(upload_dir):
+		os.makedirs(upload_dir)
+
 	if fileitem.filename:
 		fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
-		open('/tmp/' + fn, 'wb').write(fileitem.file.read())
-		message = 'The file "' + fn + '" was uploaded successfully'
+		open(upload_dir + fn, 'wb').write(fileitem.file.read())
+		message = 'The file "' + upload_dir + fn + '" was uploaded successfully'
 	else:
 		message = 'No file was uploaded'
 
