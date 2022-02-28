@@ -252,10 +252,14 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 
 	/*error file, if error html in Conf cannot be open and read, we send a static error
 	 message */
-	if (method_is_not_allow(r, obj) || check_f_permi_existence(r, obj) || manage_cgi_based_file(obj))
-	{
+	if (file_not_exist(obj))
 		set_error(obj, web_conf, 404);
-	}
+	else if (file_no_permission(r, obj))
+		set_error(obj, web_conf, 403);
+	else if (method_is_not_allow(r, obj))	
+		set_error(obj, web_conf, 405);
+	else if (manage_cgi_based_file(obj))
+		set_error(obj, web_conf, 501);
 	else if (obj.dir_list == true) //dir listing
 	{
 		obj.f_extension = "html";

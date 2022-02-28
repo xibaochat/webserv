@@ -83,7 +83,7 @@ int open_file(std::ifstream &s, std::string path);
 void manage_request_status(route &r, Client_Request &obj, Conf &web_conf);
 
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
-void	delete_request(Client_Request &obj);
+void delete_request(Client_Request &obj);
 void set_request_status_nb_message(int status_nb, Client_Request &obj);
 
 void set_error(Client_Request &obj, Conf &web_conf, int status_code_nb);
@@ -91,7 +91,8 @@ void send_response(Client_Request &obj, int &new_socket);
 void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m);
 int method_is_not_allow(route &r, Client_Request &obj);
 int extension_is_not_exist(std::string *mylist, std::string extension, int size);
-int check_f_permi_existence(route &r, Client_Request &obj);
+int file_no_permission(route &r, Client_Request &obj);
+int file_not_exist(Client_Request &obj);
 int file_is_text_based(std::string type);
 std::string get_file_output(Client_Request &o);
 

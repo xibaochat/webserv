@@ -19,6 +19,7 @@ public:
 	struct sockaddr_in *serverAddr;
 	int *listener;
 	int epfd;
+	std::string	_request;
 	std::set<int> port;
 	std::map<int, std::string> error_page_map;
 	Conf  web_conf;
