@@ -77,7 +77,7 @@ int manage_cgi_based_file(Client_Request &obj)
 	return (0);
 }
 
-char	**get_cgi_env(Client_Request &obj)
+char	**get_cgi_env(Client_Request &obj, route &r)
 {
 	std::vector<string> env;
 	char	**_env;
@@ -87,12 +87,20 @@ char	**get_cgi_env(Client_Request &obj)
 
 	std::string	script_filename = (std::string("SCRIPT_FILENAME=") + obj.get_client_ask_file());
 	std::string	request_method = (std::string("REQUEST_METHOD=") + obj.get_client_method());
+	std::string	upload_dir = (std::string("UPLOAD_DIR=") + UPLOAD_DIR);
+	std::string	acceptable_upload = (std::string("ACCEPTABLE_UPLOAD=") + UPLOAD_DEFAUT);
 
 	env.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	env.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	env.push_back("REDIRECT_STATUS=200");
 	env.push_back(script_filename.c_str());
 	env.push_back(request_method.c_str());
+	if (!r.path_upload_root.empty())
+		upload_dir = (std::string("UPLOAD_DIR=") + r.path_upload_root);
+	env.push_back(upload_dir.c_str());
+	if (!r.acceptable_upload.empty())
+		acceptable_upload = (std::string("ACCEPTABLE_UPLOAD=") + r.acceptable_upload);
+	env.push_back(acceptable_upload.c_str());
 
 	if (obj.get_client_method() == "GET")
 	{
@@ -117,7 +125,7 @@ char	**get_cgi_env(Client_Request &obj)
 	return (_env);
 }
 
-int	manage_executable_file(Client_Request &obj)
+int	manage_executable_file(Client_Request &obj, route &r)
 {
 	int status;
 	int cgi_out[2];
@@ -143,7 +151,7 @@ int	manage_executable_file(Client_Request &obj)
 	}
 
 	char foo[4096] = {0};
-	char **env = get_cgi_env(obj);
+	char **env = get_cgi_env(obj, r);
 	pid_t pid = fork();
 	if (pid < 0)
 		std::cout << "Fork error!" << std::endl;
@@ -274,7 +282,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 	}
 	else if (obj.get_file_extension() == "py")
 	{
-		if (manage_executable_file(obj))
+		if (manage_executable_file(obj, r))
 			set_error(obj, web_conf, 500);
 	}
 }

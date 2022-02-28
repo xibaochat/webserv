@@ -35,6 +35,10 @@
 #define ERR_SEND  "Something went wrong when sending response"
 #define AUTO_ON     "autoindex on;"
 #define AUTO_OFF    "autoindex off;"
+#define UPLOAD_DIR	"/tmp/"
+#define UPLOAD_ON	"upload on;"
+#define UPLOAD_OFF	"upload off;"
+#define	UPLOAD_DEFAUT	"on"
 
 
 using namespace std;
@@ -44,11 +48,15 @@ typedef struct s_route
 	{
 		this->auto_index = false;
 		auto_index_time = 0;
+		acceptable_upload_time = 0;
 	}
 	std::string path_root;
 	std::set<std::string> allow_methods;
 	bool auto_index;
 	int  auto_index_time;
+	std::string	path_upload_root;
+	std::string	acceptable_upload;
+	int	acceptable_upload_time;
 }              route;
 
 class Client_Request;
