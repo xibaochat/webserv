@@ -29,14 +29,17 @@ if (len(data) == 0):
 else:
 	fileitem = data['upload_file']
 	upload_dir = os.getenv("UPLOAD_DIR")
-
-	if not os.path.exists(upload_dir):
-		os.makedirs(upload_dir)
+	acceptable_upload = os.getenv("ACCEPTABLE_UPLOAD")
 
 	if fileitem.filename:
-		fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
-		open(upload_dir + fn, 'wb').write(fileitem.file.read())
-		message = 'The file "' + upload_dir + fn + '" was uploaded successfully'
+		if acceptable_upload == "on":
+			if not os.path.exists(upload_dir):
+				os.makedirs(upload_dir)
+			fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
+			open(upload_dir + fn, 'wb').write(fileitem.file.read())
+			message = 'The file "' + upload_dir + fn + '" was uploaded successfully'
+		else:
+			message = 'Not allow to upload file'
 	else:
 		message = 'No file was uploaded'
 

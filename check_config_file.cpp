@@ -382,6 +382,23 @@ void manage_auto_index(int &end, std::string &path, std::string &line, std::map<
 	exit(EXIT_FAILURE);
 }
 
+void manage_acceptable_upload(std::string &path, std::string &line, std::map<std::string, route> &m)
+{
+	if (line != UPLOAD_ON && line != UPLOAD_OFF)
+	{
+		std::cerr << "[ERROR]upload in config file is wrong" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (m[path].acceptable_upload_time == 0)
+	{
+		m[path].acceptable_upload = get_root(line);
+		m[path].acceptable_upload_time = 1;
+		return ;
+	}
+	std::cerr << "[ERROR]upload in config file is doubled" << std::endl;
+	exit(EXIT_FAILURE);
+}
+
 void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m)
 {
 	int end = 0;
@@ -423,6 +440,8 @@ void manage_route(std::ifstream &file, std::string &line, std::map<std::string, 
 			upload_root = get_root(line);
 			m[path].path_upload_root = upload_root;
 		}
+		else if (elem == "upload")
+			manage_acceptable_upload(path, line, m);
 		else
 		{
 			std::cerr << "[ERROR] Inaccpeted element in config" << elem << std::endl;

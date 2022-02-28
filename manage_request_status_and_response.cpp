@@ -88,6 +88,7 @@ char	**get_cgi_env(Client_Request &obj, route &r)
 	std::string	script_filename = (std::string("SCRIPT_FILENAME=") + obj.get_client_ask_file());
 	std::string	request_method = (std::string("REQUEST_METHOD=") + obj.get_client_method());
 	std::string	upload_dir = (std::string("UPLOAD_DIR=") + UPLOAD_DIR);
+	std::string	acceptable_upload = (std::string("ACCEPTABLE_UPLOAD=") + UPLOAD_DEFAUT);
 
 	env.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	env.push_back("SERVER_PROTOCOL=HTTP/1.1");
@@ -97,7 +98,9 @@ char	**get_cgi_env(Client_Request &obj, route &r)
 	if (!r.path_upload_root.empty())
 		upload_dir = (std::string("UPLOAD_DIR=") + r.path_upload_root);
 	env.push_back(upload_dir.c_str());
-
+	if (!r.acceptable_upload.empty())
+		acceptable_upload = (std::string("ACCEPTABLE_UPLOAD=") + r.acceptable_upload);
+	env.push_back(acceptable_upload.c_str());
 
 	if (obj.get_client_method() == "GET")
 	{
