@@ -40,7 +40,7 @@ int main(int ac, char **av)
 	t2.close();
 	Conf web_conf2 = manage_config_file(server_content2);
 
-	Server server(web_conf);
+	Server server();
 	server.web_conf_vector.insert(server.web_conf_vector.end(), web_conf);
 	server.web_conf_vector.insert(server.web_conf_vector.end(), web_conf2);
 	server.Start(web_conf);
