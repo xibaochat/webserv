@@ -153,7 +153,7 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count)
 		// A request is now ready to receive a response
 		else if (ev & EPOLLIN)
 			this->ready_map[sockfd] = this->handle_client_event(sockfd);
-		else if (ev && EPOLLOUT && this->ready_map[sockfd])/*send content to request*/
+		else if (ev & EPOLLOUT && this->ready_map[sockfd])/*send content to request*/
 			this->send_content_to_request(sockfd);
 	}
 }
@@ -370,7 +370,7 @@ bool Server::handle_client_event(int &request_fd)
 		this->ready_map.insert(std::pair<int, bool> (request_fd, false));
 	}
 	// Add what we just read from the buffer
-	request_map[request_fd] += std::string(buffer);
+	request_map[request_fd] += std::string(buffer, nb_read);
 
 	if (nb_read <= 0)
 	{
@@ -396,6 +396,15 @@ bool Server::handle_client_event(int &request_fd)
 			{
 				std::string tmp = request_map[request_fd].substr(request_map[request_fd].find("Content-Length: ") + 16, 10);
 				int len = (int)std::strtol(tmp.c_str(), NULL, 10);
+				if (len > default_conf.get_client_max_body_size() && default_conf.get_client_max_body_size() != -1)
+				{
+					set_error(obj, default_conf, 413);
+					send_response(obj, request_fd);
+					ready_map.erase(request_fd);
+					request_map.erase(request_fd);
+					this->Close(request_fd);
+					return (ready_map[request_fd]);
+				}
 				if (request_map[request_fd].size() >= len + end_of_header + 4)
 					ready_map[request_fd] = true;
 				else

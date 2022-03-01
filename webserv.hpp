@@ -40,11 +40,7 @@
 # define UPLOAD_OFF	"upload off;"
 # define	UPLOAD_DEFAUT	"on"
 
-
-# define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location"}
-
-
-# define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location"}
+# define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location", "client_max_body_size"}
 
 
 using namespace std;
@@ -127,7 +123,7 @@ public:
 	Conf &operator=(Conf const &src)
 	{
 		this->port = src.port;
-//		this->client_max_body_size = src.client_max_body_size;
+		this->client_max_body_size = src.client_max_body_size;
 		this->m_location = src.m_location;
 		this->server_name = src.server_name;
 		this->conf_map = src.conf_map;

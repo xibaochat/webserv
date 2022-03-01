@@ -185,7 +185,7 @@ int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 				show_err_message_and_quite(message_error);
 			}
 			nb = get_transfered_value(ss, it);
-			if (nb >= 1 && nb <= 65535)
+			if ((nb >= 1 && nb <= 65535) || key == "client_max_body_size")
 			{
 				vec.erase(it, it + 2);
 				return nb;
@@ -222,13 +222,15 @@ void manage_port(std::vector<std::string> &vec, Conf &web_conf)
 /*
 ** check max buffer size is number and store value to web_conf
 */
-// void manage_client_max_body_size(std::vector<std::string> &vec, Conf &web_conf)
-// {
-// 	 std::vector<std::string>::iterator it;
-// 	 std::string key("client_max_body_size");
-// 	 int client_max_body_size  = manage_key_correspond_value(key,  vec);
-// 	 web_conf.set_client_max_body_size(client_max_body_size);
-// }
+void manage_client_max_body_size(std::vector<std::string> &vec, Conf &web_conf)
+{
+	std::vector<std::string>::iterator it;
+	std::string key("client_max_body_size");
+	int client_max_body_size  = manage_key_correspond_value(key,  vec);
+	if (client_max_body_size == 0)
+		show_err_message_and_quite("[Error]The clinet_max_body_size can't be 0");
+	web_conf.set_client_max_body_size(client_max_body_size);
+}
 
 /*
 ** Extract and return `server_name` if valid
@@ -490,7 +492,7 @@ Conf manage_config_file(std::stringstream &file)
 	web_conf.m_location = m;
 	manage_port(vec, web_conf);
 	manage_server_name(vec, web_conf);
-//	manage_client_max_body_size(vec, web_conf);
+	manage_client_max_body_size(vec, web_conf);
 	set_err_page_map(vec, web_conf);
 
 	if (vec.size() != 0)
