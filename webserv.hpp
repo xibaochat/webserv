@@ -76,7 +76,7 @@ std::string get_time();
 std::string response_str(Client_Request &obj);
 std::string get_client_file(char *buffer);
 void check_err_page_validity(std::string file);
-void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf);
+void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer);
 
 void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_conf);
 

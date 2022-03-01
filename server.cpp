@@ -259,6 +259,7 @@ void reset_file_full_path(route &r, Client_Request &obj)
  */
 void Server::handle_client_event(int &request_fd)
 {
+	Conf curr_conf;
 	Client_Request obj;
 	int max_nb = 65536;
 	char buffer[max_nb];
@@ -266,23 +267,41 @@ void Server::handle_client_event(int &request_fd)
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
 	std::cout << GREEN << buffer << NC << "\n";
 
-	// Conf curr_conf = this->get_curr_conf(obj){};
 	// //Conf curr_conf = this->web_conf;
 
-	// if (nb_read <= 0)
-	// {
-	// 	set_error(obj, curr_conf, 204);
-	// 	send_response(obj, request_fd);
-	// 	this->Close(request_fd);
-	// }
-	// else
-	// {
-	// 	extract_info_from_first_line_of_buffer(obj, buffer, curr_conf);
-	// 	extract_info_from_rest_buffer(obj, buffer);
-	// 	route r = get_matching_route(obj, curr_conf);
-	// 	reset_file_full_path(r, obj);
-	// 	std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
-	// 	manage_request_status(r, obj, curr_conf);
-	// 	this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
-	// }
+	if (nb_read <= 0)
+	{
+		set_error(obj, curr_conf, 204);
+		send_response(obj, request_fd);
+		this->Close(request_fd);
+	}
+	else
+	{
+		extract_info_from_first_line_of_buffer(obj, buffer);
+		extract_info_from_rest_buffer(obj, buffer);
+
+		std::string curr_server_name;
+		for (std::map<std::string, std::string>::iterator it=obj.client_request.begin();
+			 it!=obj.client_request.end(); ++it)
+			if (it->first == "Host")
+				curr_server_name = it->second.substr(0, it->second.find(':'));
+
+		for (std::vector<Conf>::iterator it = this->web_conf_vector.begin() ;
+			 it != this->web_conf_vector.end(); ++it)
+			if (curr_server_name == (*it).server_name)
+				curr_conf = (*it);
+		// If request's server_name is not in conf file
+		if (it == this->web_conf_vector.end())
+		{
+			set_error(obj, curr_conf, 204);
+			send_response(obj, request_fd);
+			this->Close(request_fd);
+		}
+
+		route r = get_matching_route(obj, curr_conf);
+		reset_file_full_path(r, obj);
+		std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
+		manage_request_status(r, obj, curr_conf);
+		this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
+	}
 }

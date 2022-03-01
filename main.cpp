@@ -51,7 +51,6 @@ int main(int ac, char **av)
         int closing_i = get_closing_bracket_index(s_content, indexes[i]);
 		std::stringstream curr_server_content;
 		curr_server_content << s_content.substr(indexes[i] + 1, closing_i - indexes[i] - 1);
-
 		Conf curr_web_conf = manage_config_file(curr_server_content);
 		web_conf_vector.insert(web_conf_vector.end(), curr_web_conf);
 	}
