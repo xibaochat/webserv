@@ -31,10 +31,9 @@ int main(int ac, char **av)
 
 	// Get conf file as string
 	std::stringstream file_content;
-	std::ifstream t1("conf/default.conf");
-    file_content << t1.rdbuf();
-	Conf web_conf = manage_config_file(file_content);
-	Server server(web_conf);
+	std::ifstream f;
+	open_conf(ac, av, f);
+    file_content << f.rdbuf();
 
 
 
@@ -46,15 +45,19 @@ int main(int ac, char **av)
 
 	// Extract
 	std::vector<std::string> servers_content;
+	std::vector<Conf> web_conf_vector;
     for (std::size_t i = 0; i != indexes.size(); ++i)
     {
         int closing_i = get_closing_bracket_index(s_content, indexes[i]);
 		std::stringstream curr_server_content;
 		curr_server_content << s_content.substr(indexes[i] + 1, closing_i - indexes[i] - 1);
+
 		Conf curr_web_conf = manage_config_file(curr_server_content);
-		server.web_conf_vector.insert(server.web_conf_vector.end(), curr_web_conf);
+		web_conf_vector.insert(web_conf_vector.end(), curr_web_conf);
 	}
 
-	server.Start(web_conf);
+	Server server(web_conf_vector);
+
+	server.Start();
     return 0;
 }

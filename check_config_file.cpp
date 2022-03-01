@@ -416,10 +416,10 @@ void manage_route(std::stringstream &file, std::string &line, std::map<std::stri
 		i = 0;
 		if (line == "")
 			break;
-		if (line == "}")
-			continue;
 		elem = extract_word_from_line(end, line);
-		if (elem == "location")
+		if (elem == "}")
+			continue;
+		else if (elem == "location")
 		{
 			path = get_location_path(line);
 		}

@@ -83,6 +83,7 @@ void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_
 std::map<int, std::string> init_status_code_message_map();
 
 int open_file(std::ifstream &s, std::string path);
+void open_conf(int ac, char **av, std::ifstream &file);
 void manage_request_status(route &r, Client_Request &obj, Conf &web_conf);
 
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);

@@ -1,14 +1,37 @@
 #include "server.hpp"
 #include "webserv.hpp"
 
-/*Constructor of class Server*/
-Server::Server(Conf &web_conf)
+int get_total_port(std::vector<Conf> &v)
 {
-	this->port = web_conf.get_port();
-	this->serverAddr = new struct sockaddr_in[this->port.size()];
+	int total_port = 0;
+	for (std::vector<Conf>::iterator it = v.begin() ; it != v.end(); ++it)
+		total_port += (*it).port.size();
+	return total_port;
+}
 
-	int i = 0;
+
+std::set<int> get_all_port_nb_in_set(std::vector<Conf> &v)
+{
+	std::set<int> port;
+	for (std::vector<Conf>::iterator it = v.begin() ; it != v.end(); ++it)
+	{
+		std::set<int> p = (*it).port;
+		for (std::set<int>::iterator it_set = p.begin() ; it_set != p.end(); ++it_set)
+			port.insert(*it_set);
+	}
+	return port;
+}
+
+/*Constructor of class Server*/
+Server::Server(std::vector<Conf> &web_conf_vector)
+{
+	//get a set of port from multi server
+	this->web_conf_vector = web_conf_vector;
+	this->port = get_all_port_nb_in_set(this->web_conf_vector);
+
+	this->serverAddr = new struct sockaddr_in[this->port.size()];
 	std::set<int>::iterator it=this->port.begin();
+	int i = 0;
 	while(it!=this->port.end())
 	{
 		memset(this->serverAddr[i].sin_zero, '\0', sizeof this->serverAddr[i].sin_zero);
@@ -20,8 +43,6 @@ Server::Server(Conf &web_conf)
 	}
 	this->listener = new int[this->port.size()];
 	this->epfd = 0;
-	this->error_page_map = web_conf.get_conf_err_page_map();
-	this->web_conf = web_conf;
 }
 
 /* create sockfd fd of endpoint, bind and listen, add sockfd to interest list of epoll*/
@@ -81,7 +102,6 @@ void Server::send_content_to_request(int &request_fd)
 			std::cout << RED << ERR_SEND << NC << std::endl;
 		this->Close(request_fd);
 	}
-
 }
 
 int Server::fd_is_in_listener(int fd)
@@ -132,7 +152,7 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count, st
 	}
 }
 
-void Server::Start(Conf &web_conf)
+void Server::Start()
 {
 	struct epoll_event events[EPOLL_SIZE];
 	try
@@ -246,24 +266,23 @@ void Server::handle_client_event(int &request_fd)
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
 	std::cout << GREEN << buffer << NC << "\n";
 
-
 	// Conf curr_conf = this->get_curr_conf(obj){};
-	Conf curr_conf = this->web_conf;
+	// //Conf curr_conf = this->web_conf;
 
-	if (nb_read <= 0)
-	{
-		set_error(obj, curr_conf, 204);
-		send_response(obj, request_fd);
-		this->Close(request_fd);
-	}
-	else
-	{
-		extract_info_from_first_line_of_buffer(obj, buffer, curr_conf);
-		extract_info_from_rest_buffer(obj, buffer);
-		route r = get_matching_route(obj, curr_conf);
-		reset_file_full_path(r, obj);
-		std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
-		manage_request_status(r, obj, curr_conf);
-		this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
-	}
+	// if (nb_read <= 0)
+	// {
+	// 	set_error(obj, curr_conf, 204);
+	// 	send_response(obj, request_fd);
+	// 	this->Close(request_fd);
+	// }
+	// else
+	// {
+	// 	extract_info_from_first_line_of_buffer(obj, buffer, curr_conf);
+	// 	extract_info_from_rest_buffer(obj, buffer);
+	// 	route r = get_matching_route(obj, curr_conf);
+	// 	reset_file_full_path(r, obj);
+	// 	std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
+	// 	manage_request_status(r, obj, curr_conf);
+	// 	this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
+	// }
 }
