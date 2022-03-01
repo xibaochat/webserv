@@ -29,7 +29,7 @@ int file_not_exist(Client_Request &obj)
 {
 	std::string file = obj.get_client_ask_file();
 	fstream fileStream;
-	fileStream.open(file);
+	fileStream.open(file.c_str());
 	if (fileStream.fail())
 	{
 		obj.set_status_code_nb(404);
@@ -46,7 +46,7 @@ int file_no_permission(Client_Request &obj)
 	if (access(file.c_str(), W_OK) != 0)
 	{
 		fstream fileStream;
-		fileStream.open(file);
+		fileStream.open(file.c_str());
 		if (fileStream.fail())
 		{
 			obj.set_status_code_nb(404);

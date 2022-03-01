@@ -1,5 +1,14 @@
 #include "webserv.hpp"
 
+std::string nb_to_str(int nb)
+{
+	std::string str; // a variable of str data type
+	stringstream ss;
+	ss << nb;
+	ss >> str;
+	return str;
+}
+
 std::vector<std::string> extract_words_in_vector(std::string &s)
 {
 	std::vector<std::string>v;

@@ -54,6 +54,7 @@ typedef struct s_route
 class Client_Request;
 class Conf;
 
+std::string nb_to_str(int nb);
 std::vector<std::string> extract_words_in_vector(std::string &s);
 int check_substring(std::string s, std::string s1);
 int count_words(std::string str);
@@ -164,7 +165,7 @@ public:
 	std::map<std::string, std::string> client_request;
 	std::map<std::string, std::string> cgi_output;
 public:
-	Client_Request():method("GET"), file(""), dir_list(false), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), total_line(""), origin_path(""){}
+	Client_Request():method("GET"), file(""), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), total_line(""), origin_path(""), dir_list(false){}
 	~Client_Request(){};
 	Client_Request(Client_Request const &src){*this = src;}
 	Client_Request &operator=(Client_Request const &src)

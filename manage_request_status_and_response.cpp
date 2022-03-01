@@ -212,11 +212,11 @@ void    set_error(Client_Request &obj, Conf &web_conf, int status_code_nb)
     std::ifstream myfile;
 	std::map<int, std::string> error_map = web_conf.get_conf_err_page_map();
 	int ret = 0;
-	
+
 	ret = open_file(myfile, error_map[status_code_nb]);
-	if (ret)
+	if (ret)//cannot open the error page
 	{
-		
+		status_code_nb = 404;
 		obj.set_status_code_nb(status_code_nb);
 		set_request_status_nb_message(status_code_nb, obj);
 		std::string str = string("Error ") +  obj.get_status_code_message();
@@ -246,7 +246,9 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 	 message */
 	if (method_is_not_allow(r, obj) || check_f_permi_existence(r, obj) || manage_cgi_based_file(obj))
 	{
-		set_error(obj, web_conf, 404);
+		int nb = obj.status_code_nb;
+		set_error(obj, web_conf, nb);
+		return ;
 	}
 	else if (obj.dir_list == true) //dir listing
 	{
@@ -278,4 +280,3 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 			set_error(obj, web_conf, 500);
 	}
 }
-
