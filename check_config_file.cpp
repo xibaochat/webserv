@@ -49,7 +49,7 @@ void remove_fst_white_space(std::string &line)
 int find_first_of_whilespace(std::string &line)
 {
 	int i = 0;
-	while (line[i] && line[i] != ' ')
+	while (line[i] && !is_whitespace(line[i]))
 		i++;
 	if (i)
 		return i;
