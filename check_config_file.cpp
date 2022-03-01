@@ -274,12 +274,12 @@ void manage_port(std::vector<std::string> &vec, Conf &web_conf)
 /*
 ** check max buffer size is number and store value to web_conf
 */
-// void manage_max_size_request(std::vector<std::string> &vec, Conf &web_conf)
+// void manage_client_max_body_size(std::vector<std::string> &vec, Conf &web_conf)
 // {
 // 	 std::vector<std::string>::iterator it;
-// 	 std::string key("max_size_request");
-// 	 int max_size_request  = manage_key_correspond_value(key,  vec);
-// 	 web_conf.set_max_size_request(max_size_request);
+// 	 std::string key("client_max_body_size");
+// 	 int client_max_body_size  = manage_key_correspond_value(key,  vec);
+// 	 web_conf.set_client_max_body_size(client_max_body_size);
 // }
 
 /*
@@ -543,7 +543,7 @@ Conf manage_config_file(int ac, char **av)
 	web_conf.m_location = m;
 	manage_port(vec, web_conf);
 	manage_server_name(vec, web_conf);
-//	manage_max_size_request(vec, web_conf);
+//	manage_client_max_body_size(vec, web_conf);
 	set_err_page_map(vec, web_conf);
 	file.close();
 
