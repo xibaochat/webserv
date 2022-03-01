@@ -28,15 +28,21 @@ int main(int ac, char **av)
 	//###parse nginx conf
 	// Conf web_conf = manage_config_file(ac, av);
 
-	char *tab[] =  {"_", "conf/default.conf"};
-	Conf web_conf = manage_config_file(2,tab);
+	std::stringstream server_content;
+	std::ifstream t1("conf/default.conf");
+    server_content << t1.rdbuf();
+	t1.close();
+	Conf web_conf = manage_config_file(server_content);
 
-	char *tab2[] =  {"_", "conf/bao.conf"};
-	Conf web_conf2 = manage_config_file(2,tab);
+	std::stringstream server_content2;
+	std::ifstream t2("conf/default_bis.conf");
+    server_content2 << t2.rdbuf();
+	t2.close();
+	Conf web_conf2 = manage_config_file(server_content2);
 
 	Server server(web_conf);
-	server.web_conf_vector[0] = web_conf;
-	server.web_conf_vector[1] = web_conf2;
+	server.web_conf_vector.insert(server.web_conf_vector.end(), web_conf);
+	server.web_conf_vector.insert(server.web_conf_vector.end(), web_conf2);
 	server.Start(web_conf);
     return 0;
 }

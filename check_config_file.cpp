@@ -172,7 +172,7 @@ bool has_extra_elem_in_line(std::string &key, int &i)
 	return false;
 }
 
-void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::map<std::string, route> &m)
+void store_elem_in_vec(std::stringstream &file, std::vector<std::string> &vec, std::map<std::string, route> &m)
 {
 	std::string line, key, elem;
 	int end = 0;
@@ -404,7 +404,7 @@ void manage_acceptable_upload(std::string &path, std::string &line, std::map<std
 	exit(EXIT_FAILURE);
 }
 
-void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m)
+void manage_route(std::stringstream &file, std::string &line, std::map<std::string, route> &m)
 {
 	int end = 0;
 	int i = 0;
@@ -525,17 +525,16 @@ void set_err_page_map(std::vector<std::string> &vec, Conf &web_conf)
 ** :return (Conf) web_conf: object containing all extracted configuration
 */
 
-Conf manage_config_file(int ac, char **av)
+Conf manage_config_file(std::stringstream &file)
 {
 	Conf web_conf;
 	std::vector<std::string> vec;  // store each word in vec
-	std::ifstream file;
 	std::string conf_file;
 	std::vector<std::string>::iterator it;
 	std::map<std::string, route> m;
 
 	// Conf extraction
-	open_conf(ac, av, file);//can open file?
+	// open_conf(ac, av, file);//can open file?
 
 	// std::map<std::int, std::string> servers;
 	// servers = extract_servers_as_string(file);
@@ -545,7 +544,6 @@ Conf manage_config_file(int ac, char **av)
 	manage_server_name(vec, web_conf);
 //	manage_client_max_body_size(vec, web_conf);
 	set_err_page_map(vec, web_conf);
-	file.close();
 
 	if (vec.size() != 0)
 	{
