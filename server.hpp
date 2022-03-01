@@ -26,9 +26,12 @@ public:
 	// Conf  web_conf;
 	std::vector<Conf> web_conf_vector;
 	std::map<int, std::string> request_map;
+	std::map<int, bool> ready_map;
+
 public:
 	int fd_is_in_listener(int fd);
-	void handle_client_event(int &clientfd);
+	bool handle_client_event(int &clientfd);
+	bool chunkManagement(size_t end_of_header);
 	void addfd(int fd, bool enable_et);
 	Server(std::vector<Conf> &web_conf_vector);
 	~Server();
@@ -40,7 +43,7 @@ public:
 	int get_epfd(){return this->epfd;}
 	std::map<int, std::string> get_request_map(){return this->request_map;}
 	void acceptConnect(int &fd);
-	void manage_event(struct epoll_event *events, int &epoll_event_count, std::map<int, std::string> &request_map);
+	void manage_event(struct epoll_event *events, int &epoll_event_count);
 	void send_content_to_request(int &fd);
 	void extract_info_from_buffer(Client_Request &obj, char *buffer);
 	void extract_info_and_prepare_response(Conf &c, int &r_fd, Client_Request &obj, char *buffer);

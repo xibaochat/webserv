@@ -75,12 +75,12 @@ std::string get_client_file(char *buffer, Client_Request &obj)
 ** :param (char *) buffer that from client, (Conf) configuration file passed as scd parameter
  */
 //extract method; client asked file; and status_code of file(file valid?)
-void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer)
+void extract_info_from_first_line(Client_Request &obj, std::string full_request)
 {
-	char *ptr = strstr(buffer, " ");//GET , POST ?
-	std::string method(buffer, 0, ptr - buffer);
+	size_t ptr = full_request.find(" ");
+	std::string method = full_request.substr(0, ptr);
 	obj.set_client_method(method);
-	std::string file = get_client_file(buffer, obj);//the file client ask
+	std::string file = get_client_file(&full_request[0], obj);//the file client ask
 	obj.origin_path = file;
 	std::cout << BLUE << "[ORIGIN]" << file << NC << endl;
 	obj.set_client_file(file);

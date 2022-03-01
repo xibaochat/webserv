@@ -100,6 +100,8 @@ void Server::send_content_to_request(int &request_fd)
 		const char *new_str = (*it).second.c_str();
 		if (send((*it).first, new_str, strlen(new_str), 0) < 0)
 			std::cout << RED << ERR_SEND << NC << std::endl;
+		ready_map.erase(request_fd);
+		request_map.erase(request_fd);
 		this->Close(request_fd);
 	}
 }
@@ -121,7 +123,7 @@ int Server::fd_is_in_listener(int fd)
  *:params (int)epoll_event_count:total nb of events
  *:params (std::map<int, std::string>) request_map: a map store fd from read process and corresponding reponse
  */
-void Server::manage_event(struct epoll_event *events, int &epoll_event_count, std::map<int, std::string> &request_map)
+void Server::manage_event(struct epoll_event *events, int &epoll_event_count)
 {
 	for(int i = 0; i < epoll_event_count; i++)
 	{
@@ -143,11 +145,15 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count, st
 		}
 		/* sth went wrong in the epoll monitoring list*/
 		else if (ev & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+		{
+			ready_map.erase(sockfd);
+			request_map.erase(sockfd);
 			this->Close(sockfd);
+		}
 		// A request is now ready to receive a response
 		else if (ev & EPOLLIN)
-			this->handle_client_event(sockfd);
-		else if (ev && EPOLLOUT)/*send content to request*/
+			this->ready_map[sockfd] = this->handle_client_event(sockfd);
+		else if (ev && EPOLLOUT && this->ready_map[sockfd])/*send content to request*/
 			this->send_content_to_request(sockfd);
 	}
 }
@@ -184,7 +190,7 @@ void Server::Start()
 		}
 		/* `epoll_event_count` will most likely always be equal to 1, since `epoll_wait`
 		   will return immediatly after receiving an event */
-		this->manage_event(events, epoll_event_count, this->request_map);
+		this->manage_event(events, epoll_event_count);
 	}
 }
 
@@ -321,8 +327,8 @@ Conf get_curr_conf(std::string &curr_server_name, int curr_port, std::vector<Con
 
 void  Server::extract_info_from_buffer(Client_Request &obj, char *buffer)
 {
-	extract_info_from_first_line_of_buffer(obj, buffer);
-	extract_info_from_rest_buffer(obj, buffer);
+	extract_info_from_first_line(obj, buffer);
+	extract_info_from_rest(obj, buffer);
 }
 
 void Server::extract_info_and_prepare_response(Conf &default_conf, int &fd, Client_Request &obj, char *buffer)
@@ -338,22 +344,81 @@ void Server::extract_info_and_prepare_response(Conf &default_conf, int &fd, Clie
 	this->request_map.insert(std::pair<int, std::string> (fd, response_str(obj)));
 }
 
+bool Server::chunkManagement(size_t end_of_header)
+{
+	return true;
+}
+
+
 /*read from the buffer and store the request fd and reponse in the map
  */
-void Server::handle_client_event(int &request_fd)
+bool Server::handle_client_event(int &request_fd)
 {
 	Client_Request obj;
 	int max_nb = 65536;
 	char buffer[max_nb];
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
+
 	Conf default_conf = this->web_conf_vector.at(0);
+
+	std::cout << GREEN << buffer << NC << "\n";
+	// Initialize in case it isn't yet
+	if (request_map.find(request_fd) == request_map.end())
+	{
+		this->request_map.insert(std::pair<int, std::string> (request_fd, ""));
+		this->ready_map.insert(std::pair<int, bool> (request_fd, false));
+	}
+	// Add what we just read from the buffer
+	request_map[request_fd] += std::string(buffer);
+
 	if (nb_read <= 0)
 	{
 		set_error(obj, default_conf, 204);
 		send_response(obj, request_fd);
+		ready_map.erase(request_fd);
+		request_map.erase(request_fd);
 		this->Close(request_fd);
 	}
 	else
-		this->extract_info_and_prepare_response(default_conf, request_fd, obj, buffer);
+	{
+		size_t	end_of_header = request_map[request_fd].find("\r\n\r\n");
+		if (end_of_header != std::string::npos)
+		{
+			if (request_map[request_fd].find("Content-Length: ") == std::string::npos)
+			{
+				if (request_map[request_fd].find("Transfer-Encoding: chunked") != std::string::npos)
+					ready_map[request_fd] = this->chunkManagement(end_of_header);
+				else
+					ready_map[request_fd] = true;
+			}
+			else
+			{
+				std::string tmp = request_map[request_fd].substr(request_map[request_fd].find("Content-Length: ") + 16, 10);
+				int len = (int)std::strtol(tmp.c_str(), NULL, 10);
+				if (request_map[request_fd].size() >= len + end_of_header + 4)
+					ready_map[request_fd] = true;
+				else
+					ready_map[request_fd] = false;
+			}
+			if (ready_map[request_fd])
+			{
+				std::string basis = request_map[request_fd];
+				request_map[request_fd] = "";
+				extract_info_from_first_line(obj, basis);
+				extract_info_from_rest(obj, basis);
+				route r = get_matching_route(obj, default_conf);
+				reset_file_full_path(r, obj);
+				std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
+				manage_request_status(r, obj, default_conf);
+				//std::cerr << RED << response_str(obj) << endl; // FOR DEBUGGING
+				request_map.erase(request_fd);
+				this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
+			}
+		}
+		else
+			ready_map[request_fd] = true;
+	}
+	std::cout << "\t\t" << ready_map[request_fd] << std::endl;
+	return (ready_map[request_fd]);
 }

@@ -73,13 +73,13 @@ int check_substring(std::string s, std::string s1);
 int count_words(std::string str);
 std::string extract_word_from_line(int &end, std::string &line);
 std::string get_client_file(char *buffer);
-void extract_info_from_rest_buffer(Client_Request &o, char *buffer);
+void extract_info_from_rest(Client_Request &obj, std::string full_request);
 Conf manage_config_file(std::stringstream &file);
 std::string get_time();
 std::string response_str(Client_Request &obj);
 std::string get_client_file(char *buffer);
 void check_err_page_validity(std::string file);
-void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer);
+void extract_info_from_first_line(Client_Request &obj, std::string full_request);
 
 void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_conf);
 

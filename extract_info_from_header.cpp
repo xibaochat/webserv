@@ -1,18 +1,18 @@
 #include "webserv.hpp"
 
-int has_new_line(char *buffer)
+int has_new_line(std::string full_request)
 {
 	int i = 0;
-	while (buffer[i])
+	while (full_request[i])
 	{
-		if (buffer[i] == '\n')
+		if (full_request[i] == '\n')
 			return i;
 		i++;
 	}
 	return 0;
 }
 
-std::string get_key_from_line(char *str, int *i)
+std::string get_key_from_line(string str, int *i)
 {
 	int lens = 0;
 
@@ -21,31 +21,16 @@ std::string get_key_from_line(char *str, int *i)
 		(*i)++;
 		lens++;
 	}
-	char k[lens + 1];
-	strncpy(k, str, lens);
-	k[lens] = '\0';
-	std::string key(k);
+	std::string key = str.substr(0, lens);
 	return (key);
 }
 
-std::string get_value_from_line(char *str)
-{
-	int j = 0;
-	while (str[j])
-		j++;
-	char v[j + 1];
-	strncpy(v, str, j);
-	v[j] = '\0';
-	std::string value(v);
-	return (value);
-}
-
-int get_r_n_index(char *buffer)
+int get_r_n_index(std::string full_request)
 {
 	int i = 0;
-	while (buffer[i] && buffer[i] != '\n')
+	while (full_request[i] && full_request[i] != '\n')
 	{
-		if (i > 0 && buffer[i] == '\r' && buffer[i + 1] && buffer[i + 1] == '\n')
+		if (i > 0 && full_request[i] == '\r' && full_request[i + 1] && full_request[i + 1] == '\n')
 			return i;
 		i++;
 	}
@@ -53,35 +38,35 @@ int get_r_n_index(char *buffer)
 }
 
 
-/*sauf fst line of buffer, extract info from client, create a map to store them, then this map become attribute in obj
+/*sauf fst line of full_request, extract info from client, create a map to store them, then this map become attribute in obj
 **:params(Client_Request) incomplete obj, (char*) user
 */
-void extract_info_from_rest_buffer(Client_Request &obj, char *buffer)
+void extract_info_from_rest(Client_Request &obj, std::string full_request)
 {
 	int len = 0;
 	int i;
 	std::map<std::string,std::string> header;
 
 	std::string line;
-	buffer += get_r_n_index(buffer) + 1 + 1;//skip fst line which ask filename
-	while ((len = get_r_n_index(buffer)) > 0)
+	full_request += get_r_n_index(full_request) + 1 + 1;//skip fst line which ask filename
+	while ((len = get_r_n_index(full_request)) > 0)
 	{
 		i = 0;
-		char str[len + 1];
-		strncpy(str, buffer, len);//cpy till \r\n
-		str[len] = '\0';
+		std::string str = full_request.substr(0, len);
 		std::string key = get_key_from_line(str, &i);
 		while (str[i] && (str[i] == ':' || str[i] == ' '))
 			i++;
-		std::string value = get_value_from_line(str + i);
+		std::string value = str.substr(i);
 		header[key] = value;
-		buffer += len + 1 + 1;
+		full_request = full_request.substr(len + 2);
 	}
-	if (buffer[0] && buffer[0] == '\r' && buffer[1] && buffer[1] == '\n')
-		header["body"] = string(buffer + 2, atoi(header["Content-Length"].c_str()));
+	if (full_request[0] && full_request[0] == '\r' && full_request[1] && full_request[1] == '\n')
+		header["body"] = full_request.substr(2, atoi(header["Content-Length"].c_str()));
 	header["method"] = obj.get_client_method();
 	header["file"] = obj.get_client_ask_file();
-	header["status_code_nb"] = obj.get_status_code_nb();
+	ostringstream convert;
+	convert << obj.get_status_code_nb();
+	header["status_code_nb"] = convert.str();
 	header["status_code_message"] = obj.get_status_code_message();
 	header["extension"] = obj.get_file_extension();
 	std::ostringstream ss;
