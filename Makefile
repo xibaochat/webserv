@@ -6,7 +6,7 @@ OBJ = $(SRC:.cpp=.o)
 
 CC = clang++
 
-CFLAGS = #-Wall -Wextra -Werror -std=c++98
+CFLAGS = -g #-std=c++98 -Wall -Wextra -Werror
 
 all:
 	@$(CC) $(CFLAGS) $(SRC) -c

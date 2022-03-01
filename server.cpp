@@ -245,20 +245,25 @@ void Server::handle_client_event(int &request_fd)
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
 	std::cout << GREEN << buffer << NC << "\n";
+
+
+	// Conf curr_conf = this->get_curr_conf(obj){};
+	Conf curr_conf = this->web_conf;
+
 	if (nb_read <= 0)
 	{
-		set_error(obj, this->web_conf, 204);
+		set_error(obj, curr_conf, 204);
 		send_response(obj, request_fd);
 		this->Close(request_fd);
 	}
 	else
 	{
-		extract_info_from_first_line_of_buffer(obj, buffer, this->web_conf);
+		extract_info_from_first_line_of_buffer(obj, buffer, curr_conf);
 		extract_info_from_rest_buffer(obj, buffer);
-		route r = get_matching_route(obj, this->web_conf);
+		route r = get_matching_route(obj, curr_conf);
 		reset_file_full_path(r, obj);
 		std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
-		manage_request_status(r, obj, this->web_conf);
+		manage_request_status(r, obj, curr_conf);
 		this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
 	}
 }

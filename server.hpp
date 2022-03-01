@@ -24,6 +24,7 @@ public:
 	std::set<int> port;
 	std::map<int, std::string> error_page_map;
 	Conf  web_conf;
+	std::vector<Conf> web_conf_vector;
 	std::map<int, std::string> request_map;
 
 public:
