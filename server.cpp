@@ -260,6 +260,7 @@ void reset_file_full_path(route &r, Client_Request &obj)
 void Server::handle_client_event(int &request_fd)
 {
 	Conf curr_conf;
+	Conf default_conf = this->web_conf_vector.at(0);
 	Client_Request obj;
 	int max_nb = 65536;
 	char buffer[max_nb];
@@ -271,7 +272,7 @@ void Server::handle_client_event(int &request_fd)
 
 	if (nb_read <= 0)
 	{
-		set_error(obj, curr_conf, 204);
+		set_error(obj, default_conf, 204);
 		send_response(obj, request_fd);
 		this->Close(request_fd);
 	}
@@ -286,17 +287,15 @@ void Server::handle_client_event(int &request_fd)
 			if (it->first == "Host")
 				curr_server_name = it->second.substr(0, it->second.find(':'));
 
-		for (std::vector<Conf>::iterator it = this->web_conf_vector.begin() ;
-			 it != this->web_conf_vector.end(); ++it)
-			if (curr_server_name == (*it).server_name)
-				curr_conf = (*it);
+		std::vector<Conf>::iterator it2;
+		for (it2 = this->web_conf_vector.begin() ;
+			 it2 != this->web_conf_vector.end(); ++it2)
+			if (curr_server_name == (*it2).server_name)
+				curr_conf = (*it2);
+
 		// If request's server_name is not in conf file
-		if (it == this->web_conf_vector.end())
-		{
-			set_error(obj, curr_conf, 204);
-			send_response(obj, request_fd);
-			this->Close(request_fd);
-		}
+		if (it2 == this->web_conf_vector.end())
+			curr_conf = default_conf;
 
 		route r = get_matching_route(obj, curr_conf);
 		reset_file_full_path(r, obj);
