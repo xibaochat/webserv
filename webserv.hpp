@@ -98,6 +98,9 @@ int file_no_permission(route &r, Client_Request &obj);
 int file_not_exist(Client_Request &obj);
 int file_is_text_based(std::string type);
 std::string get_file_output(Client_Request &o);
+std::vector<size_t> get_occurences_indexes(std::string s, std::string sub);
+int get_closing_bracket_index(std::string s, int i_start);
+
 
 //contain port, server_name, all err page
 class Conf

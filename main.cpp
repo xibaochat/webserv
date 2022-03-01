@@ -28,21 +28,33 @@ int main(int ac, char **av)
 	//###parse nginx conf
 	// Conf web_conf = manage_config_file(ac, av);
 
-	std::stringstream server_content;
+
+	// Get conf file as string
+	std::stringstream file_content;
 	std::ifstream t1("conf/default.conf");
-    server_content << t1.rdbuf();
-	t1.close();
-	Conf web_conf = manage_config_file(server_content);
-
-	std::stringstream server_content2;
-	std::ifstream t2("conf/default_bis.conf");
-    server_content2 << t2.rdbuf();
-	t2.close();
-	Conf web_conf2 = manage_config_file(server_content2);
-
+    file_content << t1.rdbuf();
+	Conf web_conf = manage_config_file(file_content);
 	Server server(web_conf);
-	server.web_conf_vector.insert(server.web_conf_vector.end(), web_conf);
-	server.web_conf_vector.insert(server.web_conf_vector.end(), web_conf2);
+
+
+
+	// Get `server` indexes
+	std::string s_content = file_content.str();
+    std::vector<size_t> indexes = get_occurences_indexes(s_content, "server ");
+    std::vector<size_t> tmp_v = get_occurences_indexes(s_content, "server{");
+    indexes.insert(indexes.end(), tmp_v.begin(), tmp_v.end());
+
+	// Extract
+	std::vector<std::string> servers_content;
+    for (std::size_t i = 0; i != indexes.size(); ++i)
+    {
+        int closing_i = get_closing_bracket_index(s_content, indexes[i]);
+		std::stringstream curr_server_content;
+		curr_server_content << s_content.substr(indexes[i] + 1, closing_i - indexes[i] - 1);
+		Conf curr_web_conf = manage_config_file(curr_server_content);
+		server.web_conf_vector.insert(server.web_conf_vector.end(), curr_web_conf);
+	}
+
 	server.Start(web_conf);
     return 0;
 }
