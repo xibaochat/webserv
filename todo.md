@@ -25,8 +25,8 @@
   - manage same port being used in multiple servers
   - manage multiple `hostname` with multiple servers:
 	  - what happen when `server_names` is left empty ?
-* (Olano & Ting) check `max_size_request` (=`MSR`) beahvior with `POST`
-  -> does `MSR` apply to headers or only body ?
+* (Olano & Ting) check `client_max_body_size` (=`MBS`) beahvior with `POST`
+  -> does `MBS` apply to headers or only body ?
 	  -> if apply to headers : adapt `handle_client_event` function
 	  -> if does not apply to headers : what is the beahvior with 1 billion headers
 * (Maobe) manage routes configuration:

@@ -105,7 +105,7 @@ class Conf
 //in fact, no need to put as privee
 public:
 	std::set<int> port;
-	int max_size_request;
+	int client_max_body_size;
 	std::string server_name;
 	std::map<int, std::string>conf_map;//status code, error_page_path
 public:
@@ -116,7 +116,7 @@ public:
 	Conf &operator=(Conf const &src)
 	{
 		this->port = src.port;
-//		this->max_size_request = src.max_size_request;
+//		this->client_max_body_size = src.client_max_body_size;
 		this->m_location = src.m_location;
 		this->server_name = src.server_name;
 		this->conf_map = src.conf_map;
@@ -125,13 +125,13 @@ public:
 
 	std::set<int> get_port()const {return port;}
 	std::map<std::string, route> get_m_location() const{return this->m_location;}
-	int get_max_size_request() const{return max_size_request;}
+	int get_client_max_body_size() const{return client_max_body_size;}
 	std::string get_server_name() const {return server_name;}
 	std::map<int, std::string> get_conf_err_page_map() const
 	{
 		return this->conf_map;
 	}
-	void set_max_size_request(int n){this->max_size_request = n;}
+	void set_client_max_body_size(int n){this->client_max_body_size = n;}
 	void set_port(std::set<int> port){this->port = port;}
 	void set_m_location(std::map<std::string, route> &r){this->m_location = r;}
 	void set_server_name(std::string f){this->server_name = f;}
