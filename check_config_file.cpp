@@ -32,10 +32,15 @@ void open_conf(int ac, char **av, std::ifstream &file)
 	}
 }
 
+int is_whitespace(char c)
+{
+	return (c == ' ' || (c >= 9 && c <= 13));
+}
+
 void remove_fst_white_space(std::string &line)
 {
 	std::size_t i = 0;
-	while (line[i] && (line[i] == ' ' || line[i] == 9))
+	while (line[i] && is_whitespace(line[i]))
 		i++;
 	if (i)
 		line.erase(0, i);
