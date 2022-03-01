@@ -252,6 +252,11 @@ void reset_file_full_path(route &r, Client_Request &obj)
 	// 	full_path += '/';
 	obj.clean_relative_path = full_path;
 	full_path = r.path_root + file;
+
+
+	if (full_path.length() - file.length() == 0)
+		full_path = "." + full_path;
+
 	obj.set_client_file(full_path);
 }
 
