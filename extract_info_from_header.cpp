@@ -81,7 +81,7 @@ void extract_info_from_rest_buffer(Client_Request &obj, char *buffer)
 		header["body"] = string(buffer + 2, atoi(header["Content-Length"].c_str()));
 	header["method"] = obj.get_client_method();
 	header["file"] = obj.get_client_ask_file();
-	header["status_code_nb"] = std::to_string(obj.get_status_code_nb());
+	header["status_code_nb"] = obj.get_status_code_nb();
 	header["status_code_message"] = obj.get_status_code_message();
 	header["extension"] = obj.get_file_extension();
 	std::ostringstream ss;
