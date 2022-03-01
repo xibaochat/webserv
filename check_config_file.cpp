@@ -46,7 +46,7 @@ void remove_fst_white_space(std::string &line)
 		line.erase(0, i);
 }
 
-int find_first_of_whilespace(std::string &line)
+int find_first_of_whitespace(std::string &line)
 {
 	int i = 0;
 	while (line[i] && !is_whitespace(line[i]))
@@ -77,8 +77,8 @@ void show_err_message_and_quite(std::string message)
 bool invalid_key(std::string &elem)
 {
 	std::vector<std::string>::iterator it;
-	std::string arr[] = {"listen", "server_name", "error_page", "location"};
-    std::vector<std::string> key_vec(arr, arr + sizeof(arr)/ sizeof(std::string));
+	std::string arr[] = VALID_CONF_KEYWORDS;
+	std::vector<std::string> key_vec(arr, arr + sizeof(arr)/ sizeof(std::string));
 	if ((it = std::find(key_vec.begin(), key_vec.end(), elem)) == key_vec.end())
 		return true;
 	return false;
@@ -151,7 +151,7 @@ std::string extract_word_from_line(int &end, std::string &line)
 {
 	std::string elem;
 	remove_fst_white_space(line);
-	end = find_first_of_whilespace(line);
+	end = find_first_of_whitespace(line);
 	elem = line.substr(0, end);
 	return elem;
 }
@@ -184,7 +184,7 @@ void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::
 		int i = 0;
 		while(line.length() > 0)
 		{
-			i++;
+			++i;
 			elem = extract_word_from_line(end, line);
 			if (i == 1) // check key in the white list or not
 			{

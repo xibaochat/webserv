@@ -41,6 +41,9 @@
 #define	UPLOAD_DEFAUT	"on"
 
 
+# define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location"}
+
+
 using namespace std;
 typedef struct s_route
 {
