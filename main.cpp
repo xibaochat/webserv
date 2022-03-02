@@ -25,10 +25,8 @@ std::map<int, std::string> init_status_code_message_map()
  */
 int main(int ac, char **av)
 {
-	//###parse nginx conf
-	Conf web_conf = manage_config_file(ac, av);
-
-	Server server(web_conf);
-	server.Start(web_conf);
+	std::vector<Conf> web_conf_vector = get_all_server_conf(ac, av);
+	Server server(web_conf_vector);
+	server.Start();
     return 0;
 }

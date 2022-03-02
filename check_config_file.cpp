@@ -1,60 +1,8 @@
+
 #include "webserv.hpp"
 
 //I create a strucutr contains port, serve_name,
 //and a map, key is the int status_code, value is path of error page, Example:  status_code->400, value ->400.html
-
-/*
-** :param (int) ac: number of the server's argument
-** :param (char **) av: server's argument
-** :return (std::string) conf_file: path of configuration file
-*/
-std::string get_conf_file(int ac, char **av)
-{
-	std::string conf_file;
-	if (ac == 1)
-	{
-		conf_file = "conf/default.conf";
-		return conf_file;
-	}
-	conf_file = av[1];
-	return conf_file;
-}
-
-void open_conf(int ac, char **av, std::ifstream &file)
-{
-	std::string conf_file = get_conf_file(ac, av);
-
-	file.open(conf_file.c_str(), std::ios::in);
-	if (!file.is_open())
-	{
-		std::cout << "Cannot open config file" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-}
-
-int is_whitespace(char c)
-{
-	return (c == ' ' || (c >= 9 && c <= 13));
-}
-
-void remove_fst_white_space(std::string &line)
-{
-	std::size_t i = 0;
-	while (line[i] && is_whitespace(line[i]))
-		i++;
-	if (i)
-		line.erase(0, i);
-}
-
-int find_first_of_whitespace(std::string &line)
-{
-	int i = 0;
-	while (line[i] && !is_whitespace(line[i]))
-		i++;
-	if (i)
-		return i;
-	return 0;
-}
 
 bool isNumber(const string& str)
 {
@@ -172,7 +120,7 @@ bool has_extra_elem_in_line(std::string &key, int &i)
 	return false;
 }
 
-void store_elem_in_vec(std::ifstream &file, std::vector<std::string> &vec, std::map<std::string, route> &m)
+void store_elem_in_vec(std::stringstream &file, std::vector<std::string> &vec, std::map<std::string, route> &m)
 {
 	std::string line, key, elem;
 	int end = 0;
@@ -404,7 +352,7 @@ void manage_acceptable_upload(std::string &path, std::string &line, std::map<std
 	exit(EXIT_FAILURE);
 }
 
-void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m)
+void manage_route(std::stringstream &file, std::string &line, std::map<std::string, route> &m)
 {
 	int end = 0;
 	int i = 0;
@@ -414,12 +362,12 @@ void manage_route(std::ifstream &file, std::string &line, std::map<std::string, 
 	while (getline(file, line))
 	{
 		i = 0;
-		if (line == "")
-			break;
-		if (line == "}")
+		if (is_only_whitespace(line))
 			continue;
 		elem = extract_word_from_line(end, line);
-		if (elem == "location")
+		if (elem == "}")
+			break;
+		else if (elem == "location")
 		{
 			path = get_location_path(line);
 		}
@@ -525,17 +473,16 @@ void set_err_page_map(std::vector<std::string> &vec, Conf &web_conf)
 ** :return (Conf) web_conf: object containing all extracted configuration
 */
 
-Conf manage_config_file(int ac, char **av)
+Conf manage_config_file(std::stringstream &file)
 {
 	Conf web_conf;
 	std::vector<std::string> vec;  // store each word in vec
-	std::ifstream file;
 	std::string conf_file;
 	std::vector<std::string>::iterator it;
 	std::map<std::string, route> m;
 
 	// Conf extraction
-	open_conf(ac, av, file);//can open file?
+	// open_conf(ac, av, file);//can open file?
 
 	// std::map<std::int, std::string> servers;
 	// servers = extract_servers_as_string(file);
@@ -545,7 +492,6 @@ Conf manage_config_file(int ac, char **av)
 	manage_server_name(vec, web_conf);
 //	manage_client_max_body_size(vec, web_conf);
 	set_err_page_map(vec, web_conf);
-	file.close();
 
 	if (vec.size() != 0)
 	{

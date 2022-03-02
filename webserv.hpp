@@ -1,44 +1,47 @@
 #ifndef WEBSERVE_HPP
 # define WEBSERVE_HPP
 
-#include <sstream>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <cstring>
-#include <iostream>
-#include <fstream>
-#include <experimental/filesystem>
-#include <string>
-#include <dirent.h>
-#include <time.h>
-#include <map>
-#include <vector>
-#include <ctime>
-#include <algorithm>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <pwd.h>
-#include <grp.h>
-#include <sys/stat.h>
-#include <set>
+# include <sstream>
+# include <stdio.h>
+# include <sys/socket.h>
+# include <unistd.h>
+# include <stdlib.h>
+# include <netinet/in.h>
+# include <cstring>
+# include <iostream>
+# include <fstream>
+# include <experimental/filesystem>
+# include <string>
+# include <dirent.h>
+# include <time.h>
+# include <map>
+# include <vector>
+# include <ctime>
+# include <algorithm>
+# include <sys/types.h>
+# include <sys/wait.h>
+# include <pwd.h>
+# include <grp.h>
+# include <sys/stat.h>
+# include <set>
+# include <sstream>
+
+# define GREEN       "\033[33;32m"
+# define YELLOW      "\033[33;33m"
+# define RED         "\033[33;31m"
+# define MAGENTA     "\e[95m"
+# define BLUE        "\033[1;34m"
+# define NC          "\033[0m"
+# define ERR_SEND  "Something went wrong when sending response"
+# define AUTO_ON     "autoindex on;"
+# define AUTO_OFF    "autoindex off;"
+# define UPLOAD_DIR	"/tmp/"
+# define UPLOAD_ON	"upload on;"
+# define UPLOAD_OFF	"upload off;"
+# define	UPLOAD_DEFAUT	"on"
 
 
-#define GREEN       "\033[33;32m"
-#define YELLOW      "\033[33;33m"
-#define RED         "\033[33;31m"
-#define MAGENTA     "\e[95m"
-#define BLUE        "\033[1;34m"
-#define NC          "\033[0m"
-#define ERR_SEND  "Something went wrong when sending response"
-#define AUTO_ON     "autoindex on;"
-#define AUTO_OFF    "autoindex off;"
-#define UPLOAD_DIR	"/tmp/"
-#define UPLOAD_ON	"upload on;"
-#define UPLOAD_OFF	"upload off;"
-#define	UPLOAD_DEFAUT	"on"
+# define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location"}
 
 
 # define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location"}
@@ -71,18 +74,20 @@ int count_words(std::string str);
 std::string extract_word_from_line(int &end, std::string &line);
 std::string get_client_file(char *buffer);
 void extract_info_from_rest_buffer(Client_Request &o, char *buffer);
-Conf manage_config_file(int ac, char **av);
+Conf manage_config_file(std::stringstream &file);
 std::string get_time();
 std::string response_str(Client_Request &obj);
 std::string get_client_file(char *buffer);
 void check_err_page_validity(std::string file);
-void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer, Conf &web_conf);
+void extract_info_from_first_line_of_buffer(Client_Request &obj, char *buffer);
 
 void echange_with_client(int &server_fd, struct sockaddr_in &address, Conf &web_conf);
 
 std::map<int, std::string> init_status_code_message_map();
 
 int open_file(std::ifstream &s, std::string path);
+void open_conf(int ac, char **av, std::ifstream &file);
+std::vector<Conf> get_all_server_conf(int ac, char **av);
 void manage_request_status(route &r, Client_Request &obj, Conf &web_conf);
 
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
@@ -91,13 +96,19 @@ void set_request_status_nb_message(int status_nb, Client_Request &obj);
 
 void set_error(Client_Request &obj, Conf &web_conf, int status_code_nb);
 void send_response(Client_Request &obj, int &new_socket);
-void manage_route(std::ifstream &file, std::string &line, std::map<std::string, route> &m);
+void manage_route(std::stringstream &file, std::string &line, std::map<std::string, route> &m);
 int method_is_not_allow(route &r, Client_Request &obj);
 int extension_is_not_exist(std::string *mylist, std::string extension, int size);
 int file_no_permission(route &r, Client_Request &obj);
 int file_not_exist(Client_Request &obj);
 int file_is_text_based(std::string type);
 std::string get_file_output(Client_Request &o);
+std::vector<size_t> get_occurences_indexes(std::string s, std::string sub);
+int get_closing_bracket_index(std::string s, int i_start);
+int is_whitespace(char c);
+void remove_fst_white_space(std::string &line);
+int find_first_of_whitespace(std::string &line);
+int is_only_whitespace(std::string &s);
 
 //contain port, server_name, all err page
 class Conf
@@ -139,6 +150,9 @@ public:
 		this->conf_map = src;}
 	void display_conf_file_debug()
 	{
+
+
+		std::cout << MAGENTA << "##### PARSING SERVER CONF #####\n\n" << NC;
 		for (std::set<int>::iterator it=port.begin(); it!=port.end(); ++it)
 			std::cout << "port " << *it << std::endl;
 		std::cout << "server_name " << this->server_name << std::endl;
@@ -153,8 +167,9 @@ public:
 			cout << "autoindex " << it->second.auto_index << "\n";
 			std::set<string>::iterator itt;
 			for (itt=it->second.allow_methods.begin(); itt!=it->second.allow_methods.end(); ++itt)
-				std::cout << YELLOW << *itt << "\n";
+				std::cout << YELLOW << *itt << NC << "\n";
 		}
+		std::cout << MAGENTA << "##### END OF PARSING #####\n\n" << NC;
 	}
 };
 

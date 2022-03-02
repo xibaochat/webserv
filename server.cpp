@@ -1,14 +1,37 @@
 #include "server.hpp"
 #include "webserv.hpp"
 
-/*Constructor of class Server*/
-Server::Server(Conf &web_conf)
+int get_total_port(std::vector<Conf> &v)
 {
-	this->port = web_conf.get_port();
-	this->serverAddr = new struct sockaddr_in[this->port.size()];
+	int total_port = 0;
+	for (std::vector<Conf>::iterator it = v.begin() ; it != v.end(); ++it)
+		total_port += (*it).port.size();
+	return total_port;
+}
 
-	int i = 0;
+
+std::set<int> get_all_port_nb_in_set(std::vector<Conf> &v)
+{
+	std::set<int> port;
+	for (std::vector<Conf>::iterator it = v.begin() ; it != v.end(); ++it)
+	{
+		std::set<int> p = (*it).port;
+		for (std::set<int>::iterator it_set = p.begin() ; it_set != p.end(); ++it_set)
+			port.insert(*it_set);
+	}
+	return port;
+}
+
+/*Constructor of class Server*/
+Server::Server(std::vector<Conf> &web_conf_vector)
+{
+	//get a set of port from multi server
+	this->web_conf_vector = web_conf_vector;
+	this->port = get_all_port_nb_in_set(this->web_conf_vector);
+
+	this->serverAddr = new struct sockaddr_in[this->port.size()];
 	std::set<int>::iterator it=this->port.begin();
+	int i = 0;
 	while(it!=this->port.end())
 	{
 		memset(this->serverAddr[i].sin_zero, '\0', sizeof this->serverAddr[i].sin_zero);
@@ -20,8 +43,6 @@ Server::Server(Conf &web_conf)
 	}
 	this->listener = new int[this->port.size()];
 	this->epfd = 0;
-	this->error_page_map = web_conf.get_conf_err_page_map();
-	this->web_conf = web_conf;
 }
 
 /* create sockfd fd of endpoint, bind and listen, add sockfd to interest list of epoll*/
@@ -81,7 +102,6 @@ void Server::send_content_to_request(int &request_fd)
 			std::cout << RED << ERR_SEND << NC << std::endl;
 		this->Close(request_fd);
 	}
-
 }
 
 int Server::fd_is_in_listener(int fd)
@@ -132,7 +152,7 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count, st
 	}
 }
 
-void Server::Start(Conf &web_conf)
+void Server::Start()
 {
 	struct epoll_event events[EPOLL_SIZE];
 	try
@@ -228,11 +248,94 @@ void reset_file_full_path(route &r, Client_Request &obj)
 		if (it != v.end() - 1)
 			full_path += "/";
 	}
-	// if (v.size() > 1 && file[file.size() - 1] == '/')//client ask a dir
-	// 	full_path += '/';
 	obj.clean_relative_path = full_path;
 	full_path = r.path_root + file;
+	if (full_path.length() - file.length() == 0)
+		full_path = "." + full_path;
 	obj.set_client_file(full_path);
+}
+
+std::string get_curr_server_name(Client_Request &obj)
+{
+	std::string curr_server_name;
+	for (std::map<std::string, std::string>::iterator it=obj.client_request.begin();
+		 it!=obj.client_request.end(); ++it)
+		if (it->first == "Host")
+			curr_server_name = it->second.substr(0, it->second.find(':'));
+	return curr_server_name;
+}
+
+
+int get_curr_port(Client_Request &obj)
+{
+	std::stringstream iss_port;
+	int port;
+
+	for (std::map<std::string, std::string>::iterator it=obj.client_request.begin();
+		 it!=obj.client_request.end(); ++it)
+		if (it->first == "Host")
+		{
+			iss_port << it->second.substr(it->second.find(':') + 1, it->second.length());;
+			iss_port >> port;
+			return (port);
+		}
+	return (-1);
+}
+
+int port_is_matching_conf(int curr_port, Conf &curr_conf)
+{
+	return (curr_conf.port.count(curr_port));
+}
+
+
+/*
+** Found the request's matching configuration based on the `Host` header.
+** In case the `server_name` & `port` pair do not match any conf, we
+** will use the default conf (first one parsed)
+**
+** :param (std::string) &curr_server_name: requested server name
+** :param (int) curr_port: port used by request
+** :param (std::vector<Conf>) &web_conf_vector: all parsed server configurations
+** :param (Conf) &default_conf: server configuration to use if no matching Conf where found
+** :return (Conf): matching Conf or default one
+*/
+Conf get_curr_conf(std::string &curr_server_name, int curr_port, std::vector<Conf> &web_conf_vector, Conf &default_conf)
+{
+	std::vector<Conf>::iterator it;
+	for (it = web_conf_vector.begin() ;
+		 it != web_conf_vector.end(); ++it)
+	{
+		if (curr_server_name == (*it).server_name)
+		{
+			if (port_is_matching_conf(curr_port, (*it)))
+				return (*it);
+			else
+				return (default_conf);
+		}
+	}
+	// If request's server_name is not in conf file
+	if (it == web_conf_vector.end())
+		return default_conf;
+	return default_conf;
+}
+
+void  Server::extract_info_from_buffer(Client_Request &obj, char *buffer)
+{
+	extract_info_from_first_line_of_buffer(obj, buffer);
+	extract_info_from_rest_buffer(obj, buffer);
+}
+
+void Server::extract_info_and_prepare_response(Conf &default_conf, int &fd, Client_Request &obj, char *buffer)
+{
+
+	this->extract_info_from_buffer(obj, buffer);
+	std::string curr_server_name = get_curr_server_name(obj);
+	int curr_port = get_curr_port(obj);
+	Conf curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
+	route r = get_matching_route(obj, curr_conf);
+	reset_file_full_path(r, obj);
+	manage_request_status(r, obj, curr_conf);
+	this->request_map.insert(std::pair<int, std::string> (fd, response_str(obj)));
 }
 
 /*read from the buffer and store the request fd and reponse in the map
@@ -244,21 +347,13 @@ void Server::handle_client_event(int &request_fd)
 	char buffer[max_nb];
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
-	std::cout << GREEN << buffer << NC << "\n";
+	Conf default_conf = this->web_conf_vector.at(0);
 	if (nb_read <= 0)
 	{
-		set_error(obj, this->web_conf, 204);
+		set_error(obj, default_conf, 204);
 		send_response(obj, request_fd);
 		this->Close(request_fd);
 	}
 	else
-	{
-		extract_info_from_first_line_of_buffer(obj, buffer, this->web_conf);
-		extract_info_from_rest_buffer(obj, buffer);
-		route r = get_matching_route(obj, this->web_conf);
-		reset_file_full_path(r, obj);
-		std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
-		manage_request_status(r, obj, this->web_conf);
-		this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
-	}
+		this->extract_info_and_prepare_response(default_conf, request_fd, obj, buffer);
 }

@@ -32,6 +32,7 @@
 * (Maobe) manage routes configuration:
   - define an HTTP redirection
   - add `PATH_INFO` to define where to look for the CGI file (ex `/usr/bin/python3`)
+  - add default html file when none are provided in url
   <!-- - add alterntaives directories for specific routes -->
   <!-- - limit request type (`POST`, `GET`...) -->
   <!-- - turn on or off directory listing -->

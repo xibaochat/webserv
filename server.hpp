@@ -22,19 +22,19 @@ public:
 	int epfd;
 	std::string	_request;
 	std::set<int> port;
-	std::map<int, std::string> error_page_map;
-	Conf  web_conf;
+	// std::map<int, std::string> error_page_map;
+	// Conf  web_conf;
+	std::vector<Conf> web_conf_vector;
 	std::map<int, std::string> request_map;
-
 public:
 	int fd_is_in_listener(int fd);
 	void handle_client_event(int &clientfd);
 	void addfd(int fd, bool enable_et);
-	Server(Conf &web_conf);
+	Server(std::vector<Conf> &web_conf_vector);
 	~Server();
 	void Init();
 	void Close(int &fd);
-	void Start(Conf &web_conf);
+	void Start();
 	Server(Server const &src){*this = src;}
 	int* get_listener(){return this->listener;}
 	int get_epfd(){return this->epfd;}
@@ -42,6 +42,8 @@ public:
 	void acceptConnect(int &fd);
 	void manage_event(struct epoll_event *events, int &epoll_event_count, std::map<int, std::string> &request_map);
 	void send_content_to_request(int &fd);
+	void extract_info_from_buffer(Client_Request &obj, char *buffer);
+	void extract_info_and_prepare_response(Conf &c, int &r_fd, Client_Request &obj, char *buffer);
 };
 
 /*ref : Level-triggered vs Edge-triggered

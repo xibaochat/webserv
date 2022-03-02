@@ -220,11 +220,11 @@ void    set_error(Client_Request &obj, Conf &web_conf, int status_code_nb)
     std::ifstream myfile;
 	std::map<int, std::string> error_map = web_conf.get_conf_err_page_map();
 	int ret = 0;
-	
+
 	ret = open_file(myfile, error_map[status_code_nb]);
 	if (ret)
 	{
-		
+
 		obj.set_status_code_nb(status_code_nb);
 		set_request_status_nb_message(status_code_nb, obj);
 		std::string str = string("Error ") +  obj.get_status_code_message();
@@ -256,7 +256,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 		set_error(obj, web_conf, 404);
 	else if (file_no_permission(r, obj))
 		set_error(obj, web_conf, 403);
-	else if (method_is_not_allow(r, obj))	
+	else if (method_is_not_allow(r, obj))
 		set_error(obj, web_conf, 405);
 	else if (manage_cgi_based_file(obj))
 		set_error(obj, web_conf, 501);
@@ -290,4 +290,3 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 			set_error(obj, web_conf, 500);
 	}
 }
-
