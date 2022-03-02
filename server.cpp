@@ -248,32 +248,47 @@ void reset_file_full_path(route &r, Client_Request &obj)
 		if (it != v.end() - 1)
 			full_path += "/";
 	}
-	// if (v.size() > 1 && file[file.size() - 1] == '/')//client ask a dir
-	// 	full_path += '/';
 	obj.clean_relative_path = full_path;
 	full_path = r.path_root + file;
-
-
 	if (full_path.length() - file.length() == 0)
 		full_path = "." + full_path;
-
 	obj.set_client_file(full_path);
+}
+
+std::string get_curr_server_name(Client_Request &obj)
+{
+	std::string curr_server_name;
+	for (std::map<std::string, std::string>::iterator it=obj.client_request.begin();
+		 it!=obj.client_request.end(); ++it)
+		if (it->first == "Host")
+			curr_server_name = it->second.substr(0, it->second.find(':'));
+	return curr_server_name;
+}
+
+
+Conf get_curr_conf(std::string &curr_server_name, std::vector<Conf> &web_conf_vector, Conf &default_conf)
+{
+	std::vector<Conf>::iterator it2;
+	for (it2 = web_conf_vector.begin() ;
+		 it2 != web_conf_vector.end(); ++it2)
+			if (curr_server_name == (*it2).server_name)
+				return (*it2);
+	// If request's server_name is not in conf file
+	if (it2 == web_conf_vector.end())
+		return default_conf;
+	return default_conf;
 }
 
 /*read from the buffer and store the request fd and reponse in the map
  */
 void Server::handle_client_event(int &request_fd)
 {
-	Conf curr_conf;
 	Conf default_conf = this->web_conf_vector.at(0);
 	Client_Request obj;
 	int max_nb = 65536;
 	char buffer[max_nb];
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
-	std::cout << GREEN << buffer << NC << "\n";
-
-	// //Conf curr_conf = this->web_conf;
 
 	if (nb_read <= 0)
 	{
@@ -285,26 +300,11 @@ void Server::handle_client_event(int &request_fd)
 	{
 		extract_info_from_first_line_of_buffer(obj, buffer);
 		extract_info_from_rest_buffer(obj, buffer);
-
-		std::string curr_server_name;
-		for (std::map<std::string, std::string>::iterator it=obj.client_request.begin();
-			 it!=obj.client_request.end(); ++it)
-			if (it->first == "Host")
-				curr_server_name = it->second.substr(0, it->second.find(':'));
-
-		std::vector<Conf>::iterator it2;
-		for (it2 = this->web_conf_vector.begin() ;
-			 it2 != this->web_conf_vector.end(); ++it2)
-			if (curr_server_name == (*it2).server_name)
-				curr_conf = (*it2);
-
-		// If request's server_name is not in conf file
-		if (it2 == this->web_conf_vector.end())
-			curr_conf = default_conf;
-
+		//from user req
+		std::string curr_server_name = get_curr_server_name(obj);
+		Conf curr_conf = get_curr_conf(curr_server_name, this->web_conf_vector, default_conf);
 		route r = get_matching_route(obj, curr_conf);
 		reset_file_full_path(r, obj);
-		std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
 		manage_request_status(r, obj, curr_conf);
 		this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
 	}
