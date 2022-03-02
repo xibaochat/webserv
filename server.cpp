@@ -279,17 +279,34 @@ Conf get_curr_conf(std::string &curr_server_name, std::vector<Conf> &web_conf_ve
 	return default_conf;
 }
 
+void  Server::extract_info_from_buffer(Client_Request &obj, char *buffer)
+{
+	extract_info_from_first_line_of_buffer(obj, buffer);
+	extract_info_from_rest_buffer(obj, buffer);
+}
+
+void Server::extract_info_and_prepare_response(Conf &default_conf, int &fd, Client_Request &obj, char *buffer)
+{
+
+	this->extract_info_from_buffer(obj, buffer);
+	std::string curr_server_name = get_curr_server_name(obj);
+	Conf curr_conf = get_curr_conf(curr_server_name, this->web_conf_vector, default_conf);
+	route r = get_matching_route(obj, curr_conf);
+	reset_file_full_path(r, obj);
+	manage_request_status(r, obj, curr_conf);
+	this->request_map.insert(std::pair<int, std::string> (fd, response_str(obj)));
+}
+
 /*read from the buffer and store the request fd and reponse in the map
  */
 void Server::handle_client_event(int &request_fd)
 {
-	Conf default_conf = this->web_conf_vector.at(0);
 	Client_Request obj;
 	int max_nb = 65536;
 	char buffer[max_nb];
 	memset(buffer, 0, max_nb);
 	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
-
+	Conf default_conf = this->web_conf_vector.at(0);
 	if (nb_read <= 0)
 	{
 		set_error(obj, default_conf, 204);
@@ -297,15 +314,5 @@ void Server::handle_client_event(int &request_fd)
 		this->Close(request_fd);
 	}
 	else
-	{
-		extract_info_from_first_line_of_buffer(obj, buffer);
-		extract_info_from_rest_buffer(obj, buffer);
-		//from user req
-		std::string curr_server_name = get_curr_server_name(obj);
-		Conf curr_conf = get_curr_conf(curr_server_name, this->web_conf_vector, default_conf);
-		route r = get_matching_route(obj, curr_conf);
-		reset_file_full_path(r, obj);
-		manage_request_status(r, obj, curr_conf);
-		this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
-	}
+		this->extract_info_and_prepare_response(default_conf, request_fd, obj, buffer);
 }
