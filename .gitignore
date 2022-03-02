@@ -11,3 +11,5 @@ source_file
 *.o
 webserv
 note
+a.out
+.\#*

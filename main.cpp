@@ -36,12 +36,14 @@ int main(int ac, char **av)
     file_content << f.rdbuf();
 	std::string s_content = file_content.str();
 
-
 	// Get `server` indexes
-    std::vector<size_t> indexes = get_occurences_indexes(s_content, "server {");
-    std::vector<size_t> tmp_v = get_occurences_indexes(s_content, "server{");
-    indexes.insert(indexes.end(), tmp_v.begin(), tmp_v.end());
-
+    std::vector<size_t> indexes = get_occurences_indexes(s_content, "server{");
+	for (int x = 100; x > 0; x--)
+	{
+		std::string tmp(x, ' ');
+		std::vector<size_t> tmp_v = get_occurences_indexes(s_content, "server" + tmp + "{");
+		indexes.insert(indexes.end(), tmp_v.begin(), tmp_v.end());
+	}
 	// Extract
 	std::vector<std::string> servers_content;
 	std::vector<Conf> web_conf_vector;
