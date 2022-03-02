@@ -5,6 +5,10 @@ SRC = main.cpp check_config_file.cpp extract_info_from_header.cpp response_heade
 	auto_index.cpp check_requested_files.cpp get_occurences_indexes.cpp get_closing_bracket_index.cpp \
 	whitespaces.cpp get_server_conf.cpp
 
+SRC_PATH = $(addprefix ./src/,$(SRC))
+
+HEADER_DIR = ./includes/
+
 OBJ = $(SRC:.cpp=.o)
 
 CC = clang++
@@ -12,7 +16,7 @@ CC = clang++
 CFLAGS = -g -std=c++98 #-Wall -Wextra -Werror
 
 all:
-	@$(CC) $(CFLAGS) $(SRC) -c
+	@$(CC) $(CFLAGS) $(SRC_PATH) -c -I $(HEADER_DIR)
 	@$(CC) $(OBJ) -o $(NAME)
 
 clean:
