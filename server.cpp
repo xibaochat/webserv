@@ -266,15 +266,55 @@ std::string get_curr_server_name(Client_Request &obj)
 }
 
 
-Conf get_curr_conf(std::string &curr_server_name, std::vector<Conf> &web_conf_vector, Conf &default_conf)
+int get_curr_port(Client_Request &obj)
 {
-	std::vector<Conf>::iterator it2;
-	for (it2 = web_conf_vector.begin() ;
-		 it2 != web_conf_vector.end(); ++it2)
-			if (curr_server_name == (*it2).server_name)
-				return (*it2);
+	std::stringstream iss_port;
+	int port;
+
+	for (std::map<std::string, std::string>::iterator it=obj.client_request.begin();
+		 it!=obj.client_request.end(); ++it)
+		if (it->first == "Host")
+		{
+			iss_port << it->second.substr(it->second.find(':') + 1, it->second.length());;
+			iss_port >> port;
+			return (port);
+		}
+	return (-1);
+}
+
+int port_is_matching_conf(int curr_port, Conf &curr_conf)
+{
+	return (curr_conf.port.count(curr_port));
+}
+
+
+/*
+** Found the request's matching configuration based on the `Host` header.
+** In case the `server_name` & `port` pair do not match any conf, we
+** will use the default conf (first one parsed)
+**
+** :param (std::string) &curr_server_name: requested server name
+** :param (int) curr_port: port used by request
+** :param (std::vector<Conf>) &web_conf_vector: all parsed server configurations
+** :param (Conf) &default_conf: server configuration to use if no matching Conf where found
+** :return (Conf): matching Conf or default one
+*/
+Conf get_curr_conf(std::string &curr_server_name, int curr_port, std::vector<Conf> &web_conf_vector, Conf &default_conf)
+{
+	std::vector<Conf>::iterator it;
+	for (it = web_conf_vector.begin() ;
+		 it != web_conf_vector.end(); ++it)
+	{
+		if (curr_server_name == (*it).server_name)
+		{
+			if (port_is_matching_conf(curr_port, (*it)))
+				return (*it);
+			else
+				return (default_conf);
+		}
+	}
 	// If request's server_name is not in conf file
-	if (it2 == web_conf_vector.end())
+	if (it == web_conf_vector.end())
 		return default_conf;
 	return default_conf;
 }
@@ -290,7 +330,8 @@ void Server::extract_info_and_prepare_response(Conf &default_conf, int &fd, Clie
 
 	this->extract_info_from_buffer(obj, buffer);
 	std::string curr_server_name = get_curr_server_name(obj);
-	Conf curr_conf = get_curr_conf(curr_server_name, this->web_conf_vector, default_conf);
+	int curr_port = get_curr_port(obj);
+	Conf curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
 	route r = get_matching_route(obj, curr_conf);
 	reset_file_full_path(r, obj);
 	manage_request_status(r, obj, curr_conf);
