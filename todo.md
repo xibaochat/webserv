@@ -21,10 +21,10 @@
 * (Olano) validate `HTTP status code` for:
   - file permission error
   - file does not exist (CGI & static html)
-* (Maobe) add `multiple server management` in `code` & `config file`:
-  - manage same port being used in multiple servers
-  - manage multiple `hostname` with multiple servers:
-	  - what happen when `server_names` is left empty ?
+<!-- * (Maobe) add `multiple server management` in `code` & `config file`: -->
+  <!-- - manage same port being used in multiple servers -->
+  <!-- - manage multiple `hostname` with multiple servers: -->
+  <!-- 	  - what happen when `server_names` is left empty ? -->
 * (Olano & Ting) check `client_max_body_size` (=`MBS`) beahvior with `POST`
   -> does `MBS` apply to headers or only body ?
 	  -> if apply to headers : adapt `handle_client_event` function
