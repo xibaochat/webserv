@@ -143,6 +143,9 @@ public:
 		this->conf_map = src;}
 	void display_conf_file_debug()
 	{
+
+
+		std::cout << MAGENTA << "##### PARSING SERVER CONF #####\n\n" << NC;
 		for (std::set<int>::iterator it=port.begin(); it!=port.end(); ++it)
 			std::cout << "port " << *it << std::endl;
 		std::cout << "server_name " << this->server_name << std::endl;
@@ -157,8 +160,9 @@ public:
 			cout << "autoindex " << it->second.auto_index << "\n";
 			std::set<string>::iterator itt;
 			for (itt=it->second.allow_methods.begin(); itt!=it->second.allow_methods.end(); ++itt)
-				std::cout << YELLOW << *itt << "\n";
+				std::cout << YELLOW << *itt << NC << "\n";
 		}
+		std::cout << MAGENTA << "##### END OF PARSING #####\n\n" << NC;
 	}
 };
 
