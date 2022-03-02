@@ -40,7 +40,7 @@
 # define UPLOAD_OFF	"upload off;"
 # define	UPLOAD_DEFAUT	"on"
 
-# define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location", "client_max_body_size"}
+# define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location", "client_max_body_size", "index"}
 
 
 using namespace std;
@@ -115,9 +115,9 @@ public:
 	int client_max_body_size;
 	std::string server_name;
 	std::map<int, std::string>conf_map;//status code, error_page_path
-public:
 	std::map<std::string, route> m_location;
-	Conf(){};
+	std::string default_file;
+	Conf(): default_file("index.html"){};
 	~Conf(){};
 	Conf(Conf const &s){*this = s;}
 	Conf &operator=(Conf const &src)
@@ -127,6 +127,7 @@ public:
 		this->m_location = src.m_location;
 		this->server_name = src.server_name;
 		this->conf_map = src.conf_map;
+		this->default_file = src.default_file;
 		return *this;
 	}
 
@@ -152,6 +153,7 @@ public:
 		for (std::set<int>::iterator it=port.begin(); it!=port.end(); ++it)
 			std::cout << "port " << *it << std::endl;
 		std::cout << "server_name " << this->server_name << std::endl;
+		std::cout << "index " << this->default_file << std::endl;
 		std::map<int, std::string> mymap = this->get_conf_err_page_map();
 		for (std::map<int, std::string>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
 			std::cout << "status code: " << it->first << " corresponding page path" << " => " << it->second<< std::endl;

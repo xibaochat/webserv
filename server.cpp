@@ -172,11 +172,11 @@ void Server::Start()
 		std::cerr << s << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	std::cout << YELLOW << "Looking for request" << NC << std::endl;
 	while (1)
 	{
-		std::cout << YELLOW << "Looking for request" << NC << std::endl;
-		memset(events, 0, EPOLL_SIZE);
-		int epoll_event_count = epoll_wait(this->epfd, events, EPOLL_SIZE, 1000);
+ 		memset(events, 0, EPOLL_SIZE);
+		int epoll_event_count = epoll_wait(this->epfd, events, EPOLL_SIZE, 10000000);
 		/*err manage*/
 		if (epoll_event_count < 0)
 		{
@@ -346,6 +346,16 @@ bool Server::chunkManagement(size_t end_of_header)
 	return true;
 }
 
+void manage_default_file_if_needed(Client_Request &obj, Conf &curr_conf)
+{
+	route r = get_matching_route(obj, curr_conf);
+	if (r.auto_index == false && (obj.clean_relative_path == "" || obj.clean_relative_path == "/"))
+	{
+		obj.file = curr_conf.default_file;
+		obj.clean_relative_path = curr_conf.default_file;
+	}
+}
+
 
 /*read from the buffer and store the request fd and reponse in the map
  */
@@ -383,6 +393,9 @@ bool Server::handle_client_event(int &request_fd)
 		std::string curr_server_name = get_curr_server_name(obj);
 		int curr_port = get_curr_port(obj);
 		Conf curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
+
+
+		manage_default_file_if_needed(obj, curr_conf);
 
 		size_t	end_of_header = request_map[request_fd].find("\r\n\r\n");
 		if (end_of_header != std::string::npos)

@@ -100,7 +100,7 @@ std::vector<Conf> get_vector_of_server_conf(std::string s_content, std::vector<s
 		std::stringstream curr_server_content;
 		curr_server_content << s_content.substr(server_indexes[i], closing_i - server_indexes[i] - 1);
 		curr_web_conf = manage_config_file(curr_server_content);
-		web_conf_vector.insert(web_conf_vector.end(), curr_web_conf);
+		web_conf_vector.push_back(curr_web_conf);
 	}
 	return (web_conf_vector);
 }

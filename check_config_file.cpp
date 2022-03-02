@@ -144,7 +144,7 @@ void store_elem_in_vec(std::stringstream &file, std::vector<std::string> &vec, s
 				manage_route(file, line, m);
 				break;
 			}
-			if (key == "error_page")
+			else if (key == "error_page")
 				check_line_error_page(i, elem, vec);
 			vec.push_back(elem);
 			line.erase(0, end + 1);
@@ -252,6 +252,21 @@ void manage_server_name(std::vector<std::string> &vec, Conf &web_conf)
 	std::cout << "Invalide serve name in conf" << std::endl;
 	exit(EXIT_FAILURE);
 }
+
+void manage_conf_default_file(std::vector<std::string> &vec, Conf &web_conf)
+{
+	std::vector<string>::iterator it;
+	if ((it = std::find(vec.begin(), vec.end(), "index")) != vec.end())
+	{
+		if ((it + 1) != vec.end())
+		{
+			web_conf.default_file = "/" + (*(it + 1));
+			vec.erase(it, it + 2);
+			return ;
+		}
+	}
+}
+
 
 std::string get_location_path(std::string &line)
 {
@@ -483,16 +498,12 @@ Conf manage_config_file(std::stringstream &file)
 	std::vector<std::string>::iterator it;
 	std::map<std::string, route> m;
 
-	// Conf extraction
-	// open_conf(ac, av, file);//can open file?
-
-	// std::map<std::int, std::string> servers;
-	// servers = extract_servers_as_string(file);
 	store_elem_in_vec(file, vec, m);
 	web_conf.m_location = m;
 	manage_port(vec, web_conf);
 	manage_server_name(vec, web_conf);
 	manage_client_max_body_size(vec, web_conf);
+	manage_conf_default_file(vec, web_conf);
 	set_err_page_map(vec, web_conf);
 
 	if (vec.size() != 0)
