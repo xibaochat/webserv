@@ -3,7 +3,7 @@ NAME = ./webserv
 SRC = main.cpp check_config_file.cpp extract_info_from_header.cpp response_header.cpp \
 	manage_request.cpp server.cpp manage_request_status_and_response.cpp utile.cpp \
 	auto_index.cpp check_requested_files.cpp get_occurences_indexes.cpp get_closing_bracket_index.cpp \
-	whitespaces.cpp
+	whitespaces.cpp get_server_conf.cpp
 
 OBJ = $(SRC:.cpp=.o)
 

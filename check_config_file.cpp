@@ -3,34 +3,6 @@
 //I create a strucutr contains port, serve_name,
 //and a map, key is the int status_code, value is path of error page, Example:  status_code->400, value ->400.html
 
-/*
-** :param (int) ac: number of the server's argument
-** :param (char **) av: server's argument
-** :return (std::string) conf_file: path of configuration file
-*/
-std::string get_conf_file(int ac, char **av)
-{
-	std::string conf_file;
-	if (ac == 1)
-	{
-		conf_file = "conf/default.conf";
-		return conf_file;
-	}
-	conf_file = av[1];
-	return conf_file;
-}
-
-void open_conf(int ac, char **av, std::ifstream &file)
-{
-	std::string conf_file = get_conf_file(ac, av);
-
-	file.open(conf_file.c_str(), std::ios::in);
-	if (!file.is_open())
-	{
-		std::cout << "Cannot open config file" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-}
 
 
 bool isNumber(const string& str)
