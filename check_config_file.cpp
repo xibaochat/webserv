@@ -32,29 +32,6 @@ void open_conf(int ac, char **av, std::ifstream &file)
 	}
 }
 
-int is_whitespace(char c)
-{
-	return (c == ' ' || (c >= 9 && c <= 13));
-}
-
-void remove_fst_white_space(std::string &line)
-{
-	std::size_t i = 0;
-	while (line[i] && is_whitespace(line[i]))
-		i++;
-	if (i)
-		line.erase(0, i);
-}
-
-int find_first_of_whitespace(std::string &line)
-{
-	int i = 0;
-	while (line[i] && !is_whitespace(line[i]))
-		i++;
-	if (i)
-		return i;
-	return 0;
-}
 
 bool isNumber(const string& str)
 {
@@ -414,11 +391,11 @@ void manage_route(std::stringstream &file, std::string &line, std::map<std::stri
 	while (getline(file, line))
 	{
 		i = 0;
-		if (line == "")
-			break;
+		if (is_only_whitespace(line))
+			continue;
 		elem = extract_word_from_line(end, line);
 		if (elem == "}")
-			continue;
+			break;
 		else if (elem == "location")
 		{
 			path = get_location_path(line);

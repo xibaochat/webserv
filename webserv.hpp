@@ -101,7 +101,10 @@ int file_is_text_based(std::string type);
 std::string get_file_output(Client_Request &o);
 std::vector<size_t> get_occurences_indexes(std::string s, std::string sub);
 int get_closing_bracket_index(std::string s, int i_start);
-
+int is_whitespace(char c);
+void remove_fst_white_space(std::string &line);
+int find_first_of_whitespace(std::string &line);
+int is_only_whitespace(std::string &s);
 
 //contain port, server_name, all err page
 class Conf
