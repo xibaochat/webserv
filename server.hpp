@@ -46,7 +46,7 @@ public:
 	void manage_event(struct epoll_event *events, int &epoll_event_count);
 	void send_content_to_request(int &fd);
 	void extract_info_from_buffer(Client_Request &obj, char *buffer);
-	void extract_info_and_prepare_response(Conf &c, int &r_fd, Client_Request &obj, char *buffer);
+	void extract_info_and_prepare_response(Conf &c, int &r_fd, Client_Request &obj);
 };
 
 /*ref : Level-triggered vs Edge-triggered

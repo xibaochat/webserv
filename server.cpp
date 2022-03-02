@@ -331,16 +331,13 @@ void  Server::extract_info_from_buffer(Client_Request &obj, char *buffer)
 	extract_info_from_rest(obj, buffer);
 }
 
-void Server::extract_info_and_prepare_response(Conf &default_conf, int &fd, Client_Request &obj, char *buffer)
+void Server::extract_info_and_prepare_response(Conf &curr_conf, int &fd, Client_Request &obj)
 {
-
-	this->extract_info_from_buffer(obj, buffer);
-	std::string curr_server_name = get_curr_server_name(obj);
-	int curr_port = get_curr_port(obj);
-	Conf curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
+	this->request_map[fd] = "";
 	route r = get_matching_route(obj, curr_conf);
 	reset_file_full_path(r, obj);
 	manage_request_status(r, obj, curr_conf);
+	this->request_map.erase(fd);
 	this->request_map.insert(std::pair<int, std::string> (fd, response_str(obj)));
 }
 
@@ -382,6 +379,11 @@ bool Server::handle_client_event(int &request_fd)
 	}
 	else
 	{
+		this->extract_info_from_buffer(obj, buffer);
+		std::string curr_server_name = get_curr_server_name(obj);
+		int curr_port = get_curr_port(obj);
+		Conf curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
+
 		size_t	end_of_header = request_map[request_fd].find("\r\n\r\n");
 		if (end_of_header != std::string::npos)
 		{
@@ -396,9 +398,9 @@ bool Server::handle_client_event(int &request_fd)
 			{
 				std::string tmp = request_map[request_fd].substr(request_map[request_fd].find("Content-Length: ") + 16, 10);
 				int len = (int)std::strtol(tmp.c_str(), NULL, 10);
-				if (len > default_conf.get_client_max_body_size() && default_conf.get_client_max_body_size() != -1)
+				if (len > curr_conf.get_client_max_body_size() && curr_conf.get_client_max_body_size() != -1)
 				{
-					set_error(obj, default_conf, 413);
+					set_error(obj, curr_conf, 413);
 					send_response(obj, request_fd);
 					ready_map.erase(request_fd);
 					request_map.erase(request_fd);
@@ -411,19 +413,7 @@ bool Server::handle_client_event(int &request_fd)
 					ready_map[request_fd] = false;
 			}
 			if (ready_map[request_fd])
-			{
-				std::string basis = request_map[request_fd];
-				request_map[request_fd] = "";
-				extract_info_from_first_line(obj, basis);
-				extract_info_from_rest(obj, basis);
-				route r = get_matching_route(obj, default_conf);
-				reset_file_full_path(r, obj);
-				std::cout << RED << "[file]" << obj.get_client_ask_file() << NC << endl;
-				manage_request_status(r, obj, default_conf);
-				//std::cerr << RED << response_str(obj) << endl; // FOR DEBUGGING
-				request_map.erase(request_fd);
-				this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
-			}
+				this->extract_info_and_prepare_response(curr_conf, request_fd, obj);
 		}
 		else
 			ready_map[request_fd] = true;
