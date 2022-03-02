@@ -7,7 +7,7 @@ std::vector<size_t> get_occurences_indexes(std::string s, std::string sub)
     while(pos != s.npos)
     {
         indexes.push_back(pos + sub.length());
-        pos = s.find(sub, pos + 1);
+        pos = s.find(sub, pos + sub.length());
     }
     return (indexes);
 }
