@@ -7,6 +7,7 @@ std::map<int, std::string> init_status_code_message_map()
 
 	_map[200] = "200 OK";
 	_map[204] = "204 No Content";
+    _map[301] = "301 Moved Permanently";
     _map[400] = "400 Bad Request";
     _map[403] = "403 Forbidden";
     _map[404] = "404 Not Found";

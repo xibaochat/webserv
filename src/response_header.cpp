@@ -38,13 +38,20 @@ std::string response_str(Client_Request &obj)
 
 	//ecrazer the map frommcgi ouput
 	for (std::map<std::string, std::string>::iterator it=cgi_output.begin(); it!=cgi_output.end(); ++it)
+		response_header[it->first] = it->second;
+
+	for (std::map<std::string, std::string>::iterator it=obj.custom_headers.begin();
+		 it!=obj.custom_headers.end(); ++it)
 	{
+		std::cout << RED << "XXXXXXXXXXDEBUG:" << it->first << " | " << it->second << NC << "\n";
 		response_header[it->first] = it->second;
 	}
+
 	std::ostringstream ss;
 	ss << obj.get_total_nb();
 	response_header["Content-Length"] = ss.str();
-	for (std::map<std::string, std::string>::iterator it=response_header.begin(); it!=response_header.end(); ++it)
+	for (std::map<std::string, std::string>::iterator it=response_header.begin();
+		 it!=response_header.end(); ++it)
 	{
 		res.append(it->first);
 		res.append(": ");

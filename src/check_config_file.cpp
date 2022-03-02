@@ -412,6 +412,8 @@ void manage_route(std::stringstream &file, std::string &line, std::map<std::stri
 		}
 		else if (elem == "upload")
 			manage_acceptable_upload(path, line, m);
+		else if (elem == "redirect")
+			m[path].redirection = get_root(line);
 		else
 		{
 			std::cerr << "[ERROR] Inaccpeted element in config" << elem << std::endl;

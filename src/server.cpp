@@ -395,6 +395,21 @@ bool Server::handle_client_event(int &request_fd)
 		Conf curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
 
 
+		// -------- HTTP REDIRECTION -------
+		route r = get_matching_route(obj, curr_conf);
+		if (r.redirection.length() > 0)
+		{
+			std::string final_redir =  r.redirection + obj.origin_path;
+			set_error(obj, curr_conf, 301);
+			obj.custom_headers["Location"] = final_redir;
+			send_response(obj, request_fd);
+			ready_map.erase(request_fd);
+			request_map.erase(request_fd);
+			this->Close(request_fd);
+			return (ready_map[request_fd]);
+		}
+		// ---------------------------------
+
 		manage_default_file_if_needed(obj, curr_conf);
 
 		size_t	end_of_header = request_map[request_fd].find("\r\n\r\n");

@@ -29,8 +29,8 @@
   -> does `MBS` apply to headers or only body ?
 	  -> if apply to headers : adapt `handle_client_event` function
 	  -> if does not apply to headers : what is the beahvior with 1 billion headers
-* (Maobe) manage routes configuration:
-  - define an HTTP redirection
+<!-- * (Maobe) manage routes configuration: -->
+<!--   - define an HTTP redirection -->
   <!-- - add `PATH_INFO` to define where to look for the CGI file (ex `/usr/bin/python3`) -> NO NEED TO MANAGE: nous utilisons deja les path complet comme explique par le sujet-->
   <!-- - add default html file when none are provided in url -->
   <!-- - add alterntaives directories for specific routes -->
@@ -48,3 +48,4 @@
 <!--   - delete files -->
 <!-- * (Olano) validate browser headers with different request type (`GET`, `POST`...), action (`upload`, `delete`...) and status codes (`200`, `404`, `500`...) -->
 <!-- * (Olano) use `Siege` (or similar tool) to stress tests the server -->
+* See why we don't send html templates on error

@@ -49,8 +49,9 @@ typedef struct s_route
 	s_route()
 	{
 		this->auto_index = false;
-		auto_index_time = 0;
-		acceptable_upload_time = 0;
+		this->auto_index_time = 0;
+		this->acceptable_upload_time = 0;
+		this->redirection = "";
 	}
 	std::string path_root;
 	std::set<std::string> allow_methods;
@@ -59,6 +60,7 @@ typedef struct s_route
 	std::string	path_upload_root;
 	std::string	acceptable_upload;
 	int	acceptable_upload_time;
+	std::string redirection;
 }              route;
 
 class Client_Request;
@@ -188,6 +190,7 @@ public:
 	std::string total_line;
 	std::map<std::string, std::string> client_request;
 	std::map<std::string, std::string> cgi_output;
+	std::map<std::string, std::string> custom_headers;
 public:
 	Client_Request():method("GET"), file(""), dir_list(false), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), total_line(""), origin_path(""){}
 	~Client_Request(){};
@@ -202,6 +205,9 @@ public:
 		this->status_code_message = src.status_code_message;
 		this->total_nb = src.total_nb;
 		this->total_line = src.total_line;
+		this->cgi_output = src.cgi_output;
+		this->custom_headers = src.custom_headers;
+		this->client_request = src.client_request;
 		return *this;
 	}
 	std::string get_client_method(){return this->method;}
