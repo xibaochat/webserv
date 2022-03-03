@@ -60,8 +60,11 @@ void extract_info_from_rest(Client_Request &obj, std::string full_request)
 		header[key] = value;
 		full_request = full_request.substr(len + 2);
 	}
-	if (full_request[0] && full_request[0] == '\r' && full_request[1] && full_request[1] == '\n')
+
+	if (header.count("Content-Length") && full_request[0] &&
+		full_request[0] == '\r' && full_request[1] && full_request[1] == '\n')
 		header["body"] = full_request.substr(2, atoi(header["Content-Length"].c_str()));
+
 	header["method"] = obj.get_client_method();
 	header["file"] = obj.get_client_ask_file();
 	ostringstream convert;
