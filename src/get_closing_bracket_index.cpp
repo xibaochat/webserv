@@ -7,7 +7,7 @@ int get_closing_bracket_index(std::string s, int i_start) {
 
     while (counter > 0)
     {
-        c = s[++i_end];
+        c = s[i_end++];
         if (c == '{')
             ++counter;
         else if (c == '}')
