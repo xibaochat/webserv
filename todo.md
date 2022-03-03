@@ -18,17 +18,17 @@
 <!-- * manage return value for `send` in `send_content_to_request` -->
 <!-- * add  `this->Close(request_fd)` in `send_content_to_request` -->
 <!-- * what are `compilation re-link issues` ? -->
-* (Olano) validate `HTTP status code` for:
-  - file permission error
-  - file does not exist (CGI & static html)
+<!-- * (Olano) validate `HTTP status code` for: -->
+<!--   - file permission error -->
+<!--   - file does not exist (CGI & static html) -->
 <!-- * (Maobe) add `multiple server management` in `code` & `config file`: -->
   <!-- - manage same port being used in multiple servers -->
   <!-- - manage multiple `hostname` with multiple servers: -->
   <!-- 	  - what happen when `server_names` is left empty ? -->
-* (Olano & Ting) check `client_max_body_size` (=`MBS`) beahvior with `POST`
-  -> does `MBS` apply to headers or only body ?
-	  -> if apply to headers : adapt `handle_client_event` function
-	  -> if does not apply to headers : what is the beahvior with 1 billion headers
+<!-- * (Olano & Ting) check `client_max_body_size` (=`MBS`) beahvior with `POST` -->
+<!--   -> does `MBS` apply to headers or only body ? -->
+<!-- 	  -> if apply to headers : adapt `handle_client_event` function -->
+<!-- 	  -> if does not apply to headers : what is the beahvior with 1 billion headers -->
 <!-- * (Maobe) manage routes configuration: -->
 <!--   - define an HTTP redirection -->
   <!-- - add `PATH_INFO` to define where to look for the CGI file (ex `/usr/bin/python3`) -> NO NEED TO MANAGE: nous utilisons deja les path complet comme explique par le sujet-->
@@ -40,8 +40,8 @@
 <!-- * see behavior with invalid type requests (ex: `not POST`) -->
 * (Ting) POST :
   - upload files with c++ only, not using external files or CGI
-  - make the route (see `location` in config file) able to accept or not uploaded files
-  - add new param in the route (see `location` in config file) to configure where uploaded files should be saved
+  <!-- - make the route (see `location` in config file) able to accept or not uploaded files -->
+  <!-- - add new param in the route (see `location` in config file) to configure where uploaded files should be saved -->
   <!-- - data passed to CGI -->
   - do we need to manage chunk upload with CGI ?
 <!-- * DELETE : -->
