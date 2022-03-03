@@ -42,10 +42,7 @@ std::string response_str(Client_Request &obj)
 
 	for (std::map<std::string, std::string>::iterator it=obj.custom_headers.begin();
 		 it!=obj.custom_headers.end(); ++it)
-	{
-		std::cout << RED << "XXXXXXXXXXDEBUG:" << it->first << " | " << it->second << NC << "\n";
 		response_header[it->first] = it->second;
-	}
 
 	std::ostringstream ss;
 	ss << obj.get_total_nb();

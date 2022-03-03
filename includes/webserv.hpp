@@ -107,6 +107,7 @@ int is_whitespace(char c);
 void remove_fst_white_space(std::string &line);
 int find_first_of_whitespace(std::string &line);
 int is_only_whitespace(std::string &s);
+int cast_as_int(std::string s);
 
 //contain port, server_name, all err page
 class Conf
