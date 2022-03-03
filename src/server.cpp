@@ -399,7 +399,7 @@ bool Server::handle_client_event(int &request_fd)
 
 	// Add what we just read from the buffer
 	std::map<int, std::string> curr_request;
-	curr_request[request_fd] += std::string(buffer, nb_read);
+	curr_request[request_fd] = std::string(buffer, nb_read);
 
 
 	if (nb_read <= 0)
@@ -446,9 +446,6 @@ bool Server::handle_client_event(int &request_fd)
 					ready_map[request_fd] = this->chunkManagement(obj);
 				else
 					ready_map[request_fd] = true;
-			}
-			else
-			{
 			}
 			if (ready_map[request_fd])
 				this->extract_info_and_prepare_response(curr_conf, request_fd, obj);
