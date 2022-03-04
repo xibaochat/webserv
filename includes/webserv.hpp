@@ -104,6 +104,7 @@ void manage_route(std::stringstream &file, std::string &line, std::map<std::stri
 int method_is_not_allow(route &r, Client_Request &obj);
 int extension_is_not_exist(std::string *mylist, std::string extension, int size);
 int file_no_read_permission(route &r, Client_Request &obj);
+int file_no_write_permission(std::string filepath);
 int file_not_exist(Client_Request &obj);
 int file_is_text_based(std::string type);
 std::string get_file_output(Client_Request &o);

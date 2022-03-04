@@ -55,12 +55,15 @@ int file_no_read_permission(route &r, Client_Request &obj)
 	//check in case it doesn't exist
 	if (stat(file.c_str(), &sb) == -1)
 		return 1;
-	struct passwd *pw = getpwuid(sb.st_uid);
-	struct group  *gr = getgrgid(sb.st_gid);
-	//no permission
-	if ((pw && (sb.st_mode & S_IRUSR))	|| (gr && (sb.st_mode & S_IRGRP)) || (sb.st_mode & S_IROTH))
+
+	unsigned int server_uid = getuid();
+	unsigned int server_gid = getgid();
+
+	if ((server_uid == sb.st_uid && (sb.st_mode & S_IRUSR)) ||
+		(server_gid == sb.st_gid && (sb.st_mode & S_IRGRP)) ||
+		(sb.st_mode & S_IROTH))
 		return (0);
-	return (1)
+	return (1);
 }
 
 int file_no_write_permission(std::string filepath)
@@ -71,10 +74,12 @@ int file_no_write_permission(std::string filepath)
 	if (stat(filepath.c_str(), &sb) == -1)
 		return 1;
 
-	struct passwd *pw = getpwuid(sb.st_uid);
-	struct group  *gr = getgrgid(sb.st_gid);
-	//no permission
-	if ((pw && (sb.st_mode & S_IWUSR))	|| (gr && (sb.st_mode & S_IWGRP)) || (sb.st_mode & S_IWOTH))
+	unsigned int server_uid = getuid();
+	unsigned int server_gid = getgid();
+
+	if ((server_uid == sb.st_uid && (sb.st_mode & S_IWUSR)) ||
+		(server_gid == sb.st_gid && (sb.st_mode & S_IWGRP)) ||
+		(sb.st_mode & S_IWOTH))
 		return (0);
 	return (1);
 }
