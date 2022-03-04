@@ -246,14 +246,16 @@ void manage_static_upload(route &r, Client_Request &obj, Conf &curr_conf, cl_res
 		set_error(obj, curr_conf, 501);
 	else
 	{
-		obj.file = r.path_upload_root + "/" + fd_rep.filename;
-
-		// ADD VALIDATION ON FILE PERMISSION
-
-		std::ofstream f(obj.file.c_str());
-		f << fd_rep.payloads;
-		f.close();
-		set_error(obj, curr_conf, 200);
+		std::string filepath = r.path_upload_root + fd_rep.filename;
+		if (file_no_write_permission(filepath))
+			set_error(obj, curr_conf, 403);
+		else
+		{
+			std::ofstream f(filepath.c_str());
+			f << fd_rep.payloads;
+			f.close();
+			set_error(obj, curr_conf, 200);
+		}
 	}
 
 }
@@ -272,7 +274,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 	 message */
 	if (file_not_exist(obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 404);
-	else if (file_no_permission(r, obj) && !fd_rep.boundary.size())
+	else if (file_no_read_permission(r, obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 403);
 	else if (method_is_not_allow(r, obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 405);

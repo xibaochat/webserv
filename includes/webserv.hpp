@@ -103,7 +103,7 @@ void send_response(Client_Request &obj, int &new_socket);
 void manage_route(std::stringstream &file, std::string &line, std::map<std::string, route> &m);
 int method_is_not_allow(route &r, Client_Request &obj);
 int extension_is_not_exist(std::string *mylist, std::string extension, int size);
-int file_no_permission(route &r, Client_Request &obj);
+int file_no_read_permission(route &r, Client_Request &obj);
 int file_not_exist(Client_Request &obj);
 int file_is_text_based(std::string type);
 std::string get_file_output(Client_Request &o);

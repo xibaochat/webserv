@@ -40,7 +40,7 @@ int file_not_exist(Client_Request &obj)
 	return (0);
 }
 
-int file_no_permission(route &r, Client_Request &obj)
+int file_no_read_permission(route &r, Client_Request &obj)
 {
 	struct stat sb;
 	std::string file = obj.get_client_ask_file();
@@ -58,10 +58,28 @@ int file_no_permission(route &r, Client_Request &obj)
 	struct passwd *pw = getpwuid(sb.st_uid);
 	struct group  *gr = getgrgid(sb.st_gid);
 	//no permission
-	if (!(pw && (sb.st_mode & S_IRUSR))	|| !(gr && (sb.st_mode & S_IRGRP)) || !(sb.st_mode & S_IROTH))
-		return 1;
-	return 0;
+	if ((pw && (sb.st_mode & S_IRUSR))	|| (gr && (sb.st_mode & S_IRGRP)) || (sb.st_mode & S_IROTH))
+		return (0);
+	return (1)
 }
+
+int file_no_write_permission(std::string filepath)
+{
+	struct stat sb;
+	stat(filepath.c_str(), &sb);
+
+	if (stat(filepath.c_str(), &sb) == -1)
+		return 1;
+
+	struct passwd *pw = getpwuid(sb.st_uid);
+	struct group  *gr = getgrgid(sb.st_gid);
+	//no permission
+	if ((pw && (sb.st_mode & S_IWUSR))	|| (gr && (sb.st_mode & S_IWGRP)) || (sb.st_mode & S_IWOTH))
+		return (0);
+	return (1);
+}
+
+
 
 int method_is_not_allow(route &r, Client_Request &obj)
 {
