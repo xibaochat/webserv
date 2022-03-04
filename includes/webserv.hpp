@@ -59,6 +59,7 @@ typedef struct s_route
 		this->acceptable_upload_time = 0;
 		this->redirection = "";
 		this->path_root = "";
+		this->path_upload_root = "";
 	}
 	std::string path_root;
 	std::set<std::string> allow_methods;
@@ -259,6 +260,7 @@ typedef struct s_response {
 		this->filename = "";
 		this->content_type = "";
 		this->content = "";
+		this->payloads = "";
 		this->ready = false;
 	}
 	bool ready;
@@ -267,6 +269,7 @@ typedef struct s_response {
 	std::string filename;
 	std::string content_type;
 	std::string content;
+	std::string payloads;
 	Conf conf;
 }           cl_response;
 

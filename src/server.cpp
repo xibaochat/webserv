@@ -405,17 +405,19 @@ bool Server::chunkManagement(int fd, Client_Request &obj, Conf &curr_conf)
 		this->fd_responses_map[fd].boundary = "--" + c_type.substr(i_equal + 1, c_type.length());
 		this->fd_responses_map[fd].conf = curr_conf;
 		this->fd_responses_map[fd].content_length = cast_as_int(obj.client_request["Content-Length"]);
+
+		std::cout << MAGENTA << "PAYLOAD" << obj.payload << NC << "\n";
 		return (false);
 	}
 	// IS LAST CHUNK
-	if (obj.payload.find(this->fd_responses_map[fd].boundary))
+	if (obj.payload.find(this->fd_responses_map[fd].boundary) != string::npos)
 	{
 		int i_end_payload = obj.payload.find(this->fd_responses_map[fd].boundary) - 2;
-		this->fd_responses_map[fd].content = obj.payload.substr(0, i_end_payload);
+		this->fd_responses_map[fd].payloads += obj.payload.substr(0, i_end_payload);
+		return (true);
 	}
-	else
-		this->fd_responses_map[fd].content = obj.payload;
-	return true;
+	this->fd_responses_map[fd].payloads += obj.payload;
+	return (false);
 }
 
 
@@ -434,6 +436,7 @@ bool Server::handle_client_event(int &request_fd)
 	Conf curr_conf = default_conf;
 
 	std::cout << GREEN << buffer << NC << "\n";
+	std::cout << YELLOW << "#########################################" << NC << "\n";
 
 	// Initialize in case it isn't yet
 	if (this->fd_responses_map.find(request_fd) == this->fd_responses_map.end())
@@ -442,7 +445,6 @@ bool Server::handle_client_event(int &request_fd)
 	// Add what we just read from the buffer
 	std::map<int, std::string> curr_request;
 	curr_request[request_fd] = std::string(buffer, nb_read);
-
 
 	if (nb_read <= 0)
 		// -------- EMPTY REQUEST ---------
@@ -461,8 +463,9 @@ bool Server::handle_client_event(int &request_fd)
 			std::string c_dispo = obj.client_request["Content-Disposition"];
 			int i_filename = c_dispo.find("filename=\"") + 10;
 			this->fd_responses_map[request_fd].filename = c_dispo.substr(i_filename, c_dispo.length() - i_filename - 1);
-			std::cout << MAGENTA << "DEBUG:" << this->fd_responses_map[request_fd].filename<< NC << "\n";
 		}
+		else if (this->fd_responses_map.count(request_fd))
+			obj.payload = buffer;
 		else
 		{
 			// -------- SERVER CONF MANGEMENT ---------

@@ -246,8 +246,14 @@ void manage_static_upload(route &r, Client_Request &obj, Conf &curr_conf, cl_res
 		set_error(obj, curr_conf, 501);
 	else
 	{
-		std::cout << MAGENTA << fd_rep.content << "\n";
-		exit(0);
+		obj.file = r.path_upload_root + "/" + fd_rep.filename;
+
+		// ADD VALIDATION ON FILE PERMISSION
+
+		std::ofstream f(obj.file.c_str());
+		f << fd_rep.payloads;
+		f.close();
+		set_error(obj, curr_conf, 200);
 	}
 
 }
