@@ -350,7 +350,8 @@ bool no_specific_file_asked(Client_Request &obj)
 void manage_default_file_if_needed(Client_Request &obj, Conf &curr_conf)
 {
 	route r = get_matching_route(obj, curr_conf);
-	if (r.auto_index == false && no_specific_file_asked(obj))
+	if (r.auto_index == false && obj.method == "GET" &&
+		no_specific_file_asked(obj))
 	{
 		obj.file = curr_conf.default_file;
 		obj.clean_relative_path = curr_conf.default_file;
