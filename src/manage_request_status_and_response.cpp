@@ -240,6 +240,19 @@ void    set_error(Client_Request &obj, Conf &web_conf, int status_code_nb)
 	}
 }
 
+void manage_static_upload(route &r, Client_Request &obj, Conf &curr_conf)
+{
+	if (r.acceptable_upload != "on")
+		set_error(obj, curr_conf, 501);
+	else
+	{
+		std::string query_string = obj.get_query_string();
+		std::cout << "DEBUG" << query_string << "\n";
+		exit(0);
+	}
+
+}
+
 /*
 **check file is valid or not; by default, status_nb_message is "200 OK"in the constructor;
 **if file has unaccepted extension->501, if file not exist, ->404; if exist but no open right, ->503; and from map to obtain status error message
@@ -252,9 +265,9 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 
 	/*error file, if error html in Conf cannot be open and read, we send a static error
 	 message */
-	if (file_not_exist(obj))
+	if ((obj.method == "GET" || obj.get_file_extension() == "py") && file_not_exist(obj))
 		set_error(obj, web_conf, 404);
-	else if (file_no_permission(r, obj))
+	else if ((obj.method == "GET" || obj.get_file_extension() == "py") && file_no_permission(r, obj))
 		set_error(obj, web_conf, 403);
 	else if (method_is_not_allow(r, obj))
 		set_error(obj, web_conf, 405);
@@ -278,6 +291,8 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 	}
 	else if (obj.get_client_method() == "DELETE")
 		delete_request(obj);
+	else if (obj.method == "POST" && obj.get_file_extension() != "py")
+		manage_static_upload(r, obj, web_conf);
 	//readable file
 	else if (file_is_text_based(obj.get_file_extension()))
 	{
