@@ -245,24 +245,26 @@ route get_matching_route(Client_Request &obj, Conf &web_conf)
 
 void add_root_to_file(route &r, Client_Request &obj)
 {
-	// If `root` is defined in current `location` in conf file
-	if (r.path_root.size() > 0)
-	{
 		std::string full_path("/");
 		std::string file = obj.get_client_ask_file();
-		std::vector<std::string> v = extract_words_in_vector(file);
-		for (std::vector<std::string>::iterator it = v.begin() ; it != v.end(); ++it)
+
+		// If `root` is defined in current `location` in conf file
+		if (r.path_root.size() > 0)
 		{
-			full_path += *it;
-			if (it != v.end() - 1)
-				full_path += "/";
+			std::vector<std::string> v = extract_words_in_vector(file);
+			for (std::vector<std::string>::iterator it = v.begin() ; it != v.end(); ++it)
+			{
+				full_path += *it;
+				if (it != v.end() - 1)
+					full_path += "/";
+			}
 		}
+
 		obj.clean_relative_path = full_path;
 		full_path = r.path_root + file;
 		if (full_path.length() - file.length() == 0)
 			full_path = "." + full_path;
 		obj.set_client_file(full_path);
-	}
 }
 
 std::string get_curr_server_name(Client_Request &obj)
