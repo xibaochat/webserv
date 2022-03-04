@@ -42,8 +42,13 @@
 
 # define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location", "client_max_body_size", "index"}
 
-
 using namespace std;
+
+class Client_Request;
+class Conf;
+
+typedef struct s_response cl_response;
+
 typedef struct s_route
 {
 	s_route()
@@ -65,25 +70,6 @@ typedef struct s_route
 	std::string redirection;
 }              route;
 
-typedef struct s_response {
-	s_response() {
-		this->boundary = "";
-		this->content_length = -1;
-		this->filename = "";
-		this->content_type = "";
-		this->content = "";
-		this->ready = false;
-	}
-	bool ready;
-	std::string boundary;
-	size_t content_length;
-	std::string filename;
-	std::string content_type;
-	std::string content;
-}           cl_response;
-
-class Client_Request;
-class Conf;
 
 std::vector<std::string> extract_words_in_vector(std::string &s);
 int check_substring(std::string s, std::string s1);
@@ -105,7 +91,7 @@ std::map<int, std::string> init_status_code_message_map();
 int open_file(std::ifstream &s, std::string path);
 void open_conf(int ac, char **av, std::ifstream &file);
 std::vector<Conf> get_all_server_conf(int ac, char **av);
-void manage_request_status(route &r, Client_Request &obj, Conf &web_conf);
+void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_response &fd_rep);
 
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
 void delete_request(Client_Request &obj);
@@ -207,12 +193,13 @@ public:
 	int 		status_code_nb;
 	std::string status_code_message;
 	unsigned long total_nb;
+	std::string payload;
 	std::string body_response;
 	std::map<std::string, std::string> client_request;
 	std::map<std::string, std::string> cgi_output;
 	std::map<std::string, std::string> custom_headers;
 public:
-	Client_Request():method("GET"), file(""), dir_list(false), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), body_response(""), origin_path(""){}
+	Client_Request():method("GET"), file(""), dir_list(false), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), payload(""), body_response(""), origin_path(""){}
 	~Client_Request(){};
 	Client_Request(Client_Request const &src){*this = src;}
 	Client_Request &operator=(Client_Request const &src)
@@ -264,5 +251,23 @@ public:
 			std::cout << YELLOW << "client info key: " << NC << it->first << YELLOW << " value" << NC << " => " << it->second<< std::endl;
 	}
 };
+
+typedef struct s_response {
+	s_response() {
+		this->boundary = "";
+		this->content_length = -1;
+		this->filename = "";
+		this->content_type = "";
+		this->content = "";
+		this->ready = false;
+	}
+	bool ready;
+	std::string boundary;
+	int content_length;
+	std::string filename;
+	std::string content_type;
+	std::string content;
+	Conf conf;
+}           cl_response;
 
 #endif

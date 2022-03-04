@@ -326,7 +326,7 @@ Conf get_curr_conf(std::string &curr_server_name, int curr_port, std::vector<Con
 	return default_conf;
 }
 
-void  Server::extract_info_from_buffer(Client_Request &obj, char *buffer)
+void  Server::extract_info_from_buffer(Client_Request &obj, std::string buffer)
 {
 	extract_info_from_first_line(obj, buffer);
 	extract_info_from_rest(obj, buffer);
@@ -336,18 +336,12 @@ void Server::extract_info_and_prepare_response(Conf &curr_conf, int &fd, Client_
 {
 	route r = get_matching_route(obj, curr_conf);
 	add_root_to_file(r, obj);
-	manage_request_status(r, obj, curr_conf);
+	manage_request_status(r, obj, curr_conf, this->fd_responses_map[fd]);
 
 	cl_response rep;
 	rep.content = response_str(obj);
 	this->fd_responses_map.erase(fd);
 	this->fd_responses_map.insert(std::pair<int, cl_response> (fd, rep));
-}
-
-bool Server::chunkManagement(Client_Request obj)
-{
-	(void)obj;
-	return true;
 }
 
 bool no_specific_file_asked(Client_Request &obj)
@@ -378,7 +372,6 @@ bool Server::prepare_error_response(int request_fd, int error_code, Conf curr_co
 	return (this->ready_map[request_fd]);
 }
 
-
 bool Server::manage_http_redirection(route r, int request_fd, Conf curr_conf, Client_Request obj)
 {
 	std::string final_redir =  r.redirection + obj.origin_path;
@@ -392,6 +385,39 @@ bool is_body_too_large(int c_len, Conf &curr_conf, Client_Request &obj)
 			c_len > curr_conf.get_client_max_body_size());
 }
 
+bool Server::is_chunked_request(int request_fd, Client_Request &obj)
+{
+	if (this->fd_responses_map.count(request_fd) == 0 &&
+		obj.client_request.count("Content-Type"))
+	{
+		int i_equal = obj.client_request["Content-Type"].find("=");
+		return (obj.client_request["Content-Type"].substr(0, i_equal) == "multipart/form-data; boundary");
+	}
+	return (this->fd_responses_map.count(request_fd));
+}
+
+bool Server::chunkManagement(int fd, Client_Request &obj, Conf &curr_conf)
+{
+	if (this->fd_responses_map.count(fd) == 0)
+	{
+		int i_equal = obj.client_request["Content-Type"].find("=");
+		std::string c_type = obj.client_request["Content-Type"];
+		this->fd_responses_map[fd].boundary = "--" + c_type.substr(i_equal + 1, c_type.length());
+		this->fd_responses_map[fd].conf = curr_conf;
+		this->fd_responses_map[fd].content_length = cast_as_int(obj.client_request["Content-Length"]);
+		return (false);
+	}
+	// IS LAST CHUNK
+	if (obj.payload.find(this->fd_responses_map[fd].boundary))
+	{
+		int i_end_payload = obj.payload.find(this->fd_responses_map[fd].boundary) - 2;
+		this->fd_responses_map[fd].content = obj.payload.substr(0, i_end_payload);
+	}
+	else
+		this->fd_responses_map[fd].content = obj.payload;
+	return true;
+}
+
 
 
 /*read from the buffer and store the request fd and reponse in the map
@@ -400,10 +426,12 @@ bool Server::handle_client_event(int &request_fd)
 {
 	Client_Request obj;
 	int max_nb = 65536;
-	char buffer[max_nb];
-	memset(buffer, 0, max_nb);
-	long nb_read = recv(request_fd, buffer, sizeof(buffer), 0);
+	char tmp_buffer[max_nb];
+	memset(tmp_buffer, 0, max_nb);
+	long nb_read = recv(request_fd, tmp_buffer, sizeof(tmp_buffer), 0);
+	std::string buffer(tmp_buffer);
 	Conf default_conf = this->web_conf_vector.at(0);
+	Conf curr_conf = default_conf;
 
 	std::cout << GREEN << buffer << NC << "\n";
 
@@ -421,46 +449,57 @@ bool Server::handle_client_event(int &request_fd)
 		return (this->prepare_error_response(request_fd, 204, default_conf, obj));
 	else
 	{
-		// -------- SERVER CONF MANGEMENT ---------
-		this->extract_info_from_buffer(obj, buffer);
-		std::string curr_server_name = get_curr_server_name(obj);
-		int curr_port = get_curr_port(obj);
-		Conf curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
-
-
-		// -------- HTTP REDIRECTION ---------
-		route r = get_matching_route(obj, curr_conf);
-		if (r.redirection.length() > 0)
-			return (this->manage_http_redirection(r, request_fd, curr_conf, obj));
-
-		 // -------- DEFAULT INDEX FILE ---------
-		manage_default_file_if_needed(obj, curr_conf);
-
-		if (obj.client_request.size() > 0) //end_of_header != std::string::npos)
+		// IS SCD CHUNKED REQUEST
+		// We remove the boundary substring to still extract new headers `Content-Disposition` and get the `filename`
+		if (this->fd_responses_map.count(request_fd) && this->fd_responses_map[request_fd].filename.size() == 0)
 		{
-			if (obj.client_request.count("Content-Length"))
+			int boundary_len = this->fd_responses_map[request_fd].boundary.length();
+			buffer.erase(0, boundary_len - 1);
+			curr_conf = this->fd_responses_map[request_fd].conf;
+			extract_info_from_rest(obj, buffer);
+
+			std::string c_dispo = obj.client_request["Content-Disposition"];
+			int i_filename = c_dispo.find("filename=\"") + 10;
+			this->fd_responses_map[request_fd].filename = c_dispo.substr(i_filename, c_dispo.length() - i_filename - 1);
+			std::cout << MAGENTA << "DEBUG:" << this->fd_responses_map[request_fd].filename<< NC << "\n";
+		}
+		else
+		{
+			// -------- SERVER CONF MANGEMENT ---------
+			this->extract_info_from_buffer(obj, buffer);
+			std::string curr_server_name = get_curr_server_name(obj);
+			int curr_port = get_curr_port(obj);
+			curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
+
+			// -------- HTTP REDIRECTION ---------
+			route r = get_matching_route(obj, curr_conf);
+			if (r.redirection.length() > 0)
+				return (this->manage_http_redirection(r, request_fd, curr_conf, obj));
+
+			// -------- DEFAULT INDEX FILE ---------
+			manage_default_file_if_needed(obj, curr_conf);
+		}
+
+		if (obj.client_request.size() > 0 || this->fd_responses_map.count(request_fd)) //end_of_header != std::string::npos)
+		{
+			if (obj.client_request.count("Content-Length") ||
+				(this->fd_responses_map.count(request_fd) && this->fd_responses_map[request_fd].content_length > -1))
 			{
 				// -------- MAX CLIENT BODY SIZE ---------
-				int c_len = cast_as_int(obj.client_request["Content-Length"]);
+				int c_len;
+				if (obj.client_request.count("Content-Length"))
+					c_len = cast_as_int(obj.client_request["Content-Length"]);
+				else
+					c_len = this->fd_responses_map[request_fd].content_length;
 				if (is_body_too_large(c_len, curr_conf, obj))
 					return (this->prepare_error_response(request_fd, 413, curr_conf, obj));
-
-
-				// -------- ??????????? ---------
-				// WHEN IS THIS FALSE ?
-				size_t	end_of_header = curr_request[request_fd].find("\r\n\r\n");
-				if (curr_request[request_fd].size() >= c_len + end_of_header + 4)
-					ready_map[request_fd] = true;
-				else
-					ready_map[request_fd] = false;
-
-				// -------- CHUNK MANAGEMENT (WIP) ---------
-				if (obj.client_request.count("Transfer-Encoding") &&
-					obj.client_request["Transfer-Encoding"] == "chunked")
-					ready_map[request_fd] = this->chunkManagement(obj);
-				else
-					ready_map[request_fd] = true;
 			}
+
+
+			if (is_chunked_request(request_fd, obj))
+				ready_map[request_fd] = this->chunkManagement(request_fd, obj, curr_conf);
+			else
+				ready_map[request_fd] = true;
 			if (ready_map[request_fd])
 				this->extract_info_and_prepare_response(curr_conf, request_fd, obj);
 		}

@@ -45,25 +45,26 @@ void extract_info_from_rest(Client_Request &obj, std::string full_request)
 {
 	int len = 0;
 	int i;
+	std::string headers_buffer(full_request);
 	std::map<std::string,std::string> header;
 
 	std::string line;
-	full_request += get_r_n_index(full_request) + 1 + 1;//skip fst line which ask filename
-	while ((len = get_r_n_index(full_request)) > 0)
+	headers_buffer += get_r_n_index(headers_buffer) + 1 + 1;//skip fst line which ask filename
+	while ((len = get_r_n_index(headers_buffer)) > 0)
 	{
 		i = 0;
-		std::string str = full_request.substr(0, len);
+		std::string str = headers_buffer.substr(0, len);
 		std::string key = get_key_from_line(str, &i);
 		while (str[i] && (str[i] == ':' || str[i] == ' '))
 			i++;
 		std::string value = str.substr(i);
 		header[key] = value;
-		full_request = full_request.substr(len + 2);
+		headers_buffer = headers_buffer.substr(len + 2);
 	}
 
-	if (header.count("Content-Length") && full_request[0] &&
-		full_request[0] == '\r' && full_request[1] && full_request[1] == '\n')
-		header["body"] = full_request.substr(2, atoi(header["Content-Length"].c_str()));
+	if (header.count("Content-Length") && headers_buffer[0] &&
+		headers_buffer[0] == '\r' && headers_buffer[1] && headers_buffer[1] == '\n')
+		header["body"] = headers_buffer.substr(2, atoi(header["Content-Length"].c_str()));
 
 	header["method"] = obj.get_client_method();
 	header["file"] = obj.get_client_ask_file();
@@ -77,4 +78,7 @@ void extract_info_from_rest(Client_Request &obj, std::string full_request)
 	header["total_nb"] = ss.str();
 	header["body_response"] = obj.get_body_response();
 	obj.set_client_request_map(header);
+
+	int i_payload = full_request.find("\r\n\r\n") + 4;
+	obj.payload = full_request.substr(i_payload);
 }

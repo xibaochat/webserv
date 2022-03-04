@@ -240,14 +240,13 @@ void    set_error(Client_Request &obj, Conf &web_conf, int status_code_nb)
 	}
 }
 
-void manage_static_upload(route &r, Client_Request &obj, Conf &curr_conf)
+void manage_static_upload(route &r, Client_Request &obj, Conf &curr_conf, cl_response &fd_rep)
 {
 	if (r.acceptable_upload != "on")
 		set_error(obj, curr_conf, 501);
 	else
 	{
-		std::string query_string = obj.get_query_string();
-		std::cout << "DEBUG" << query_string << "\n";
+		std::cout << MAGENTA << fd_rep.content << "\n";
 		exit(0);
 	}
 
@@ -257,7 +256,7 @@ void manage_static_upload(route &r, Client_Request &obj, Conf &curr_conf)
 **check file is valid or not; by default, status_nb_message is "200 OK"in the constructor;
 **if file has unaccepted extension->501, if file not exist, ->404; if exist but no open right, ->503; and from map to obtain status error message
 */
-void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
+void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_response &fd_rep)
 {
 	std::ifstream myfile;
 	std::map<int, std::string> error_map = web_conf.get_conf_err_page_map();
@@ -265,15 +264,15 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 
 	/*error file, if error html in Conf cannot be open and read, we send a static error
 	 message */
-	if ((obj.method == "GET" || obj.get_file_extension() == "py") && file_not_exist(obj))
+	if (file_not_exist(obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 404);
-	else if ((obj.method == "GET" || obj.get_file_extension() == "py") && file_no_permission(r, obj))
+	else if (file_no_permission(r, obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 403);
-	else if (method_is_not_allow(r, obj))
+	else if (method_is_not_allow(r, obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 405);
-	else if (manage_cgi_based_file(obj))
+	else if (manage_cgi_based_file(obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 501);
-	else if (obj.dir_list == true) //dir listing
+	else if (obj.dir_list == true  && !fd_rep.boundary.size()) //dir listing
 	{
 		obj.f_extension = "html";
 		//origin path is the short path affiche in the html file, full_path is place to open dir
@@ -289,10 +288,10 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 			set_error(obj, web_conf, 404);
 		}
 	}
-	else if (obj.get_client_method() == "DELETE")
+	else if (obj.get_client_method() == "DELETE" && !fd_rep.boundary.size())
 		delete_request(obj);
-	else if (obj.method == "POST" && obj.get_file_extension() != "py")
-		manage_static_upload(r, obj, web_conf);
+	else if (fd_rep.boundary.size())
+		manage_static_upload(r, obj, web_conf, fd_rep);
 	//readable file
 	else if (file_is_text_based(obj.get_file_extension()))
 	{
