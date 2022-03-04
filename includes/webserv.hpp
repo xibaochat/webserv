@@ -50,6 +50,7 @@ typedef struct s_route
 	{
 		this->auto_index = false;
 		this->auto_index_time = 0;
+		this->acceptable_upload = "off";
 		this->acceptable_upload_time = 0;
 		this->redirection = "";
 		this->path_root = "";
