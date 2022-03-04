@@ -25,7 +25,7 @@ public:
 	// std::map<int, std::string> error_page_map;
 	// Conf  web_conf;
 	std::vector<Conf> web_conf_vector;
-	std::map<int, std::string> request_map;
+	std::map<int, cl_response> fd_responses_map;
 	std::map<int, bool> ready_map;
 
 public:
@@ -41,7 +41,6 @@ public:
 	Server(Server const &src){*this = src;}
 	int* get_listener(){return this->listener;}
 	int get_epfd(){return this->epfd;}
-	std::map<int, std::string> get_request_map(){return this->request_map;}
 	void acceptConnect(int &fd);
 	void manage_event(struct epoll_event *events, int &epoll_event_count);
 	void send_content_to_request(int &fd);

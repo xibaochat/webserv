@@ -65,6 +65,23 @@ typedef struct s_route
 	std::string redirection;
 }              route;
 
+typedef struct s_response {
+	s_response() {
+		this->boundary = "";
+		this->content_length = -1;
+		this->filename = "";
+		this->content_type = "";
+		this->content = "";
+		this->ready = false;
+	}
+	bool ready;
+	std::string boundary;
+	size_t content_length;
+	std::string filename;
+	std::string content_type;
+	std::string content;
+}           cl_response;
+
 class Client_Request;
 class Conf;
 

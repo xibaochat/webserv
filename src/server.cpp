@@ -78,7 +78,7 @@ void Server::Close(int &sockfd)
 {
 	epoll_ctl(this->epfd, EPOLL_CTL_DEL, sockfd, NULL);
 	close(sockfd);
-	this->request_map.erase(sockfd);
+	this->fd_responses_map.erase(sockfd);
 }
 
 Server::~Server()
@@ -93,15 +93,15 @@ Server::~Server()
 
 void Server::send_content_to_request(int &request_fd)
 {
-	std::map<int, std::string>::iterator it;
-	it = this->request_map.find(request_fd);
-	if (it != request_map.end())
+	std::map<int, cl_response>::iterator it;
+	it = this->fd_responses_map.find(request_fd);
+	if (it != this->fd_responses_map.end())
 	{
-		const char *new_str = (*it).second.c_str();
+		const char *new_str = (*it).second.content.c_str();
 		if (send((*it).first, new_str, strlen(new_str), 0) < 0)
 			std::cout << RED << ERR_SEND << NC << std::endl;
 		ready_map.erase(request_fd);
-		request_map.erase(request_fd);
+		this->fd_responses_map.erase(request_fd);
 		this->Close(request_fd);
 	}
 }
@@ -121,7 +121,6 @@ int Server::fd_is_in_listener(int fd)
   send reponse to request(send the reponse and close fd, erase fd from map)
  *:paramas (struct epoll_event *) events: event array that store all the info of each events
  *:params (int)epoll_event_count:total nb of events
- *:params (std::map<int, std::string>) request_map: a map store fd from read process and corresponding reponse
  */
 void Server::manage_event(struct epoll_event *events, int &epoll_event_count)
 {
@@ -146,8 +145,8 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count)
 		/* sth went wrong in the epoll monitoring list*/
 		else if (ev & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 		{
-			ready_map.erase(sockfd);
-			request_map.erase(sockfd);
+			// ready_map.erase(sockfd);
+			this->fd_responses_map.erase(sockfd);
 			this->Close(sockfd);
 		}
 		// A request is now ready to receive a response
@@ -338,7 +337,11 @@ void Server::extract_info_and_prepare_response(Conf &curr_conf, int &fd, Client_
 	route r = get_matching_route(obj, curr_conf);
 	add_root_to_file(r, obj);
 	manage_request_status(r, obj, curr_conf);
-	this->request_map.insert(std::pair<int, std::string> (fd, response_str(obj)));
+
+	cl_response rep;
+	rep.content = response_str(obj);
+	this->fd_responses_map.erase(fd);
+	this->fd_responses_map.insert(std::pair<int, cl_response> (fd, rep));
 }
 
 bool Server::chunkManagement(Client_Request obj)
@@ -367,7 +370,11 @@ void manage_default_file_if_needed(Client_Request &obj, Conf &curr_conf)
 bool Server::prepare_error_response(int request_fd, int error_code, Conf curr_conf, Client_Request obj)
 {
 	set_error(obj, curr_conf, error_code);
-	this->request_map.insert(std::pair<int, std::string> (request_fd, response_str(obj)));
+
+	cl_response rep;
+	rep.content = response_str(obj);
+	this->fd_responses_map.erase(request_fd);
+	this->fd_responses_map.insert(std::pair<int, cl_response> (request_fd, rep));
 	return (this->ready_map[request_fd]);
 }
 
@@ -401,7 +408,7 @@ bool Server::handle_client_event(int &request_fd)
 	std::cout << GREEN << buffer << NC << "\n";
 
 	// Initialize in case it isn't yet
-	if (this->request_map.find(request_fd) == this->request_map.end())
+	if (this->fd_responses_map.find(request_fd) == this->fd_responses_map.end())
 		this->ready_map.insert(std::pair<int, bool> (request_fd, true));
 
 	// Add what we just read from the buffer
