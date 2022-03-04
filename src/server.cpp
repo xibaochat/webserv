@@ -398,6 +398,7 @@ bool Server::is_chunked_request(int request_fd, Client_Request &obj)
 
 bool Server::chunkManagement(int fd, Client_Request &obj, Conf &curr_conf)
 {
+	// FIRST CHUNK
 	if (this->fd_responses_map.count(fd) == 0)
 	{
 		int i_equal = obj.client_request["Content-Type"].find("=");
@@ -406,7 +407,35 @@ bool Server::chunkManagement(int fd, Client_Request &obj, Conf &curr_conf)
 		this->fd_responses_map[fd].conf = curr_conf;
 		this->fd_responses_map[fd].content_length = cast_as_int(obj.client_request["Content-Length"]);
 
-		std::cout << MAGENTA << "PAYLOAD" << obj.payload << NC << "\n";
+		this->fd_responses_map[fd].obj = obj;
+		std::string file = obj.get_client_ask_file();
+		std::string extension = file.substr(file.find_last_of(".") + 1);
+		this->fd_responses_map[fd].file_extension = extension;
+		this->fd_responses_map[fd].route_path = file;
+
+
+		std::vector<size_t> boundary_occurrences;
+		boundary_occurrences = get_occurences_indexes(obj.payload,
+													  this->fd_responses_map[fd].boundary);
+		if (boundary_occurrences.size() > 0)
+		{
+			int i_file_start = obj.payload.find("filename=\"") + 10;
+			int i_file_end = obj.payload.find_first_of("\r\n", 0) - 1;
+
+			this->fd_responses_map[fd].filename = obj.payload.substr(i_file_start,
+																	 i_file_end - i_file_start);
+
+			int i_payload_start = obj.payload.find("\r\n\r\n") + 4;
+			obj.payload.erase(0, i_payload_start);
+
+			int i_payload_end = obj.payload.find("\r\n");
+			obj.payload.erase(i_payload_end, obj.payload.length());
+			this->fd_responses_map[fd].payloads = obj.payload;
+
+			if (obj.payload.length() == 0)
+				return (this->prepare_error_response(fd, 400, curr_conf, obj));
+			return (true);
+		}
 		return (false);
 	}
 	// IS LAST CHUNK
@@ -497,7 +526,6 @@ bool Server::handle_client_event(int &request_fd)
 				if (is_body_too_large(c_len, curr_conf, obj))
 					return (this->prepare_error_response(request_fd, 413, curr_conf, obj));
 			}
-
 
 			if (is_chunked_request(request_fd, obj))
 				ready_map[request_fd] = this->chunkManagement(request_fd, obj, curr_conf);

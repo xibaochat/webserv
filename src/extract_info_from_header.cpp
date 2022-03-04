@@ -62,7 +62,9 @@ void extract_info_from_rest(Client_Request &obj, std::string full_request)
 		headers_buffer = headers_buffer.substr(len + 2);
 	}
 
-	if (header.count("Content-Length") && headers_buffer[0] &&
+	if (obj.payload.length() == 0)
+		header["body"] = "";
+	else if (header.count("Content-Length") && headers_buffer[0] &&
 		headers_buffer[0] == '\r' && headers_buffer[1] && headers_buffer[1] == '\n')
 		header["body"] = headers_buffer.substr(2, atoi(header["Content-Length"].c_str()));
 

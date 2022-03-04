@@ -125,7 +125,7 @@ char	**get_cgi_env(Client_Request &obj, route &r)
 	return (_env);
 }
 
-int	manage_executable_file(Client_Request &obj, route &r)
+int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 {
 	int status;
 	int cgi_out[2];
@@ -134,8 +134,12 @@ int	manage_executable_file(Client_Request &obj, route &r)
 	std::map<std::string, std::string> f_header_map;
 	std::map<std::string, std::string> request;
 
+	if (fd_rep.boundary.length() > 0)
+		obj = fd_rep.obj;
+
 	arr[0] = strdup("/usr/bin/python3");
-	arr[1] = strdup(obj.get_client_ask_file().c_str());
+	std::string asked_file = "." + obj.get_client_ask_file();
+	arr[1] = strdup(asked_file.c_str());
 	arr[2] = NULL;
 
 	request = obj.get_client_request_map();
@@ -146,8 +150,25 @@ int	manage_executable_file(Client_Request &obj, route &r)
 	{
 		if (pipe(cgi_in) == -1)
 			std::cout << "cgi_in error" << std::endl;
-		if (write(cgi_in[1], request["body"].c_str(), atoi(request["Content-Length"].c_str())) == -1)	//Need change "abc=123" after get body
+		std::cout << RED << "----------- DEBUG ------------" << NC << "\n";
+		std::cout << MAGENTA << request["body"] << NC << "\n";
+		std::cout << BLUE << atoi(request["Content-Length"].c_str()) << NC << "\n";
+		std::cout << RED << "------------------------------" << NC << "\n";
+		std::cout << MAGENTA << fd_rep.payloads << NC << "\n";
+		std::cout << BLUE << fd_rep.payloads.length() << NC << "\n";
+		std::cout << RED << "----------- DEBUG END ------------" << NC << "\n";
+
+		if (fd_rep.payloads.length() > 0)
+		{
+			std::cout << RED << "---------- DEBUG -------------01" << NC << "\n";
+			if (write(cgi_in[1], fd_rep.payloads.c_str(), fd_rep.payloads.length() + 10) == -1)	//Need change "abc=123" after get body
+				std::cout << "write error" << std::endl;
+		}
+		else if (write(cgi_in[1], request["body"].c_str(),
+					   request["body"].length()) == -1)	//Need change "abc=123" after get body
+		{
 			std::cout << "write error" << std::endl;
+		}
 	}
 
 	char foo[4096] = {0};
@@ -247,7 +268,7 @@ void manage_static_upload(route &r, Client_Request &obj, Conf &curr_conf, cl_res
 	else
 	{
 		std::string filepath = r.path_upload_root + fd_rep.filename;
-		if (file_no_write_permission(filepath))
+		if (file_no_write_permission(filepath, r.path_upload_root))
 			set_error(obj, curr_conf, 403);
 		else
 		{
@@ -298,17 +319,23 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 	}
 	else if (obj.get_client_method() == "DELETE" && !fd_rep.boundary.size())
 		delete_request(obj);
-	else if (fd_rep.boundary.size())
+	else if (fd_rep.file_extension != "py" && fd_rep.boundary.size())
+	{
+		std::cout << RED << "WEI SHENMEEEEEEEEEEE" << fd_rep.file_extension << NC << "\n";
 		manage_static_upload(r, obj, web_conf, fd_rep);
+	}
 	//readable file
 	else if (file_is_text_based(obj.get_file_extension()))
 	{
 		open_file(myfile, obj.get_client_ask_file());
 		set_length_and_content(myfile, obj);
 	}
-	else if (obj.get_file_extension() == "py")
+	else if (obj.get_file_extension() == "py" || fd_rep.file_extension == "py")
 	{
-		if (manage_executable_file(obj, r))
+		std::cout << RED << "--------------DEBUG" << NC << "\n";
+		if (manage_executable_file(obj, r, fd_rep))
 			set_error(obj, web_conf, 500);
 	}
+	else
+		std::cout << RED << ":(    DEBUG" << NC << "\n";
 }

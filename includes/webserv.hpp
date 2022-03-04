@@ -104,7 +104,7 @@ void manage_route(std::stringstream &file, std::string &line, std::map<std::stri
 int method_is_not_allow(route &r, Client_Request &obj);
 int extension_is_not_exist(std::string *mylist, std::string extension, int size);
 int file_no_read_permission(route &r, Client_Request &obj);
-int file_no_write_permission(std::string filepath);
+int file_no_write_permission(std::string filepath, std::string path);
 int file_not_exist(Client_Request &obj);
 int file_is_text_based(std::string type);
 std::string get_file_output(Client_Request &o);
@@ -263,6 +263,8 @@ typedef struct s_response {
 		this->content = "";
 		this->payloads = "";
 		this->ready = false;
+		this->route_path = "";
+		this->file_extension = "";
 	}
 	bool ready;
 	std::string boundary;
@@ -272,6 +274,9 @@ typedef struct s_response {
 	std::string content;
 	std::string payloads;
 	Conf conf;
+	std::string route_path;
+	std::string file_extension;
+	Client_Request obj;
 }           cl_response;
 
 #endif

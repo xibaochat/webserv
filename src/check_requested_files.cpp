@@ -66,13 +66,18 @@ int file_no_read_permission(route &r, Client_Request &obj)
 	return (1);
 }
 
-int file_no_write_permission(std::string filepath)
+int file_no_write_permission(std::string filepath, std::string path)
 {
 	struct stat sb;
 	stat(filepath.c_str(), &sb);
 
 	if (stat(filepath.c_str(), &sb) == -1)
-		return 1;
+	{
+		if (path.length() > 0)
+			return file_no_write_permission(path, "");
+		return (1);
+
+	}
 
 	unsigned int server_uid = getuid();
 	unsigned int server_gid = getgid();
