@@ -56,7 +56,7 @@ std::string response_str(Client_Request &obj)
 		res.append("\r\n");
 	}
 	res.append("\r\n");
-	res.append(obj.get_total_line());
+	res.append(obj.get_body_response());
 	return res;
 
 //	return std::string("HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\nContent-Type: text/plain\r\nHello world!");

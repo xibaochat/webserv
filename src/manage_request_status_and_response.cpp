@@ -42,7 +42,7 @@ void set_length_and_content(std::ifstream &myfile, Client_Request &obj)
         content_page += line;
     }
     obj.set_total_nb(content_page.length());
-    obj.set_total_line(content_page);
+    obj.set_body_response(content_page);
     myfile.close();
 }
 
@@ -204,7 +204,7 @@ int	manage_executable_file(Client_Request &obj, route &r)
 			obj.set_cgi_output_map(f_header_map);
 			//after extract, ret is only content without header
 			obj.set_total_nb(ret.length());
-			obj.set_total_line(ret);
+			obj.set_body_response(ret);
 		}
 		free(arr[0]);
 		free(arr[1]);
@@ -229,7 +229,7 @@ void    set_error(Client_Request &obj, Conf &web_conf, int status_code_nb)
 		set_request_status_nb_message(status_code_nb, obj);
 		std::string str = string("Error ") +  obj.get_status_code_message();
 		obj.set_total_nb(str.length());
-		obj.set_total_line(str);
+		obj.set_body_response(str);
 		myfile.close();
 	}
 	else
@@ -268,7 +268,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf)
 		{
 			std::string auto_index_output = get_file_output(obj);
 			obj.set_total_nb(auto_index_output.length());
-			obj.set_total_line(auto_index_output);
+			obj.set_body_response(auto_index_output);
 		}
 		catch (const char* msg)
 		{

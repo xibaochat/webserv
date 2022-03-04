@@ -52,6 +52,7 @@ typedef struct s_route
 		this->auto_index_time = 0;
 		this->acceptable_upload_time = 0;
 		this->redirection = "";
+		this->path_root = "";
 	}
 	std::string path_root;
 	std::set<std::string> allow_methods;
@@ -188,12 +189,12 @@ public:
 	int 		status_code_nb;
 	std::string status_code_message;
 	unsigned long total_nb;
-	std::string total_line;
+	std::string body_response;
 	std::map<std::string, std::string> client_request;
 	std::map<std::string, std::string> cgi_output;
 	std::map<std::string, std::string> custom_headers;
 public:
-	Client_Request():method("GET"), file(""), dir_list(false), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), total_line(""), origin_path(""){}
+	Client_Request():method("GET"), file(""), dir_list(false), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), body_response(""), origin_path(""){}
 	~Client_Request(){};
 	Client_Request(Client_Request const &src){*this = src;}
 	Client_Request &operator=(Client_Request const &src)
@@ -205,7 +206,7 @@ public:
 		this->status_code_nb = src.status_code_nb;
 		this->status_code_message = src.status_code_message;
 		this->total_nb = src.total_nb;
-		this->total_line = src.total_line;
+		this->body_response = src.body_response;
 		this->cgi_output = src.cgi_output;
 		this->custom_headers = src.custom_headers;
 		this->client_request = src.client_request;
@@ -217,7 +218,7 @@ public:
 	int get_status_code_nb(){return this->status_code_nb;}
 	std::string get_status_code_message(){return this->status_code_message;}
 	unsigned long get_total_nb(){return this->total_nb;}
-	std::string get_total_line(){return this->total_line;}
+	std::string get_body_response(){return this->body_response;}
 	std::string	get_query_string(){return this->query_string;}
 	std::map<std::string, std::string> get_client_request_map(){return this->client_request;}
 	std::map<std::string, std::string> get_cgi_output_map(){return this->cgi_output;}
@@ -228,7 +229,7 @@ public:
 	void set_status_code_nb(int src){this->status_code_nb = src;}
 	void set_status_code_message(std::string &src){this->status_code_message = src;}
 	void set_total_nb(unsigned long src){this->total_nb = src;}
-	void set_total_line(std::string &src){this->total_line = src;}
+	void set_body_response(std::string &src){this->body_response = src;}
 	void set_query_string(std::string &src){this->query_string = src;}
 	void set_client_request_map(std::map<std::string, std::string> &src)
 	{

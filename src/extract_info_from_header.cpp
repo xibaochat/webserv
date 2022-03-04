@@ -75,6 +75,6 @@ void extract_info_from_rest(Client_Request &obj, std::string full_request)
 	std::ostringstream ss;
 	ss << obj.get_total_nb();
 	header["total_nb"] = ss.str();
-	header["total_line"] = obj.get_total_line();
+	header["body_response"] = obj.get_body_response();
 	obj.set_client_request_map(header);
 }
