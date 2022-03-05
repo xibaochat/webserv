@@ -36,7 +36,7 @@
   <!-- - turn on or off directory listing -->
   <!-- - default file to answer if the request is a directory -->
 <!-- * see behavior with invalid type requests (ex: `not POST`) -->
-* (Ting) POST :
+* (Xin) POST :
   - manage 3+ chunk+CGI
   <!-- - upload files with c++ only, not using external files or CGI -->
   <!-- - make the route (see `location` in config file) able to accept or not uploaded files -->
@@ -48,5 +48,7 @@
 <!-- * (Olano) validate browser headers with different request type (`GET`, `POST`...), action (`upload`, `delete`...) and status codes (`200`, `404`, `500`...) -->
 <!-- * (Olano) use `Siege` (or similar tool) to stress tests the server -->
 <!-- * See why we don't send html templates on error -->
-* Ajouter un try/catch dans la boucle EPOLL pour eviter que le serveur ne crash
+* (?) Ajouter un try/catch dans la boucle EPOLL pour eviter que le serveur ne crash
   -> + set ERROR 500
+* (Ting) Clean up CGI code
+* (Olano) Completer le fichier `./tests/how_to_test.md` sur comment valider toutes les features
