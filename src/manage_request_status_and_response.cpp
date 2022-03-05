@@ -150,24 +150,19 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 	{
 		if (pipe(cgi_in) == -1)
 			std::cout << "cgi_in error" << std::endl;
-		std::cout << RED << "----------- DEBUG ------------" << NC << "\n";
-		std::cout << MAGENTA << request["body"] << NC << "\n";
-		std::cout << BLUE << atoi(request["Content-Length"].c_str()) << NC << "\n";
-		std::cout << RED << "------------------------------" << NC << "\n";
-		std::cout << MAGENTA << fd_rep.payloads << NC << "\n";
-		std::cout << BLUE << fd_rep.payloads.length() << NC << "\n";
-		std::cout << RED << "----------- DEBUG END ------------" << NC << "\n";
 
+		// CHUNKED BASED REQUESTS
 		if (fd_rep.payloads.length() > 0)
 		{
-			std::cout << RED << "---------- DEBUG -------------01" << NC << "\n";
-			if (write(cgi_in[1], fd_rep.payloads.c_str(), fd_rep.payloads.length() + 10) == -1)	//Need change "abc=123" after get body
+			if (write(cgi_in[1], fd_rep.unparsed_payloads.c_str(), fd_rep.unparsed_payloads.length()) == -1)	//Need change "abc=123" after get body
 				std::cout << "write error" << std::endl;
 		}
-		else if (write(cgi_in[1], request["body"].c_str(),
-					   request["body"].length()) == -1)	//Need change "abc=123" after get body
+		// BASIC REQUESTS
+		else
 		{
-			std::cout << "write error" << std::endl;
+			if(write(cgi_in[1], request["body"].c_str(),
+					 request["body"].length()) == -1)	//Need change "abc=123" after get body
+				std::cout << "write error" << std::endl;
 		}
 	}
 

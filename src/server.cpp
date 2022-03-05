@@ -403,11 +403,13 @@ void Server::store_req_infos_for_later(int fd, Client_Request &obj, Conf &curr_c
 	this->fd_responses_map[fd].boundary = "--" + c_type.substr(i_equal + 1, c_type.length());
 	this->fd_responses_map[fd].conf = curr_conf;
 	this->fd_responses_map[fd].content_length = cast_as_int(obj.client_request["Content-Length"]);
+	this->fd_responses_map[fd].unparsed_payloads = obj.payload;
 
-	this->fd_responses_map[fd].obj = obj;
 	std::string file = obj.get_client_ask_file();
 	std::string extension = file.substr(file.find_last_of(".") + 1);
 	this->fd_responses_map[fd].file_extension = extension;
+	obj.set_file_extension(extension);
+	this->fd_responses_map[fd].obj = obj;
 	this->fd_responses_map[fd].route_path = file;
 }
 
@@ -426,20 +428,17 @@ bool Server::manage_chunk_but_one_request(int fd, Client_Request &obj, Conf &cur
 	int i_payload_start = obj.payload.find("\r\n\r\n") + 4;
 	obj.payload.erase(0, i_payload_start);
 
-	int i_payload_end = obj.payload.find("\r\n");
-	if (i_payload_end != string::npos)
-		obj.payload.erase(i_payload_end, obj.payload.length());
-	this->fd_responses_map[fd].payloads = obj.payload;
-
-	if (obj.payload.length() == 0)
-		return (this->prepare_error_response(fd, 400, curr_conf, obj));
-
 	int i_last_boundary = obj.payload.find(this->fd_responses_map[fd].boundary);
 	if (i_last_boundary != string::npos)
 	{
-		obj.payload.erase(i_last_boundary - 2, this->fd_responses_map[fd].boundary.length() + 2);
+		obj.payload.erase(i_last_boundary - 2, this->fd_responses_map[fd].boundary.length() + 6);
+		this->fd_responses_map[fd].payloads = obj.payload;
+
+		if (obj.payload.length() == 0)
+	    	return (this->prepare_error_response(fd, 400, curr_conf, obj));
 		return (true);
 	}
+	this->fd_responses_map[fd].payloads = obj.payload;
 	return (false);
 }
 
@@ -475,6 +474,7 @@ bool Server::is_scd_chunked_request(int request_fd)
 
 void Server::manage_scd_chunked_request(int request_fd, std::string &buffer, Client_Request &obj, Conf &curr_conf)
 {
+	this->fd_responses_map[request_fd].unparsed_payloads += buffer;
 	int boundary_len = this->fd_responses_map[request_fd].boundary.length();
 	buffer.erase(0, boundary_len - 1);
 	curr_conf = this->fd_responses_map[request_fd].conf;
@@ -525,7 +525,7 @@ bool Server::handle_client_event(int &request_fd)
 		else if (this->fd_responses_map.count(request_fd))
 		{
 			obj = this->fd_responses_map[request_fd].obj;
-			obj.file = this->fd_responses_map[request_fd].filename;
+			this->fd_responses_map[request_fd].unparsed_payloads += buffer;
 			obj.payload = buffer;
 			curr_conf = this->fd_responses_map[request_fd].conf;
 			route r = get_matching_route(obj, curr_conf);

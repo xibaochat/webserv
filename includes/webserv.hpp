@@ -262,6 +262,7 @@ typedef struct s_response {
 		this->content_type = "";
 		this->content = "";
 		this->payloads = "";
+		this->unparsed_payloads = "";
 		this->ready = false;
 		this->route_path = "";
 		this->file_extension = "";
@@ -273,6 +274,7 @@ typedef struct s_response {
 	std::string content_type;
 	std::string content;
 	std::string payloads;
+	std::string unparsed_payloads;
 	Conf conf;
 	std::string route_path;
 	std::string file_extension;

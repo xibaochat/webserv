@@ -10,17 +10,19 @@ int open_file(std::ifstream &myfile, std::string path)
 
 int extension_is_not_exist(std::string *mylist, std::string extension, int size)
 {
+	std::cout << RED << "baobe AI NI DEBUG --------->" << extension << NC << "\n";
     std::string *begin = mylist;
     std::string *end = mylist + size;
     if (std::find(begin, end, extension) != end)
         return (0);
+	std::cout << RED << "baobe AI NI DEBUG" << NC << "\n";
     return (1);
 }
 
 int file_is_text_based(std::string type)
 {
-	std::string mylist[]={"html", "css", "png", "bmp", "js", "jpeg", "jpg", "json"};
-	if (!extension_is_not_exist(mylist, type, 7))
+	std::string mylist[]={"html", "css", "js", "json", "xml", "csv"};
+	if (!extension_is_not_exist(mylist, type, 6))
 		return (1);
 	return (0);
 }
