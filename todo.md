@@ -4,8 +4,6 @@
 * (Maobe & Olano) add chunk management:
     -> (Olana) chunked request (when client upload a file)
 		-> will probably need to use `test_this/client.cpp` to emulate chunked request
-    -> (Maobe) chunked response (when client download a file)
-	-> (Maobe) add `max_chunk_size` in config file
 <!-- * You must provide some configuration files and default basic files to test/demonstrate -->
 <!-- every feature is working during evaluation. -->
 
@@ -48,4 +46,6 @@
 <!--   - delete files -->
 <!-- * (Olano) validate browser headers with different request type (`GET`, `POST`...), action (`upload`, `delete`...) and status codes (`200`, `404`, `500`...) -->
 <!-- * (Olano) use `Siege` (or similar tool) to stress tests the server -->
-* See why we don't send html templates on error
+<!-- * See why we don't send html templates on error -->
+* Ajouter un try/catch dans la boucle EPOLL pour eviter que le serveur ne crash
+  -> + set ERROR 500

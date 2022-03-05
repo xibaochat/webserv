@@ -369,7 +369,7 @@ bool Server::prepare_error_response(int request_fd, int error_code, Conf curr_co
 	rep.content = response_str(obj);
 	this->fd_responses_map.erase(request_fd);
 	this->fd_responses_map.insert(std::pair<int, cl_response> (request_fd, rep));
-	return (this->ready_map[request_fd]);
+	return (false);
 }
 
 bool Server::manage_http_redirection(route r, int request_fd, Conf curr_conf, Client_Request obj)
@@ -396,59 +396,94 @@ bool Server::is_chunked_request(int request_fd, Client_Request &obj)
 	return (this->fd_responses_map.count(request_fd));
 }
 
+void Server::store_req_infos_for_later(int fd, Client_Request &obj, Conf &curr_conf)
+{
+	int i_equal = obj.client_request["Content-Type"].find("=");
+	std::string c_type = obj.client_request["Content-Type"];
+	this->fd_responses_map[fd].boundary = "--" + c_type.substr(i_equal + 1, c_type.length());
+	this->fd_responses_map[fd].conf = curr_conf;
+	this->fd_responses_map[fd].content_length = cast_as_int(obj.client_request["Content-Length"]);
+
+	this->fd_responses_map[fd].obj = obj;
+	std::string file = obj.get_client_ask_file();
+	std::string extension = file.substr(file.find_last_of(".") + 1);
+	this->fd_responses_map[fd].file_extension = extension;
+	this->fd_responses_map[fd].route_path = file;
+}
+
+
+bool Server::manage_chunk_but_one_request(int fd, Client_Request &obj, Conf &curr_conf)
+{
+
+	// We erase the first `boundary`
+	obj.payload.erase(0, this->fd_responses_map[fd].boundary.length() + 2);
+
+	int i_file_start = obj.payload.find("filename=\"") + 10;
+	int i_file_end = obj.payload.find("\r\n", 0) - 1;
+
+	this->fd_responses_map[fd].filename = obj.payload.substr(i_file_start,
+															 i_file_end - i_file_start);
+	int i_payload_start = obj.payload.find("\r\n\r\n") + 4;
+	obj.payload.erase(0, i_payload_start);
+
+	int i_payload_end = obj.payload.find("\r\n");
+	if (i_payload_end != string::npos)
+		obj.payload.erase(i_payload_end, obj.payload.length());
+	this->fd_responses_map[fd].payloads = obj.payload;
+
+	if (obj.payload.length() == 0)
+		return (this->prepare_error_response(fd, 400, curr_conf, obj));
+
+	int i_last_boundary = obj.payload.find(this->fd_responses_map[fd].boundary);
+	if (i_last_boundary != string::npos)
+	{
+		obj.payload.erase(i_last_boundary - 2, this->fd_responses_map[fd].boundary.length() + 2);
+		return (true);
+	}
+	return (false);
+}
+
+bool Server::manage_last_chunked_request(int fd, Client_Request &obj)
+{
+	int i_end_payload = obj.payload.find(this->fd_responses_map[fd].boundary) - 2;
+	this->fd_responses_map[fd].payloads += obj.payload.substr(0, i_end_payload);
+	return (true);
+}
+
 bool Server::chunkManagement(int fd, Client_Request &obj, Conf &curr_conf)
 {
 	// FIRST CHUNK
 	if (this->fd_responses_map.count(fd) == 0)
 	{
-		int i_equal = obj.client_request["Content-Type"].find("=");
-		std::string c_type = obj.client_request["Content-Type"];
-		this->fd_responses_map[fd].boundary = "--" + c_type.substr(i_equal + 1, c_type.length());
-		this->fd_responses_map[fd].conf = curr_conf;
-		this->fd_responses_map[fd].content_length = cast_as_int(obj.client_request["Content-Length"]);
-
-		this->fd_responses_map[fd].obj = obj;
-		std::string file = obj.get_client_ask_file();
-		std::string extension = file.substr(file.find_last_of(".") + 1);
-		this->fd_responses_map[fd].file_extension = extension;
-		this->fd_responses_map[fd].route_path = file;
-
-
-		std::vector<size_t> boundary_occurrences;
-		boundary_occurrences = get_occurences_indexes(obj.payload,
-													  this->fd_responses_map[fd].boundary);
-		if (boundary_occurrences.size() > 0)
-		{
-			int i_file_start = obj.payload.find("filename=\"") + 10;
-			int i_file_end = obj.payload.find_first_of("\r\n", 0) - 1;
-
-			this->fd_responses_map[fd].filename = obj.payload.substr(i_file_start,
-																	 i_file_end - i_file_start);
-
-			int i_payload_start = obj.payload.find("\r\n\r\n") + 4;
-			obj.payload.erase(0, i_payload_start);
-
-			int i_payload_end = obj.payload.find("\r\n");
-			obj.payload.erase(i_payload_end, obj.payload.length());
-			this->fd_responses_map[fd].payloads = obj.payload;
-
-			if (obj.payload.length() == 0)
-				return (this->prepare_error_response(fd, 400, curr_conf, obj));
-			return (true);
-		}
+		this->store_req_infos_for_later(fd, obj, curr_conf);
+		if (obj.payload.find(this->fd_responses_map[fd].boundary) != string::npos)
+			return (this->manage_chunk_but_one_request(fd, obj, curr_conf));
 		return (false);
 	}
 	// IS LAST CHUNK
 	if (obj.payload.find(this->fd_responses_map[fd].boundary) != string::npos)
-	{
-		int i_end_payload = obj.payload.find(this->fd_responses_map[fd].boundary) - 2;
-		this->fd_responses_map[fd].payloads += obj.payload.substr(0, i_end_payload);
-		return (true);
-	}
+		return (this->manage_last_chunked_request(fd, obj));
 	this->fd_responses_map[fd].payloads += obj.payload;
 	return (false);
 }
 
+bool Server::is_scd_chunked_request(int request_fd)
+{
+	return (this->fd_responses_map.count(request_fd) &&
+			this->fd_responses_map[request_fd].filename.size() == 0);
+}
+
+void Server::manage_scd_chunked_request(int request_fd, std::string &buffer, Client_Request &obj, Conf &curr_conf)
+{
+	int boundary_len = this->fd_responses_map[request_fd].boundary.length();
+	buffer.erase(0, boundary_len - 1);
+	curr_conf = this->fd_responses_map[request_fd].conf;
+	extract_info_from_rest(obj, buffer);
+
+	std::string c_dispo = obj.client_request["Content-Disposition"];
+	int i_filename = c_dispo.find("filename=\"") + 10;
+	this->fd_responses_map[request_fd].filename = c_dispo.substr(i_filename, c_dispo.length() - i_filename - 1);
+}
 
 
 /*read from the buffer and store the request fd and reponse in the map
@@ -482,19 +517,19 @@ bool Server::handle_client_event(int &request_fd)
 	{
 		// IS SCD CHUNKED REQUEST
 		// We remove the boundary substring to still extract new headers `Content-Disposition` and get the `filename`
-		if (this->fd_responses_map.count(request_fd) && this->fd_responses_map[request_fd].filename.size() == 0)
+		if (this->is_scd_chunked_request(request_fd))
 		{
-			int boundary_len = this->fd_responses_map[request_fd].boundary.length();
-			buffer.erase(0, boundary_len - 1);
-			curr_conf = this->fd_responses_map[request_fd].conf;
-			extract_info_from_rest(obj, buffer);
-
-			std::string c_dispo = obj.client_request["Content-Disposition"];
-			int i_filename = c_dispo.find("filename=\"") + 10;
-			this->fd_responses_map[request_fd].filename = c_dispo.substr(i_filename, c_dispo.length() - i_filename - 1);
+			std::cout << RED << "------------ DEBUG -------------" << NC << "\n";
+			this->manage_scd_chunked_request(request_fd, buffer, obj, curr_conf);
 		}
 		else if (this->fd_responses_map.count(request_fd))
+		{
+			obj = this->fd_responses_map[request_fd].obj;
+			obj.file = this->fd_responses_map[request_fd].filename;
 			obj.payload = buffer;
+			curr_conf = this->fd_responses_map[request_fd].conf;
+			route r = get_matching_route(obj, curr_conf);
+		}
 		else
 		{
 			// -------- SERVER CONF MANGEMENT ---------

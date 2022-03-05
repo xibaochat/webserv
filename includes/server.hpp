@@ -49,6 +49,11 @@ public:
 	bool manage_http_redirection(route r, int request_fd, Conf curr_conf, Client_Request obj);
 	bool is_chunked_request(int request_fd, Client_Request &obj);
 	bool chunkManagement(int fd, Client_Request &obj, Conf &curr_conf);
+	bool is_scd_chunked_request(int request_fd);
+	void manage_scd_chunked_request(int request_fd, std::string &buffer, Client_Request &obj, Conf &curr_conf);
+	void store_req_infos_for_later(int fd, Client_Request &obj, Conf &curr_conf);
+	bool manage_chunk_but_one_request(int fd, Client_Request &obj, Conf &conf);
+	bool manage_last_chunked_request(int fd, Client_Request &obj);
 };
 
 /*ref : Level-triggered vs Edge-triggered
