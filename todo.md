@@ -1,9 +1,9 @@
 # Subject
 
 <!-- * define `browser` of the team -->
-* (Maobe & Olano) add chunk management:
-    -> (Olana) chunked request (when client upload a file)
-		-> will probably need to use `test_this/client.cpp` to emulate chunked request
+<!-- * (Maobe & Olano) add chunk management: -->
+<!--     -> (Olana) chunked request (when client upload a file) -->
+<!-- 		-> will probably need to use `test_this/client.cpp` to emulate chunked request -->
 <!-- * You must provide some configuration files and default basic files to test/demonstrate -->
 <!-- every feature is working during evaluation. -->
 
@@ -37,11 +37,12 @@
   <!-- - default file to answer if the request is a directory -->
 <!-- * see behavior with invalid type requests (ex: `not POST`) -->
 * (Ting) POST :
-  - upload files with c++ only, not using external files or CGI
+  - manage 3+ chunk+CGI
+  <!-- - upload files with c++ only, not using external files or CGI -->
   <!-- - make the route (see `location` in config file) able to accept or not uploaded files -->
   <!-- - add new param in the route (see `location` in config file) to configure where uploaded files should be saved -->
   <!-- - data passed to CGI -->
-  - do we need to manage chunk upload with CGI ?
+  <!-- - do we need to manage chunk upload with CGI ? -->
 <!-- * DELETE : -->
 <!--   - delete files -->
 <!-- * (Olano) validate browser headers with different request type (`GET`, `POST`...), action (`upload`, `delete`...) and status codes (`200`, `404`, `500`...) -->
