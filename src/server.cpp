@@ -495,7 +495,7 @@ bool Server::handle_client_event(int &request_fd)
 	char tmp_buffer[max_nb];
 	memset(tmp_buffer, 0, max_nb);
 	long nb_read = recv(request_fd, tmp_buffer, sizeof(tmp_buffer), 0);
-	std::string buffer(tmp_buffer);
+	std::string buffer(tmp_buffer, nb_read);
 	Conf default_conf = this->web_conf_vector.at(0);
 	Conf curr_conf = default_conf;
 

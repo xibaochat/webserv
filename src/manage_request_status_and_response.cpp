@@ -77,6 +77,7 @@ int manage_cgi_based_file(Client_Request &obj)
 	return (0);
 }
 
+// return CGI required env variable
 char	**get_cgi_env(Client_Request &obj, route &r)
 {
 	std::vector<string> env;
@@ -90,6 +91,7 @@ char	**get_cgi_env(Client_Request &obj, route &r)
 	std::string	upload_dir = (std::string("UPLOAD_DIR=") + UPLOAD_DIR);
 	std::string	acceptable_upload = (std::string("ACCEPTABLE_UPLOAD=") + UPLOAD_DEFAUT);
 
+	// env variable for GET and POST
 	env.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	env.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	env.push_back("REDIRECT_STATUS=200");
@@ -102,27 +104,87 @@ char	**get_cgi_env(Client_Request &obj, route &r)
 		acceptable_upload = (std::string("ACCEPTABLE_UPLOAD=") + r.acceptable_upload);
 	env.push_back(acceptable_upload.c_str());
 
-	if (obj.get_client_method() == "GET")
+	if (obj.get_client_method() == "GET") // env variable just for GET
 	{
 		std::string	query_string = (std::string("QUERY_STRING=") + obj.get_query_string());
 		env.push_back(query_string.c_str());
-		//env.push_back("CONTENT_LENGTH=0");
 	}
-	else if (obj.get_client_method() == "POST")
+	else if (obj.get_client_method() == "POST") // env variable just for POST
 	{
 		std::string content_length = (std::string("CONTENT_LENGTH=") + request["Content-Length"]);
 		std::string	content_type = (std::string("CONTENT_TYPE=") + request["Content-Type"]);
 		env.push_back(content_type.c_str());
 		env.push_back(content_length.c_str());
 	}
+
+	// convert verctor<string> to char**
 	_env = static_cast<char**>(malloc(sizeof(char *) * (env.size() + 1)));
 	for (size_t i = 0; i < env.size(); i++)
 	{
 		_env[i] = strdup(env[i].c_str());
-		//std::cout << _env[i] << std::endl;
 	}
 	_env[env.size()] = NULL;
 	return (_env);
+}
+
+// write payload in cgi_in
+void	write_payload_to_cgi(cl_response &fd_rep, int &cgi_in, std::map<std::string, std::string> &request)
+{
+	// CHUNKED BASED REQUESTS
+	if (fd_rep.payloads.length() > 0)
+	{
+		if (write(cgi_in, fd_rep.unparsed_payloads.c_str(), fd_rep.unparsed_payloads.length()) == -1)
+			std::cerr << "write error" << std::endl;
+	}
+	// BASIC REQUESTS
+	else
+	{
+		if(write(cgi_in, request["body"].c_str(), request["body"].length()) == -1)
+			std::cerr << "write error" << std::endl;
+	}
+}
+
+// execute cgi file with right args and env
+void	execute_cgi_file(Client_Request &obj, int cgi_in[2], int cgi_out[2], char *arr[3], char **env)
+{
+	// put cgi_in in STDIN, it will be take by cgi file as input
+	if (obj.get_client_method() == "POST")
+	{
+		close(cgi_in[1]);
+		if (dup2(cgi_in[0], STDIN_FILENO) == -1)
+			std::cerr << "cgi_in dup2 error" << std::endl;
+	}
+	close(cgi_out[0]);
+	// put cgi print response in cgi_out
+	if (dup2(cgi_out[1], STDOUT_FILENO) == -1)
+		std::cerr << "cgi_out dup2 error" << std::endl;
+	// exec cgi
+	if (execve(arr[0], arr, env) == -1)
+		std::cerr << "execve error" << std::endl;
+}
+
+// get cgi print from cgi_out
+int	get_cgi_response(Client_Request &obj, int &cgi_out)
+{
+	char foo[4096] = {0};
+	int nb_read = read(cgi_out, foo, sizeof(foo));
+	std::map<std::string, std::string> f_header_map;
+
+	if (nb_read == -1)
+	{
+		std::cerr << "read error" << std::endl;
+		return (1);
+	}
+	std::string ret(foo, nb_read);
+	close(cgi_out);
+	std::cout << ret << "\n";
+	//tract header and its value from output of the file
+	f_header_map = extract_header_from_str(ret);
+	obj.set_cgi_output_map(f_header_map);
+	//after extract, ret is only content without header
+	obj.set_total_nb(ret.length());
+	obj.set_body_response(ret);
+	return (0);
 }
 
 int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
@@ -131,7 +193,6 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 	int cgi_out[2];
 	int	cgi_in[2];
 	char *arr[3];
-	std::map<std::string, std::string> f_header_map;
 	std::map<std::string, std::string> request;
 
 	if (fd_rep.boundary.length() > 0)
@@ -145,53 +206,20 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 	request = obj.get_client_request_map();
 
 	if (pipe(cgi_out) == -1)
-		std::cout << "cgi_out error" << std::endl;
+		std::cerr << "cgi_out error" << std::endl;
 	if (obj.get_client_method() == "POST")
 	{
 		if (pipe(cgi_in) == -1)
-			std::cout << "cgi_in error" << std::endl;
-
-		// CHUNKED BASED REQUESTS
-		if (fd_rep.payloads.length() > 0)
-		{
-			if (write(cgi_in[1], fd_rep.unparsed_payloads.c_str(), fd_rep.unparsed_payloads.length()) == -1)	//Need change "abc=123" after get body
-				std::cout << "write error" << std::endl;
-		}
-		// BASIC REQUESTS
-		else
-		{
-			if(write(cgi_in[1], request["body"].c_str(),
-					 request["body"].length()) == -1)	//Need change "abc=123" after get body
-				std::cout << "write error" << std::endl;
-		}
+			std::cerr << "cgi_in error" << std::endl;
+		write_payload_to_cgi(fd_rep, cgi_in[1], request);
 	}
 
-	char foo[4096] = {0};
 	char **env = get_cgi_env(obj, r);
 	pid_t pid = fork();
 	if (pid < 0)
-		std::cout << "Fork error!" << std::endl;
+		std::cerr << "Fork error!" << std::endl;
 	else if (pid == 0)
-	{
-		if (obj.get_client_method() == "POST")
-		{
-
-			close(cgi_in[1]);
-			if (dup2(cgi_in[0], STDIN_FILENO) == -1)
-			{
-				std::cout << "cgi_in dup2 error" << std::endl;
-			}
-		}
-		close(cgi_out[0]);
-		if (dup2(cgi_out[1], STDOUT_FILENO) == -1)
-		{
-			std::cout << "cgi_out dup2 error" << std::endl;
-		}
-		if (execve(arr[0], arr, env) == -1)
-		{
-			std::cerr << "execve error" << std::endl;
-		}
-	}
+		execute_cgi_file(obj, cgi_in, cgi_out, arr, env);
 	else
 	{
 		waitpid(pid, &status, 0);
@@ -202,28 +230,15 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 			env[i] = NULL;
 		}
 		free(env);
+		free(arr[0]);
+		free(arr[1]);
 		if (obj.get_client_method() == "POST")
 				close(cgi_in[0]);
 		if (!(WIFEXITED(status) && WEXITSTATUS(status)))
 		{
-			int nb_read = read(cgi_out[0], foo, sizeof(foo));
-			if (nb_read == -1)
-			{
-				std::cout << "read error" << std::endl;
+			if (get_cgi_response(obj, cgi_out[0]))
 				return (1);
-			}
-			std::string ret(foo, nb_read);
-			close(cgi_out[0]);
-			std::cout << ret << "\n";
-			//tract header and its value from output of the file
-			f_header_map = extract_header_from_str(ret);
-			obj.set_cgi_output_map(f_header_map);
-			//after extract, ret is only content without header
-			obj.set_total_nb(ret.length());
-			obj.set_body_response(ret);
 		}
-		free(arr[0]);
-		free(arr[1]);
 		if (WIFEXITED(status) && WEXITSTATUS(status))
 			return (1);
 	}
