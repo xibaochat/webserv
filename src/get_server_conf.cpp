@@ -70,11 +70,11 @@ std::string get_conf_file_as_string(int ac, char **av)
 */
 std::vector<size_t> get_server_occurences_indexes(std::string s_content)
 {
-    std::vector<size_t> indexes = get_occurences_indexes(s_content, "server{");
+    std::vector<size_t> indexes = get_occurences_end_indexes(s_content, "server{");
 	for (int x = 100; x > 0; x--)
 	{
 		std::string tmp(x, ' ');
-		std::vector<size_t> tmp_v = get_occurences_indexes(s_content, "server" + tmp + "{");
+		std::vector<size_t> tmp_v = get_occurences_end_indexes(s_content, "server" + tmp + "{");
 		indexes.insert(indexes.end(), tmp_v.begin(), tmp_v.end());
 	}
 	return (indexes);
