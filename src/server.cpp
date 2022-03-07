@@ -509,7 +509,10 @@ bool Server::manage_last_chunked_request(int fd, Client_Request &obj, Conf &curr
 {
 	int i_end_payload = obj.payload.find("\r\n" + this->fd_responses_map[fd].boundary + "--");
 	if (i_end_payload && i_end_payload != string::npos)
+	{
 		this->fd_responses_map[fd].payloads += obj.payload.substr(0, i_end_payload);
+		obj.payload.erase(0, i_end_payload);
+	}
 	return (this->remove_last_boundary(fd, obj, curr_conf));
 }
 
