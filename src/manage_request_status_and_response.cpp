@@ -128,20 +128,28 @@ char	**get_cgi_env(Client_Request &obj, route &r)
 }
 
 // write payload in cgi_in
-void	write_payload_to_cgi(cl_response &fd_rep, int &cgi_in, std::map<std::string, std::string> &request)
+void	write_payload_to_cgi(cl_response &fd_rep, int &cgi_in)
 {
-	// CHUNKED BASED REQUESTS
-	if (fd_rep.payloads.length() > 0)
-	{
-		if (write(cgi_in, fd_rep.unparsed_payloads.c_str(), fd_rep.unparsed_payloads.length()) == -1)
-			std::cerr << "write error" << std::endl;
-	}
-	// BASIC REQUESTS
-	else
-	{
-		if(write(cgi_in, request["body"].c_str(), request["body"].length()) == -1)
-			std::cerr << "write error" << std::endl;
-	}
+	// OK
+	// int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
+	// 				10000);
+
+	// OK
+	// int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
+	// 				64999);
+
+	// KO
+	// int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
+	// 				70000);
+
+	// KO
+	// int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
+	// 				fd_rep.content_length);
+
+	int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
+					fd_rep.content_length);
+	if (ret <= 0)
+		std::cerr << "write error" << std::endl;
 }
 
 // execute cgi file with right args and env
@@ -193,7 +201,6 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 	int cgi_out[2];
 	int	cgi_in[2];
 	char *arr[3];
-	std::map<std::string, std::string> request;
 
 	if (fd_rep.boundary.length() > 0)
 		obj = fd_rep.obj;
@@ -203,15 +210,13 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 	arr[1] = strdup(asked_file.c_str());
 	arr[2] = NULL;
 
-	request = obj.get_client_request_map();
-
 	if (pipe(cgi_out) == -1)
 		std::cerr << "cgi_out error" << std::endl;
 	if (obj.get_client_method() == "POST")
 	{
 		if (pipe(cgi_in) == -1)
 			std::cerr << "cgi_in error" << std::endl;
-		write_payload_to_cgi(fd_rep, cgi_in[1], request);
+		write_payload_to_cgi(fd_rep, cgi_in[1]);
 	}
 
 	char **env = get_cgi_env(obj, r);
@@ -244,7 +249,6 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 	}
 	return (0);
 }
-
 
 void    set_error(Client_Request &obj, Conf &web_conf, int status_code_nb)
 {
@@ -340,10 +344,6 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 	}
 	else if (obj.get_file_extension() == "py" || fd_rep.file_extension == "py")
 	{
-		std::cout << RED << "+++++++++++++++++ DEBUG +++++++++++++" << NC << "\n";
-		std::cout << MAGENTA << fd_rep.unparsed_payloads.length() << "|" << obj.payload.length() << NC << "\n";
-		std::cout << BLUE << fd_rep.unparsed_payloads << "|" << NC << "\n";
-		std::cout << obj.payload << NC << "\n";
 		if (fd_rep.payloads.length() == 0 && obj.payload.length() == 0)
 			set_error(obj, web_conf, 400);
 		else if (manage_executable_file(obj, r, fd_rep))
