@@ -30,6 +30,7 @@ public:
 
 public:
 	int fd_is_in_listener(int fd);
+	bool clean_handle_client_event(int &request_fd);
 	bool handle_client_event(int &clientfd);
 	void addfd(int fd, bool enable_et);
 	Server(std::vector<Conf> &web_conf_vector);

@@ -38,6 +38,7 @@
 <!-- * see behavior with invalid type requests (ex: `not POST`) -->
 * (Xin) POST :
   - manage 3+ chunk+CGI
+  - manage chunked with many fields
   <!-- - upload files with c++ only, not using external files or CGI -->
   <!-- - make the route (see `location` in config file) able to accept or not uploaded files -->
   <!-- - add new param in the route (see `location` in config file) to configure where uploaded files should be saved -->
@@ -47,8 +48,10 @@
 <!--   - delete files -->
 <!-- * (Olano) validate browser headers with different request type (`GET`, `POST`...), action (`upload`, `delete`...) and status codes (`200`, `404`, `500`...) -->
 <!-- * (Olano) use `Siege` (or similar tool) to stress tests the server -->
-<!-- * See why we don't send html templates on error -->
-* (?) Ajouter un try/catch dans la boucle EPOLL pour eviter que le serveur ne crash
+<!-- <\!-- * See why we don't send html templates on error -\-> -->
+<!-- * (Xin) Ajouter un try/catch dans la boucle EPOLL pour eviter que le serveur ne crash -->
+<!--   -> + set ERROR 500 -->
+* (?) Ajouter un try/catch dans le CGI pour catch toutes les erreurs
   -> + set ERROR 500
-* (Ting) Clean up CGI code
+<!-- * (Ting) Clean up CGI code -->
 * (Olano) Completer le fichier `./tests/how_to_test.md` sur comment valider toutes les features

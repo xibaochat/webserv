@@ -151,7 +151,7 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count)
 		}
 		// A request is now ready to receive a response
 		else if (ev & EPOLLIN)
-			this->ready_map[sockfd] = this->handle_client_event(sockfd);
+			this->ready_map[sockfd] = this->clean_handle_client_event(sockfd);
 		else if (ev & EPOLLOUT)// && this->ready_map[sockfd])/*send content to request*/
 			this->send_content_to_request(sockfd);
 	}
@@ -483,6 +483,21 @@ void Server::manage_scd_chunked_request(int request_fd, std::string &buffer, Cli
 	std::string c_dispo = obj.client_request["Content-Disposition"];
 	int i_filename = c_dispo.find("filename=\"") + 10;
 	this->fd_responses_map[request_fd].filename = c_dispo.substr(i_filename, c_dispo.length() - i_filename - 1);
+}
+
+
+bool Server::clean_handle_client_event(int &request_fd)
+{
+	try
+	{
+		return (this->handle_client_event(request_fd));
+	}
+	catch (...)
+	{
+		Client_Request obj;
+		Conf default_conf = this->web_conf_vector.at(0);
+		return (this->prepare_error_response(request_fd, 500, default_conf, obj));
+	}
 }
 
 
