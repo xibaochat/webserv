@@ -48,13 +48,15 @@ public:
 	void extract_info_and_prepare_response(Conf &c, int &r_fd, Client_Request &obj);
 	bool prepare_error_response(int request_fd, int error_code, Conf curr_conf, Client_Request obj);
 	bool manage_http_redirection(route r, int request_fd, Conf curr_conf, Client_Request obj);
+	bool is_body_too_large(int &request_fd, Client_Request &obj, Conf &curr_conf);
 	bool is_chunked_request(int request_fd, Client_Request &obj);
 	bool chunkManagement(int fd, Client_Request &obj, Conf &curr_conf);
 	bool is_scd_chunked_request(int request_fd);
-	void manage_scd_chunked_request(int request_fd, std::string &buffer, Client_Request &obj, Conf &curr_conf);
 	void store_req_infos_for_later(int fd, Client_Request &obj, Conf &curr_conf);
 	bool manage_chunk_but_one_request(int fd, Client_Request &obj, Conf &conf);
-	bool manage_last_chunked_request(int fd, Client_Request &obj);
+	void manage_input_fields(int fd, Client_Request &obj);
+	bool remove_last_boundary(int fd, Client_Request &obj, Conf &curr_conf);
+	bool manage_last_chunked_request(int fd, Client_Request &obj, Conf &curr_conf);
 };
 
 /*ref : Level-triggered vs Edge-triggered

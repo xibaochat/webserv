@@ -151,7 +151,8 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count)
 		}
 		// A request is now ready to receive a response
 		else if (ev & EPOLLIN)
-			this->ready_map[sockfd] = this->clean_handle_client_event(sockfd);
+			// this->ready_map[sockfd] = this->clean_handle_client_event(sockfd);
+			this->ready_map[sockfd] = this->handle_client_event(sockfd);
 		else if (ev & EPOLLOUT)// && this->ready_map[sockfd])/*send content to request*/
 			this->send_content_to_request(sockfd);
 	}
@@ -379,7 +380,7 @@ bool Server::manage_http_redirection(route r, int request_fd, Conf curr_conf, Cl
 	return (this->prepare_error_response(request_fd, 301, curr_conf, obj));
 }
 
-bool is_body_too_large(int c_len, Conf &curr_conf, Client_Request &obj)
+bool is_body_size_too_based_on_conf(int c_len, Conf &curr_conf, Client_Request &obj)
 {
 	return (curr_conf.get_client_max_body_size() != -1 &&
 			c_len > curr_conf.get_client_max_body_size());
@@ -391,6 +392,8 @@ bool Server::is_chunked_request(int request_fd, Client_Request &obj)
 		obj.client_request.count("Content-Type"))
 	{
 		int i_equal = obj.client_request["Content-Type"].find("=");
+		if (i_equal == string::npos)
+			return (false);
 		return (obj.client_request["Content-Type"].substr(0, i_equal) == "multipart/form-data; boundary");
 	}
 	return (this->fd_responses_map.count(request_fd));
@@ -400,6 +403,7 @@ void Server::store_req_infos_for_later(int fd, Client_Request &obj, Conf &curr_c
 {
 	int i_equal = obj.client_request["Content-Type"].find("=");
 	std::string c_type = obj.client_request["Content-Type"];
+
 	this->fd_responses_map[fd].boundary = "--" + c_type.substr(i_equal + 1, c_type.length());
 	this->fd_responses_map[fd].conf = curr_conf;
 	this->fd_responses_map[fd].content_length = cast_as_int(obj.client_request["Content-Length"]);
@@ -414,55 +418,115 @@ void Server::store_req_infos_for_later(int fd, Client_Request &obj, Conf &curr_c
 }
 
 
-bool Server::manage_chunk_but_one_request(int fd, Client_Request &obj, Conf &curr_conf)
+void Server::manage_input_fields(int fd, Client_Request &obj)
 {
+	std::vector<size_t> i_boundaries = get_occurences_indexes(obj.payload, this->fd_responses_map[fd].boundary + "\r\n");
+	size_t nb_fields = i_boundaries.size();
 
-	// We erase the first `boundary`
-	obj.payload.erase(0, this->fd_responses_map[fd].boundary.length() + 2);
 
-	int i_file_start = obj.payload.find("filename=\"") + 10;
-	int i_file_end = obj.payload.find("\r\n", 0) - 1;
+	// PAYLOAD ONLY CONTAINS FILE'S CONTENT
+	if (nb_fields == 0)
+	{
+		// fd_responses_map[fd].payloads += obj.payload;
+		return ;
+	}
 
-	this->fd_responses_map[fd].filename = obj.payload.substr(i_file_start,
-															 i_file_end - i_file_start);
-	int i_payload_start = obj.payload.find("\r\n\r\n") + 4;
-	obj.payload.erase(0, i_payload_start);
+	// PAYLOADS START WITH SOME FILE'S CONTENT BUT
+	// ALSO CONTAINS MORE INPUTS FIELDS AT ITS END
+	if (nb_fields > 1 && i_boundaries[0] != 0)
+	{
+		this->fd_responses_map[fd].payloads += obj.payload.substr(0, i_boundaries[0] - 2);
+		obj.payload.erase(0, i_boundaries[0]);
+	}
 
-	int i_last_boundary = obj.payload.find(this->fd_responses_map[fd].boundary);
+	// MANAGE ALL INPUTS
+	while (nb_fields-- > 0)
+	{
+		int i_boundary = obj.payload.find(this->fd_responses_map[fd].boundary);
+		if (i_boundary != string::npos && i_boundary == 0)
+			obj.payload.erase(0, this->fd_responses_map[fd].boundary.length() + 2);
+
+		int i_end_curr_field = obj.payload.find("\r\n") + 2;
+		int i_payload = obj.payload.find("\r\n\r\n") + 4;
+
+		std::string curr_field = obj.payload.substr(0, i_payload);
+		std::string FILENAME_FIELD_PATTERN = "name=\"upload_file\"; filename=\"";
+
+		// CURRENT FIELD IS THE UPLOAD FILE
+		int i_file_start = curr_field.find(FILENAME_FIELD_PATTERN);
+		if (i_file_start != string::npos)
+		{
+			i_file_start += FILENAME_FIELD_PATTERN.length();
+			int i_file_end = obj.payload.find("\r\n", 0) - 1;
+			this->fd_responses_map[fd].filename = obj.payload.substr(i_file_start,
+																	 i_file_end - i_file_start);
+			// EMPTY PAYLOAD
+			if (obj.payload.find("\r\n") == 0)
+				obj.payload.erase(0, i_payload + 2);
+			else
+				obj.payload.erase(0, i_payload);
+
+			// EXTRACT FILE'S CONTENT IF SMALL ENOUGH TO BE INSIDE THE CURRENT REQUEST
+			int i_boundary = obj.payload.find("\r\n" + this->fd_responses_map[fd].boundary);
+			if (i_boundary != string::npos && i_boundary > 0)
+			{
+				this->fd_responses_map[fd].payloads += obj.payload.substr(0, i_boundary);
+				obj.payload.erase(0, i_boundary + 2);
+			}
+		}
+		else
+		{
+			obj.payload.erase(0, i_payload);
+			size_t i_end_payload = obj.payload.find(this->fd_responses_map[fd].boundary + "\r\n");
+			// EMPTY PAYLOAD
+			if (i_end_payload != string::npos)
+				obj.payload.erase(0, i_end_payload);
+			else
+			{
+				size_t i_end_payload = obj.payload.find(this->fd_responses_map[fd].boundary);
+				if (i_end_payload != string::npos)
+					obj.payload.erase(0, i_end_payload);
+			}
+		}
+	}
+}
+
+bool Server::remove_last_boundary(int fd, Client_Request &obj, Conf &curr_conf)
+{
+	// LAST BOUNDARY
+	int i_last_boundary = obj.payload.find("\r\n" + this->fd_responses_map[fd].boundary + "--");
+	if (i_last_boundary == string::npos)
+		i_last_boundary = obj.payload.find(this->fd_responses_map[fd].boundary + "--");
 	if (i_last_boundary != string::npos)
 	{
-		obj.payload.erase(i_last_boundary - 2, this->fd_responses_map[fd].boundary.length() + 6);
-		this->fd_responses_map[fd].payloads = obj.payload;
-
-		if (obj.payload.length() == 0)
-	    	return (this->prepare_error_response(fd, 400, curr_conf, obj));
+		obj.payload.erase(i_last_boundary, this->fd_responses_map[fd].boundary.length() + 6);
 		return (true);
 	}
-	this->fd_responses_map[fd].payloads = obj.payload;
 	return (false);
 }
 
-bool Server::manage_last_chunked_request(int fd, Client_Request &obj)
+bool Server::manage_last_chunked_request(int fd, Client_Request &obj, Conf &curr_conf)
 {
-	int i_end_payload = obj.payload.find(this->fd_responses_map[fd].boundary) - 2;
-	this->fd_responses_map[fd].payloads += obj.payload.substr(0, i_end_payload);
-	return (true);
+	int i_end_payload = obj.payload.find("\r\n" + this->fd_responses_map[fd].boundary + "--");
+	if (i_end_payload && i_end_payload != string::npos)
+		this->fd_responses_map[fd].payloads += obj.payload.substr(0, i_end_payload);
+	return (this->remove_last_boundary(fd, obj, curr_conf));
 }
 
 bool Server::chunkManagement(int fd, Client_Request &obj, Conf &curr_conf)
 {
 	// FIRST CHUNK
 	if (this->fd_responses_map.count(fd) == 0)
-	{
 		this->store_req_infos_for_later(fd, obj, curr_conf);
-		if (obj.payload.find(this->fd_responses_map[fd].boundary) != string::npos)
-			return (this->manage_chunk_but_one_request(fd, obj, curr_conf));
-		return (false);
-	}
-	// IS LAST CHUNK
-	if (obj.payload.find(this->fd_responses_map[fd].boundary) != string::npos)
-		return (this->manage_last_chunked_request(fd, obj));
-	this->fd_responses_map[fd].payloads += obj.payload;
+
+	// INPUT FIELDS
+	this->manage_input_fields(fd, obj);
+
+	// LAST CHUNK
+	if (obj.payload.find(this->fd_responses_map[fd].boundary + "--") != string::npos)
+		return (this->manage_last_chunked_request(fd, obj, curr_conf));
+
+	fd_responses_map[fd].payloads += obj.payload;
 	return (false);
 }
 
@@ -471,20 +535,6 @@ bool Server::is_scd_chunked_request(int request_fd)
 	return (this->fd_responses_map.count(request_fd) &&
 			this->fd_responses_map[request_fd].filename.size() == 0);
 }
-
-void Server::manage_scd_chunked_request(int request_fd, std::string &buffer, Client_Request &obj, Conf &curr_conf)
-{
-	this->fd_responses_map[request_fd].unparsed_payloads += buffer;
-	int boundary_len = this->fd_responses_map[request_fd].boundary.length();
-	buffer.erase(0, boundary_len - 1);
-	curr_conf = this->fd_responses_map[request_fd].conf;
-	extract_info_from_rest(obj, buffer);
-
-	std::string c_dispo = obj.client_request["Content-Disposition"];
-	int i_filename = c_dispo.find("filename=\"") + 10;
-	this->fd_responses_map[request_fd].filename = c_dispo.substr(i_filename, c_dispo.length() - i_filename - 1);
-}
-
 
 bool Server::clean_handle_client_event(int &request_fd)
 {
@@ -500,6 +550,22 @@ bool Server::clean_handle_client_event(int &request_fd)
 	}
 }
 
+bool Server::is_body_too_large(int &request_fd, Client_Request &obj, Conf &curr_conf)
+{
+	if (obj.client_request.count("Content-Length") ||
+		(this->fd_responses_map.count(request_fd) && this->fd_responses_map[request_fd].content_length > -1))
+	{
+		int c_len;
+		if (obj.client_request.count("Content-Length"))
+			c_len = cast_as_int(obj.client_request["Content-Length"]);
+		else
+			c_len = this->fd_responses_map[request_fd].content_length;
+
+		if (is_body_size_too_based_on_conf(c_len, curr_conf, obj))
+			return (this->prepare_error_response(request_fd, 413, curr_conf, obj));
+	}
+	return (false);
+}
 
 /*read from the buffer and store the request fd and reponse in the map
  */
@@ -517,7 +583,6 @@ bool Server::handle_client_event(int &request_fd)
 	std::cout << GREEN << buffer << NC << "\n";
 	std::cout << YELLOW << "#########################################" << NC << "\n";
 
-	// Initialize in case it isn't yet
 	if (this->fd_responses_map.find(request_fd) == this->fd_responses_map.end())
 		this->ready_map.insert(std::pair<int, bool> (request_fd, true));
 
@@ -530,14 +595,8 @@ bool Server::handle_client_event(int &request_fd)
 		return (this->prepare_error_response(request_fd, 204, default_conf, obj));
 	else
 	{
-		// IS SCD CHUNKED REQUEST
-		// We remove the boundary substring to still extract new headers `Content-Disposition` and get the `filename`
-		if (this->is_scd_chunked_request(request_fd))
-		{
-			std::cout << RED << "------------ DEBUG -------------" << NC << "\n";
-			this->manage_scd_chunked_request(request_fd, buffer, obj, curr_conf);
-		}
-		else if (this->fd_responses_map.count(request_fd))
+		// REQUEST IS ALREADY PART OF EXISTING CHUNK UPLOAD
+		if (this->fd_responses_map.count(request_fd))
 		{
 			obj = this->fd_responses_map[request_fd].obj;
 			this->fd_responses_map[request_fd].unparsed_payloads += buffer;
@@ -560,32 +619,20 @@ bool Server::handle_client_event(int &request_fd)
 
 			// -------- DEFAULT INDEX FILE ---------
 			manage_default_file_if_needed(obj, curr_conf);
+
+			bool body_too_large;
+			// -------- MAX CLIENT BODY SIZE ---------
+			if ((body_too_large = this->is_body_too_large(request_fd, obj, curr_conf)))
+				return (true);
 		}
 
-		if (obj.client_request.size() > 0 || this->fd_responses_map.count(request_fd)) //end_of_header != std::string::npos)
-		{
-			if (obj.client_request.count("Content-Length") ||
-				(this->fd_responses_map.count(request_fd) && this->fd_responses_map[request_fd].content_length > -1))
-			{
-				// -------- MAX CLIENT BODY SIZE ---------
-				int c_len;
-				if (obj.client_request.count("Content-Length"))
-					c_len = cast_as_int(obj.client_request["Content-Length"]);
-				else
-					c_len = this->fd_responses_map[request_fd].content_length;
-				if (is_body_too_large(c_len, curr_conf, obj))
-					return (this->prepare_error_response(request_fd, 413, curr_conf, obj));
-			}
-
-			if (is_chunked_request(request_fd, obj))
-				ready_map[request_fd] = this->chunkManagement(request_fd, obj, curr_conf);
-			else
-				ready_map[request_fd] = true;
-			if (ready_map[request_fd])
-				this->extract_info_and_prepare_response(curr_conf, request_fd, obj);
-		}
+		if (is_chunked_request(request_fd, obj))
+			this->ready_map[request_fd] = this->chunkManagement(request_fd, obj, curr_conf);
 		else
-			return (true);
+			this->ready_map[request_fd] = true;
+
+		if (this->ready_map[request_fd])
+			this->extract_info_and_prepare_response(curr_conf, request_fd, obj);
 	}
 	std::cout << "\t\t" << ready_map[request_fd] << std::endl;
 	return (ready_map[request_fd]);

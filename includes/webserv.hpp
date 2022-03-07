@@ -109,6 +109,7 @@ int file_not_exist(Client_Request &obj);
 int file_is_text_based(std::string type);
 std::string get_file_output(Client_Request &o);
 std::vector<size_t> get_occurences_end_indexes(std::string s, std::string sub);
+std::vector<size_t> get_occurences_indexes(std::string s, std::string sub);
 int get_closing_bracket_index(std::string s, int i_start);
 int is_whitespace(char c);
 void remove_fst_white_space(std::string &line);

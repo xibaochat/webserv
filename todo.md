@@ -55,3 +55,4 @@
   -> + set ERROR 500
 <!-- * (Ting) Clean up CGI code -->
 * (Olano) Completer le fichier `./tests/how_to_test.md` sur comment valider toutes les features
+* Ajouter un timeout sur execve !

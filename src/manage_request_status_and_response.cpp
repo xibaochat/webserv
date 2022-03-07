@@ -303,6 +303,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 
 	/*error file, if error html in Conf cannot be open and read, we send a static error
 	 message */
+
 	if (file_not_exist(obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 404);
 	else if (file_no_read_permission(r, obj) && !fd_rep.boundary.size())
@@ -330,10 +331,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 	else if (obj.get_client_method() == "DELETE" && !fd_rep.boundary.size())
 		delete_request(obj);
 	else if (fd_rep.file_extension != "py" && fd_rep.boundary.size())
-	{
-		std::cout << RED << "WEI SHENMEEEEEEEEEEE" << fd_rep.file_extension << NC << "\n";
 		manage_static_upload(r, obj, web_conf, fd_rep);
-	}
 	//readable file
 	else if (file_is_text_based(obj.get_file_extension()))
 	{
@@ -342,9 +340,17 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 	}
 	else if (obj.get_file_extension() == "py" || fd_rep.file_extension == "py")
 	{
-		std::cout << RED << "--------------DEBUG" << NC << "\n";
-		if (manage_executable_file(obj, r, fd_rep))
+		std::cout << RED << "+++++++++++++++++ DEBUG +++++++++++++" << NC << "\n";
+		std::cout << MAGENTA << fd_rep.unparsed_payloads.length() << "|" << obj.payload.length() << NC << "\n";
+		std::cout << BLUE << fd_rep.unparsed_payloads << "|" << NC << "\n";
+		std::cout << obj.payload << NC << "\n";
+		if (fd_rep.payloads.length() == 0 && obj.payload.length() == 0)
+			set_error(obj, web_conf, 400);
+		else if (manage_executable_file(obj, r, fd_rep))
+		{
+			std::cout << RED << "----------------DEBUG" << NC << "\n";
 			set_error(obj, web_conf, 500);
+		}
 	}
 	else
 		std::cout << RED << ":(    DEBUG" << NC << "\n";

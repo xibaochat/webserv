@@ -10,12 +10,10 @@ int open_file(std::ifstream &myfile, std::string path)
 
 int extension_is_not_exist(std::string *mylist, std::string extension, int size)
 {
-	std::cout << RED << "baobe AI NI DEBUG --------->" << extension << NC << "\n";
     std::string *begin = mylist;
     std::string *end = mylist + size;
     if (std::find(begin, end, extension) != end)
         return (0);
-	std::cout << RED << "baobe AI NI DEBUG" << NC << "\n";
     return (1);
 }
 
