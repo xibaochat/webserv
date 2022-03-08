@@ -314,15 +314,8 @@ Conf get_curr_conf(std::string &curr_server_name, int curr_port, std::vector<Con
 	std::vector<Conf>::iterator it;
 	for (it = web_conf_vector.begin() ;
 		 it != web_conf_vector.end(); ++it)
-	{
-		if (curr_server_name == (*it).server_name)
-		{
-			if (port_is_matching_conf(curr_port, (*it)))
-				return (*it);
-			else
-				return (default_conf);
-		}
-	}
+		if (curr_server_name == (*it).server_name and port_is_matching_conf(curr_port, (*it)))
+			return (*it);
 	return default_conf;
 }
 
