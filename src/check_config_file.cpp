@@ -529,6 +529,6 @@ Conf manage_config_file(std::stringstream &file)
 		std::cout << "Invalid conf form" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	web_conf.display_conf_file_debug();
+	// web_conf.display_conf_file_debug();
 	return web_conf;
 }

@@ -335,15 +335,12 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 	{
 		open_file(myfile, obj.get_client_ask_file());
 		set_length_and_content(myfile, obj);
+		if (obj.body_response.length() == 0)
+			set_error(obj, web_conf, 204);
 	}
 	else if (obj.get_file_extension() == "py" || fd_rep.file_extension == "py")
 	{
 		if (manage_executable_file(obj, r, fd_rep))
-		{
-			std::cout << RED << "----------------DEBUG" << NC << "\n";
 			set_error(obj, web_conf, 500);
-		}
 	}
-	else
-		std::cout << RED << ":(    DEBUG" << NC << "\n";
 }

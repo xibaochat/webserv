@@ -210,3 +210,70 @@ curl -X POST http://localhost:7067/html/max_body_size.html --data "{\"kitten\": 
   </body>
 </html>
 ```
+
+## Status code
+
+1. Basic `Curl` -> 200
+```
+curl -v http://localhost:8080/html/permission_tests.html
+```
+```
+[...]
+< HTTP/1.1 200 OK
+[...]
+```
+2. No `READ` permission
+```
+chmod -r ./html/permission_tests.html
+curl -v http://localhost:8080/html/permission_tests.html
+```
+```
+[...]
+< HTTP/1.1 403 Forbidden
+[...]
+```
+3. Empty response
+```
+curl -v http://localhost:5566/html/empty.html
+```
+```
+[...]
+< HTTP/1.1 204 No Content
+[...]
+```
+4. Not implemented
+```
+curl -v http://localhost:5566/html/not_implemented.php
+```
+```
+[...]
+< HTTP/1.1 501 Not Implemented
+[...]
+```
+4. Method not allowed
+```
+curl -X POST http://localhost:5566
+```
+```
+[...]
+< HTTP/1.1 405 Method Not Allowed
+[...]
+```
+5. Not Found
+```
+curl -v http://localhost:5566/html/does_not_exist.html
+```
+```
+[...]
+< HTTP/1.1 404 Not Found
+[...]
+```
+6. Internal Server Error (CGI)
+```
+curl -v http://localhost:5566/python_files/file_upload.py
+```
+```
+[...]
+< HTTP/1.1 500 Internal Server Error
+[...]
+```

@@ -204,7 +204,7 @@ void Server::addfd(int fd, bool enable_et)
 		ev.events = EPOLLIN | EPOLLOUT;
 	if (epoll_ctl(this->epfd, EPOLL_CTL_ADD, fd, &ev) < 0)
 		throw("[ERROR]Failed to in epoll_ctl");
-	std::cout << "fd added to epoll" << std::endl;
+	// std::cout << "fd added to epoll" << std::endl;
 }
 
 /*create a new fd and add to the interest list

@@ -6,7 +6,7 @@ import cgitb
 # This activates a special handler
 # that will display detailed reports
 # in the web browser if any errors occur
-cgitb.enable()
+cgitb.enable(display=0)
 
 data = cgi.FieldStorage()
 keys = data.keys()
