@@ -338,9 +338,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 	}
 	else if (obj.get_file_extension() == "py" || fd_rep.file_extension == "py")
 	{
-		if (fd_rep.payloads.length() == 0 && obj.payload.length() == 0)
-			set_error(obj, web_conf, 400);
-		else if (manage_executable_file(obj, r, fd_rep))
+		if (manage_executable_file(obj, r, fd_rep))
 		{
 			std::cout << RED << "----------------DEBUG" << NC << "\n";
 			set_error(obj, web_conf, 500);
