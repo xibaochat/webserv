@@ -151,8 +151,7 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count)
 		}
 		// A request is now ready to receive a response
 		else if (ev & EPOLLIN)
-			// this->ready_map[sockfd] = this->clean_handle_client_event(sockfd);
-			this->ready_map[sockfd] = this->handle_client_event(sockfd);
+			this->ready_map[sockfd] = this->clean_handle_client_event(sockfd);
 		else if (ev & EPOLLOUT)// && this->ready_map[sockfd])/*send content to request*/
 			this->send_content_to_request(sockfd);
 	}
