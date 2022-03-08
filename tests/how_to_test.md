@@ -131,3 +131,29 @@ curl -X POST http://localhost:6670
 ```
 Error 403 Forbidden
 ```
+
+## AutoIndexing
+
+1. Check that the `autoindex` is **enabled** for the server `localhost:6670` on the location `/`
+2. Go to http://localhost:6670
+3. Validate see current directory is displayed like such
+```
+Index of .
+../
+src/                                                8-Mar-2022 20:09:26                   -
+conf/                                               8-Mar-2022 20:15:05                   -
+python_files/                                       8-Mar-2022 17:17:57                   -
+includes/                                           8-Mar-2022 19:53:25                   -
+tests/                                              8-Mar-2022 20:15:29                   -
+html/                                               8-Mar-2022 20:04:56                   -
+todo.md                                             8-Mar-2022 17:17:57                3384
+index.html                                          8-Mar-2022 17:17:57                5452
+Makefile                                            8-Mar-2022 17:17:57                1032
+webserv                                             8-Mar-2022 20:08:53             1481048
+```
+4. Check that the `autoindex` is **disabled** for the server `localhost:6670` on the location `/init.d`
+5. Go to http://localhost:6670/init.d/
+6. Validate the response is as such
+```
+Error 403 Forbidden
+```
