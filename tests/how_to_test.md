@@ -26,6 +26,11 @@ Cannot open config file
 1. Go to redirectable url:
 http://localhost:8080/images/d5v.gif
 
+## Default HTML index file
+
+1. Go to http://localhost:4670/html/
+2. Donc get caught by the ghost!
+
 ## Static upload
 
 1. Create the destination directory
