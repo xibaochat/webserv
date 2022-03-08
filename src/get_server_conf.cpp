@@ -77,6 +77,11 @@ std::vector<size_t> get_server_occurences_indexes(std::string s_content)
 		std::vector<size_t> tmp_v = get_occurences_end_indexes(s_content, "server" + tmp + "{");
 		indexes.insert(indexes.end(), tmp_v.begin(), tmp_v.end());
 	}
+	if (indexes.size() <= 0)
+	{
+		std::cout << RED << "Invalid config file." << NC << "\n";
+		exit(1);
+	}
 	return (indexes);
 }
 
