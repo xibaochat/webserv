@@ -122,3 +122,4 @@ curl http://localhost:6670/root/root_test.html
 
 1. Go to http://localhost:9000/file_does_not_exist.html
 2. Validate you can see a cute and bored little cat.
+3. Try to pet the cat.

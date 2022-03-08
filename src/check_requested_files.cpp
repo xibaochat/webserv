@@ -31,11 +31,7 @@ int file_not_exist(Client_Request &obj)
 	std::string file = obj.get_client_ask_file();
 	stat(file.c_str(), &sb);
 	if (stat(file.c_str(), &sb) == -1)
-	{
-		obj.set_status_code_nb(404);
-		set_request_status_nb_message(404, obj);
 		return 1;
-	}
     // file could not be open
 	return (0);
 }
