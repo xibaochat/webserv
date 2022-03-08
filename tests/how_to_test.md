@@ -1,5 +1,26 @@
 # CORRECTION
 
+## Configuration path
+
+1. Launch the server without argument
+```
+./webserv
+```
+2. Validate the default file `conf/default.conf` is used
+3. Launch the server with a conf file as argument and validate the use of it
+```
+cp conf/default.conf new_conf.conf
+./webserv new_conf.conf
+```
+4. Launch the server with a non existant file as argument
+```
+./webserv nope
+```
+5. Validate that the server is not launching
+```
+Cannot open config file
+```
+
 ## HTTP REDIRECTION
 
 1. Go to redirectable url:
@@ -156,4 +177,31 @@ webserv                                             8-Mar-2022 20:08:53         
 6. Validate the response is as such
 ```
 Error 403 Forbidden
+```
+
+## Client Max Body Size
+
+1. Validate for the server `localhost:7066` that the `client_max_body_size` is set to 1
+2. `Curl` the server
+```
+curl -X POST http://localhost:7066/html/max_body_size.html --data "{\"kitten\": 66666}"
+```
+3. Validate the reponse is an error 413
+```
+Error 413 Request Entity Too Large%
+```
+4. Validate for the server `localhost:7067` that the `client_max_body_size` is set to 100
+5. `Curl` the server
+```
+curl -X POST http://localhost:7067/html/max_body_size.html --data "{\"kitten\": 66666}"
+```
+6. Validate the reponse is a valid html
+```html
+<html>
+  <body>
+	<div id="awesome_test">
+	  You successfuly tested the max_client_body_size.
+	</div>
+  </body>
+</html>
 ```
