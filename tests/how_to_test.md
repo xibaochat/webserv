@@ -18,15 +18,11 @@ mkdir -p /tmp/upload_file/
 
 ## Static upload with multiple fields
 
-1. Create the destination directory
-```
-mkdir -p /tmp/upload_file/
-```
-2. Go to http://localhost:9000/html/multi_fields_input_static_upload.html
-3. Fill the all the field
-4. Select a file from `./tests/files/`
-5. Click upload
-6. Validate the file was upload in `/tmp/upload_file/`
+1. Go to http://localhost:9000/html/multi_fields_input_static_upload.html
+2. Fill the all the field
+3. Select a file from `./tests/files/`
+4. Click upload
+5. Validate the file was upload in `/tmp/upload_file/`
 
 ## CGI Upload
 

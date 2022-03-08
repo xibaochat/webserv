@@ -25,6 +25,7 @@
 # include <sys/stat.h>
 # include <set>
 # include <sstream>
+# include <cerrno>
 
 # define GREEN       "\033[33;32m"
 # define YELLOW      "\033[33;33m"

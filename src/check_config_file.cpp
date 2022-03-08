@@ -409,6 +409,16 @@ void manage_route(std::stringstream &file, std::string &line, std::map<std::stri
 		{
 			upload_root = get_root(line);
 			m[path].path_upload_root = upload_root;
+			if (mkdir(upload_root.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
+			{
+				if (errno == EEXIST) {
+					// alredy exists do nothing
+				} else {
+					// something else
+					std::cerr << "[ERROR] Create upload dir fail with error:" << std::strerror(errno) << std::endl;
+					exit(EXIT_FAILURE);
+				}
+			}
 		}
 		else if (elem == "upload")
 			manage_acceptable_upload(path, line, m);

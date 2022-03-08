@@ -1,5 +1,6 @@
 #include "webserv.hpp"
-
+#include <sys/stat.h>
+#include <fcntl.h>
 void store_header_key_value_in_map(std::string &header_line, std::map<std::string, std::string> &header_map)
 {
 	size_t i = header_line.find(":");
@@ -127,8 +128,8 @@ char	**get_cgi_env(Client_Request &obj, route &r)
 	return (_env);
 }
 
-// write payload in cgi_in
-void	write_payload_to_cgi(cl_response &fd_rep, int &cgi_in)
+// write payload in stdin
+void	write_payload_to_cgi(cl_response &fd_rep)
 {
 	// OK
 	// int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
@@ -146,22 +147,22 @@ void	write_payload_to_cgi(cl_response &fd_rep, int &cgi_in)
 	// int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
 	// 				fd_rep.content_length);
 
-	int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
-					fd_rep.content_length);
-	if (ret <= 0)
-		std::cerr << "write error" << std::endl;
+	std::ofstream tmpFile;
+	std::string	filename = "/tmp/test";
+	// create tmpfile and write data in file
+	tmpFile.open(filename.c_str(), std::fstream::out | std::fstream::in | std::fstream::binary | std::fstream::trunc);
+	tmpFile.write(fd_rep.unparsed_payloads.c_str(), fd_rep.content_length);
+	tmpFile.close();
+	// dup fd to STDIN
+	int fd = open(filename.c_str(), O_RDONLY);
+	if (dup2(fd, STDIN_FILENO) == -1)
+		std::cerr << "tmp file dup2 error" << std::endl;
+	remove(filename.c_str());
 }
 
 // execute cgi file with right args and env
-void	execute_cgi_file(Client_Request &obj, int cgi_in[2], int cgi_out[2], char *arr[3], char **env)
+void	execute_cgi_file(Client_Request &obj, int cgi_out[2], char *arr[3], char **env)
 {
-	// put cgi_in in STDIN, it will be take by cgi file as input
-	if (obj.get_client_method() == "POST")
-	{
-		close(cgi_in[1]);
-		if (dup2(cgi_in[0], STDIN_FILENO) == -1)
-			std::cerr << "cgi_in dup2 error" << std::endl;
-	}
 	close(cgi_out[0]);
 	// put cgi print response in cgi_out
 	if (dup2(cgi_out[1], STDOUT_FILENO) == -1)
@@ -199,7 +200,6 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 {
 	int status;
 	int cgi_out[2];
-	int	cgi_in[2];
 	char *arr[3];
 
 	if (fd_rep.boundary.length() > 0)
@@ -213,18 +213,14 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 	if (pipe(cgi_out) == -1)
 		std::cerr << "cgi_out error" << std::endl;
 	if (obj.get_client_method() == "POST")
-	{
-		if (pipe(cgi_in) == -1)
-			std::cerr << "cgi_in error" << std::endl;
-		write_payload_to_cgi(fd_rep, cgi_in[1]);
-	}
+		write_payload_to_cgi(fd_rep);
 
 	char **env = get_cgi_env(obj, r);
 	pid_t pid = fork();
 	if (pid < 0)
 		std::cerr << "Fork error!" << std::endl;
 	else if (pid == 0)
-		execute_cgi_file(obj, cgi_in, cgi_out, arr, env);
+		execute_cgi_file(obj, cgi_out, arr, env);
 	else
 	{
 		waitpid(pid, &status, 0);
@@ -237,8 +233,6 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 		free(env);
 		free(arr[0]);
 		free(arr[1]);
-		if (obj.get_client_method() == "POST")
-				close(cgi_in[0]);
 		if (!(WIFEXITED(status) && WEXITSTATUS(status)))
 		{
 			if (get_cgi_response(obj, cgi_out[0]))
