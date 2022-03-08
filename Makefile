@@ -13,7 +13,7 @@ OBJ = $(SRC:.cpp=.o)
 
 CC = clang++
 
-CFLAGS = -g -std=c++98 #-Wall -Wextra -Werror
+CFLAGS = -g -std=c++98 -Wall -Wextra -Werror
 
 all:
 	@$(CC) $(CFLAGS) $(SRC_PATH) -c -I $(HEADER_DIR)

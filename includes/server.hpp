@@ -55,8 +55,8 @@ public:
 	void store_req_infos_for_later(int fd, Client_Request &obj, Conf &curr_conf);
 	bool manage_chunk_but_one_request(int fd, Client_Request &obj, Conf &conf);
 	void manage_input_fields(int fd, Client_Request &obj);
-	bool remove_last_boundary(int fd, Client_Request &obj, Conf &curr_conf);
-	bool manage_last_chunked_request(int fd, Client_Request &obj, Conf &curr_conf);
+	bool remove_last_boundary(int fd, Client_Request &obj);
+	bool manage_last_chunked_request(int fd, Client_Request &obj);
 };
 
 /*ref : Level-triggered vs Edge-triggered

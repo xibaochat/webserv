@@ -81,7 +81,7 @@ void extract_info_from_rest(Client_Request &obj, std::string full_request)
 	header["body_response"] = obj.get_body_response();
 	obj.set_client_request_map(header);
 
-	int i_payload = full_request.find("\r\n\r\n");
+	std::size_t i_payload = full_request.find("\r\n\r\n");
 	if (i_payload != string::npos)
 		obj.payload = full_request.substr(i_payload + 4);
 }

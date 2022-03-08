@@ -131,22 +131,6 @@ char	**get_cgi_env(Client_Request &obj, route &r)
 // write payload in stdin
 void	write_payload_to_cgi(cl_response &fd_rep)
 {
-	// OK
-	// int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
-	// 				10000);
-
-	// OK
-	// int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
-	// 				64999);
-
-	// KO
-	// int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
-	// 				70000);
-
-	// KO
-	// int ret = write(cgi_in, fd_rep.unparsed_payloads.c_str(),
-	// 				fd_rep.content_length);
-
 	std::ofstream tmpFile;
 	std::string	filename = "/tmp/test";
 	// create tmpfile and write data in file
@@ -161,7 +145,7 @@ void	write_payload_to_cgi(cl_response &fd_rep)
 }
 
 // execute cgi file with right args and env
-void	execute_cgi_file(Client_Request &obj, int cgi_out[2], char *arr[3], char **env)
+void	execute_cgi_file(int cgi_out[2], char *arr[3], char **env)
 {
 	close(cgi_out[0]);
 	// put cgi print response in cgi_out
@@ -220,7 +204,7 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 	if (pid < 0)
 		std::cerr << "Fork error!" << std::endl;
 	else if (pid == 0)
-		execute_cgi_file(obj, cgi_out, arr, env);
+		execute_cgi_file(cgi_out, arr, env);
 	else
 	{
 		waitpid(pid, &status, 0);
@@ -297,7 +281,6 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 {
 	std::ifstream myfile;
 	std::map<int, std::string> error_map = web_conf.get_conf_err_page_map();
-	int ret = 0;
 
 	/*error file, if error html in Conf cannot be open and read, we send a static error
 	 message */

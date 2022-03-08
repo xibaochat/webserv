@@ -82,6 +82,5 @@ void extract_info_from_first_line(Client_Request &obj, std::string full_request)
 	obj.set_client_method(method);
 	std::string file = get_client_file(&full_request[0], obj);//the file client ask
 	obj.origin_path = file;
-	std::cout << BLUE << "[ORIGIN]" << file << NC << endl;
 	obj.set_client_file(file);
 }

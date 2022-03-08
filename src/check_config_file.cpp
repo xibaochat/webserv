@@ -59,7 +59,7 @@ int repeated_key(std::string &elem, std::vector<std::string> &vec)
 **  check key is in white list and it is repeated or not
 */
 
-void check_key_validity(std::string elem, std::vector<std::string> &vec)
+void check_key_validity(std::string elem)
 {
 	std::vector<std::string>::iterator it;
 
@@ -136,7 +136,7 @@ void store_elem_in_vec(std::stringstream &file, std::vector<std::string> &vec, s
 			elem = extract_word_from_line(end, line);
 			if (i == 1) // check key in the white list or not
 			{
-				check_key_validity(elem, vec);
+				check_key_validity(elem);
 				key = elem;
 			}
 			if (key == "location")
@@ -293,6 +293,7 @@ std::string get_root(std::string &line)
 	int end = 0;
 	int i = 0;
 	std::string elem, path;
+	std::string::size_type pos;
 	while (line.length() > 0)
 	{
 		elem = extract_word_from_line(end, line);
@@ -301,11 +302,15 @@ std::string get_root(std::string &line)
 		line.erase(0, end + 1);
 		i++;
 	}
-	std::string::size_type pos = path.find(';');
-    if (pos != std::string::npos)
-        path =  path.substr(0, pos);
 	if (i != 2)
 		show_err_message_and_quite("[Error]Wrong format in location in config file");
+	else
+	{
+		pos = path.find(';');
+		if (pos != std::string::npos)
+			path =  path.substr(0, pos);
+		return path;
+	}
 	return path;
 }
 
@@ -332,7 +337,7 @@ std::set<std::string> set_method(std::string &line)
 	return methods_set;
 }
 
-void manage_auto_index(int &end, std::string &path, std::string &line, std::map<std::string, route> &m)
+void manage_auto_index(std::string &path, std::string &line, std::map<std::string, route> &m)
 {
 	if (line != AUTO_ON && line != AUTO_OFF)
 	{
@@ -394,7 +399,7 @@ void manage_route(std::stringstream &file, std::string &line, std::map<std::stri
 			m[path].path_root = root;
 		}
 		else if (elem == "autoindex")
-			manage_auto_index(end, path, line, m);
+			manage_auto_index(path, line, m);
 		else if (elem == "AllowMethods")
 		{
 			if (!m[path].allow_methods.size())

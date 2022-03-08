@@ -223,7 +223,7 @@ route get_matching_route(Client_Request &obj, Conf &web_conf)
 {
 	std::map<std::string, route> loc_root = web_conf.m_location;
 	std::string file = obj.get_client_ask_file();
-	int loc_len = 0;
+	std::size_t loc_len = 0;
 	std::string key;
 	for (std::map<std::string, route>::iterator it=loc_root.begin(); it!=loc_root.end(); ++it)
     {
@@ -371,7 +371,7 @@ bool Server::manage_http_redirection(route r, int request_fd, Conf curr_conf, Cl
 	return (this->prepare_error_response(request_fd, 301, curr_conf, obj));
 }
 
-bool is_body_size_too_based_on_conf(int c_len, Conf &curr_conf, Client_Request &obj)
+bool is_body_size_too_based_on_conf(int c_len, Conf &curr_conf)
 {
 	return (curr_conf.get_client_max_body_size() != -1 &&
 			c_len > curr_conf.get_client_max_body_size());
@@ -382,7 +382,7 @@ bool Server::is_chunked_request(int request_fd, Client_Request &obj)
 	if (this->fd_responses_map.count(request_fd) == 0 &&
 		obj.client_request.count("Content-Type"))
 	{
-		int i_equal = obj.client_request["Content-Type"].find("=");
+		std::size_t i_equal = obj.client_request["Content-Type"].find("=");
 		if (i_equal == string::npos)
 			return (false);
 		return (obj.client_request["Content-Type"].substr(0, i_equal) == "multipart/form-data; boundary");
@@ -433,18 +433,17 @@ void Server::manage_input_fields(int fd, Client_Request &obj)
 	// MANAGE ALL INPUTS
 	while (nb_fields-- > 0)
 	{
-		int i_boundary = obj.payload.find(this->fd_responses_map[fd].boundary);
+		std::size_t i_boundary = obj.payload.find(this->fd_responses_map[fd].boundary);
 		if (i_boundary != string::npos && i_boundary == 0)
 			obj.payload.erase(0, this->fd_responses_map[fd].boundary.length() + 2);
 
-		int i_end_curr_field = obj.payload.find("\r\n") + 2;
 		int i_payload = obj.payload.find("\r\n\r\n") + 4;
 
 		std::string curr_field = obj.payload.substr(0, i_payload);
 		std::string FILENAME_FIELD_PATTERN = "name=\"upload_file\"; filename=\"";
 
 		// CURRENT FIELD IS THE UPLOAD FILE
-		int i_file_start = curr_field.find(FILENAME_FIELD_PATTERN);
+		std::size_t i_file_start = curr_field.find(FILENAME_FIELD_PATTERN);
 		if (i_file_start != string::npos)
 		{
 			i_file_start += FILENAME_FIELD_PATTERN.length();
@@ -458,7 +457,7 @@ void Server::manage_input_fields(int fd, Client_Request &obj)
 				obj.payload.erase(0, i_payload);
 
 			// EXTRACT FILE'S CONTENT IF SMALL ENOUGH TO BE INSIDE THE CURRENT REQUEST
-			int i_boundary = obj.payload.find("\r\n" + this->fd_responses_map[fd].boundary);
+			std::size_t i_boundary = obj.payload.find("\r\n" + this->fd_responses_map[fd].boundary);
 			if (i_boundary != string::npos && i_boundary > 0)
 			{
 				this->fd_responses_map[fd].payloads += obj.payload.substr(0, i_boundary);
@@ -482,10 +481,10 @@ void Server::manage_input_fields(int fd, Client_Request &obj)
 	}
 }
 
-bool Server::remove_last_boundary(int fd, Client_Request &obj, Conf &curr_conf)
+bool Server::remove_last_boundary(int fd, Client_Request &obj)
 {
 	// LAST BOUNDARY
-	int i_last_boundary = obj.payload.find("\r\n" + this->fd_responses_map[fd].boundary + "--");
+	std::size_t i_last_boundary = obj.payload.find("\r\n" + this->fd_responses_map[fd].boundary + "--");
 	if (i_last_boundary == string::npos)
 		i_last_boundary = obj.payload.find(this->fd_responses_map[fd].boundary + "--");
 	if (i_last_boundary != string::npos)
@@ -496,15 +495,15 @@ bool Server::remove_last_boundary(int fd, Client_Request &obj, Conf &curr_conf)
 	return (false);
 }
 
-bool Server::manage_last_chunked_request(int fd, Client_Request &obj, Conf &curr_conf)
+bool Server::manage_last_chunked_request(int fd, Client_Request &obj)
 {
-	int i_end_payload = obj.payload.find("\r\n" + this->fd_responses_map[fd].boundary + "--");
+	std::size_t i_end_payload = obj.payload.find("\r\n" + this->fd_responses_map[fd].boundary + "--");
 	if (i_end_payload && i_end_payload != string::npos)
 	{
 		this->fd_responses_map[fd].payloads += obj.payload.substr(0, i_end_payload);
 		obj.payload.erase(0, i_end_payload);
 	}
-	return (this->remove_last_boundary(fd, obj, curr_conf));
+	return (this->remove_last_boundary(fd, obj));
 }
 
 bool Server::chunkManagement(int fd, Client_Request &obj, Conf &curr_conf)
@@ -518,7 +517,7 @@ bool Server::chunkManagement(int fd, Client_Request &obj, Conf &curr_conf)
 
 	// LAST CHUNK
 	if (obj.payload.find(this->fd_responses_map[fd].boundary + "--") != string::npos)
-		return (this->manage_last_chunked_request(fd, obj, curr_conf));
+		return (this->manage_last_chunked_request(fd, obj));
 
 	fd_responses_map[fd].payloads += obj.payload;
 	return (false);
@@ -555,7 +554,7 @@ bool Server::is_body_too_large(int &request_fd, Client_Request &obj, Conf &curr_
 		else
 			c_len = this->fd_responses_map[request_fd].content_length;
 
-		if (is_body_size_too_based_on_conf(c_len, curr_conf, obj))
+		if (is_body_size_too_based_on_conf(c_len, curr_conf))
 			return (this->prepare_error_response(request_fd, 413, curr_conf, obj));
 	}
 	return (false);

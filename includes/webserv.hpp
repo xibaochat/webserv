@@ -187,11 +187,11 @@ public:
 class Client_Request
 {
 public:
-	bool dir_list;
-	std::string origin_path;//in url
 	std::string method;
 	std::string clean_relative_path;//remove extra / from url
+	bool dir_list;
 	std::string file;
+	std::string origin_path;//in url
 	std::string	query_string;
 	std::string f_extension;
 	int 		status_code_nb;
@@ -203,7 +203,7 @@ public:
 	std::map<std::string, std::string> cgi_output;
 	std::map<std::string, std::string> custom_headers;
 public:
-	Client_Request():method("GET"), file(""), dir_list(false), f_extension(""), status_code_nb(200), status_code_message("200 OK"), total_nb(0), payload(""), body_response(""), origin_path(""){}
+	Client_Request():method("GET"), dir_list(false), file(""), origin_path(""), f_extension(""), status_code_nb(200),status_code_message("200 OK"), total_nb(0), payload(""), body_response(""){}
 	~Client_Request(){};
 	Client_Request(Client_Request const &src){*this = src;}
 	Client_Request &operator=(Client_Request const &src)
