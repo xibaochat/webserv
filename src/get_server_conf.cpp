@@ -96,7 +96,11 @@ std::vector<Conf> get_vector_of_server_conf(std::string s_content, std::vector<s
 
     for (std::size_t i = 0; i != server_indexes.size(); ++i)
     {
-		closing_i = get_closing_bracket_index(s_content, server_indexes[i]);
+		if ((closing_i = get_closing_bracket_index(s_content, server_indexes[i])) == -1)
+		{
+			std::cout << RED << "Missing closing bracket." << NC << "\n";
+			exit(1);
+		}
 		std::stringstream curr_server_content;
 		curr_server_content << s_content.substr(server_indexes[i], closing_i - server_indexes[i] - 1);
 		curr_web_conf = manage_config_file(curr_server_content);
