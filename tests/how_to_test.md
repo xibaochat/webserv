@@ -121,5 +121,13 @@ curl http://localhost:6670/root/root_test.html
 ## Error Page
 
 1. Go to http://localhost:9000/file_does_not_exist.html
-2. Validate you can see a cute and bored little cat.
+2. Validate you can see a cute and bored little cat with a 404 status code.
 3. Try to pet the cat.
+4. `Curl` the server without error page define while using a forbidden method
+```
+curl -X POST http://localhost:6670
+```
+5. Validate the response is an `error 403` as follow
+```
+Error 403 Forbidden
+```
