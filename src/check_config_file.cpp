@@ -11,7 +11,7 @@ bool isNumber(const string& str)
 
 void show_err_message_and_quite(std::string message)
 {
-	std::cout << message << std::endl;
+	std::cerr << RED << "[CONFIGURATION ERROR] " << message << NC << "\n";
 	exit(EXIT_FAILURE);
 }
 

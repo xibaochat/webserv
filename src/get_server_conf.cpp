@@ -79,7 +79,7 @@ std::vector<size_t> get_server_occurences_indexes(std::string s_content)
 	}
 	if (indexes.size() <= 0)
 	{
-		std::cout << RED << "Invalid config file." << NC << "\n";
+		show_err_message_and_quite("Could not parse `server` configuration.");
 		exit(1);
 	}
 	return (indexes);
