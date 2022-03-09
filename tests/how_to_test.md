@@ -82,22 +82,6 @@ curl --resolve bao.com:7000:127.0.0.1 http://bao.com:7000/html/server_name.html
 ```
 2. Validate the reponse is the content of the file `./html/server_name.html`
 
-## AllowMethods
-
-1. Check the config file and validate the server `bao.com:7000` only accept `GET` requests
-2. `Curl` the webserver with a `POST` request
-```sh
-curl --resolve bao.com:7000:127.0.0.1 http://bao.com:7000/html/allowMethods.html -X POST
-```
-3. Validate the answer being
-```
-Error 405 Method Not Allowed
-```
-4. Validate a `GET` request is valid
-```sh
-curl --resolve bao.com:7000:127.0.0.1 http://bao.com:7000/html/allowMethods.html -X POST
-```
-
 ## Ports
 
 1. Check all ports in the config file
@@ -221,6 +205,7 @@ curl -X POST http://localhost:7067/html/max_body_size.html --data "{\"kitten\": 
 1. Compile server and test client: `make test_setup`
 2. Launch server `./webserv`
 3. Launch client and try all the different combinations you'd like `./client`
+4. To check the "Method not Allowed" try different methods on port 5566, modify default.conf, and try again
 
 
 
@@ -237,61 +222,7 @@ curl -X POST http://localhost:7067/html/max_body_size.html --data "{\"kitten\": 
 
 ## Status code
 
-1. Basic `Curl` -> 200
-```
-curl -v http://localhost:8080/html/permission_tests.html
-```
-```
-[...]
-< HTTP/1.1 200 OK
-[...]
-```
-2. No `READ` permission
-```
-chmod -r ./html/permission_tests.html
-curl -v http://localhost:8080/html/permission_tests.html
-```
-```
-[...]
-< HTTP/1.1 403 Forbidden
-[...]
-```
-3. Empty response
-```
-curl -v http://localhost:5566/html/empty.html
-```
-```
-[...]
-< HTTP/1.1 204 No Content
-[...]
-```
-4. Not implemented
-```
-curl -v http://localhost:5566/html/not_implemented.php
-```
-```
-[...]
-< HTTP/1.1 501 Not Implemented
-[...]
-```
-4. Method not allowed
-```
-curl -X POST http://localhost:5566
-```
-```
-[...]
-< HTTP/1.1 405 Method Not Allowed
-[...]
-```
-5. Not Found
-```
-curl -v http://localhost:5566/html/does_not_exist.html
-```
-```
-[...]
-< HTTP/1.1 404 Not Found
-[...]
-```
+
 6. Internal Server Error (CGI)
 ```
 curl -v http://localhost:5566/python_files/file_upload.py
