@@ -45,7 +45,7 @@ public:
 	void manage_event(struct epoll_event *events, int &epoll_event_count);
 	void send_content_to_request(int &fd);
 	void extract_info_from_buffer(Client_Request &obj, std::string buffer);
-	void extract_info_and_prepare_response(Conf &c, int &r_fd, Client_Request &obj);
+	void extract_info_and_prepare_response(route &r, Conf &c, int &r_fd, Client_Request &obj);
 	bool prepare_error_response(int request_fd, int error_code, Conf curr_conf, Client_Request obj);
 	bool manage_http_redirection(route r, int request_fd, Conf curr_conf, Client_Request obj);
 	bool is_body_too_large(int &request_fd, Client_Request &obj, Conf &curr_conf);

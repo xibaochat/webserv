@@ -286,14 +286,21 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 	 message */
 
 	if (file_not_exist(obj) && !fd_rep.boundary.size())
-		set_error(obj, web_conf, 404);
+	{
+		if (obj.dir_list == false)
+			set_error(obj, web_conf, 404);
+		else
+			set_error(obj, web_conf, 403);
+	}
 	else if (file_no_read_permission(r, obj) && !fd_rep.boundary.size())
+	{
 		set_error(obj, web_conf, 403);
+	}
 	else if (method_is_not_allow(r, obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 405);
 	else if (manage_cgi_based_file(obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 501);
-	else if (obj.dir_list == true  && !fd_rep.boundary.size()) //dir listing
+	else if (obj.dir_list == true  && !fd_rep.boundary.size() && r.auto_index == true) //dir listing
 	{
 		obj.f_extension = "html";
 		//origin path is the short path affiche in the html file, full_path is place to open dir

@@ -44,6 +44,7 @@ int file_no_read_permission(route &r, Client_Request &obj)
 
 	if (!S_ISREG(sb.st_mode))//directory
 	{
+		//it is a dir, auto is off
 		if (r.auto_index == false)
 			return 1;
 		obj.dir_list = true;

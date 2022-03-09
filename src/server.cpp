@@ -257,10 +257,11 @@ void add_root_to_file(route &r, Client_Request &obj)
 					full_path += "/";
 			}
 		}
-
 		obj.clean_relative_path = full_path;
 		full_path = r.path_root + file;
-		if (full_path.length() - file.length() == 0)
+		struct stat buffer;
+		if (stat (full_path.c_str(), &buffer) != 0 &&
+			full_path.length() - file.length() == 0)
 			full_path = "." + full_path;
 		obj.set_client_file(full_path);
 }
@@ -324,13 +325,10 @@ void  Server::extract_info_from_buffer(Client_Request &obj, std::string buffer)
 	extract_info_from_rest(obj, buffer);
 }
 
-void Server::extract_info_and_prepare_response(Conf &curr_conf, int &fd, Client_Request &obj)
+void Server::extract_info_and_prepare_response(route &r, Conf &curr_conf, int &fd, Client_Request &obj)
 {
-	route r = get_matching_route(obj, curr_conf);
-	add_root_to_file(r, obj);
-	manage_request_status(r, obj, curr_conf, this->fd_responses_map[fd]);
-
 	cl_response rep;
+	manage_request_status(r, obj, curr_conf, this->fd_responses_map[fd]);
 	rep.content = response_str(obj);
 	this->fd_responses_map.erase(fd);
 	this->fd_responses_map.insert(std::pair<int, cl_response> (fd, rep));
@@ -338,18 +336,27 @@ void Server::extract_info_and_prepare_response(Conf &curr_conf, int &fd, Client_
 
 bool no_specific_file_asked(Client_Request &obj)
 {
-	return ((obj.clean_relative_path == "" || obj.clean_relative_path == "/")
-			&& (obj.file == "" || obj.file == "/"));
+	// return ((obj.clean_relative_path == "" || obj.clean_relative_path == "/")
+	// 		&& (obj.file == "" || obj.file == "/"));
+	struct stat sb;
+	stat(obj.file.c_str(), &sb);
+	return(!S_ISREG(sb.st_mode));
 }
 
-void manage_default_file_if_needed(Client_Request &obj, Conf &curr_conf)
+void manage_default_file_if_needed(route &r, Client_Request &obj, Conf &curr_conf)
 {
-	route r = get_matching_route(obj, curr_conf);
+	//is a directory include index.html
 	if (r.auto_index == false && obj.method == "GET" &&
 		no_specific_file_asked(obj))
 	{
-		obj.file = curr_conf.default_file;
 		obj.clean_relative_path = curr_conf.default_file;
+		obj.file += curr_conf.default_file;
+		std::size_t index = obj.file.find_last_of(".");
+		if (index != string::npos)
+			obj.f_extension = obj.file.substr(index + 1);
+		else
+			obj.f_extension = "html";
+		obj.dir_list = true;
 	}
 }
 
@@ -572,6 +579,7 @@ bool Server::handle_client_event(int &request_fd)
 	std::string buffer(tmp_buffer, nb_read);
 	Conf default_conf = this->web_conf_vector.at(0);
 	Conf curr_conf = default_conf;
+	route r;
 
 	std::cout << GREEN << buffer << NC << "\n";
 	std::cout << YELLOW << "#########################################" << NC << "\n";
@@ -595,7 +603,7 @@ bool Server::handle_client_event(int &request_fd)
 			this->fd_responses_map[request_fd].unparsed_payloads += buffer;
 			obj.payload = buffer;
 			curr_conf = this->fd_responses_map[request_fd].conf;
-			route r = get_matching_route(obj, curr_conf);
+			r = get_matching_route(obj, curr_conf);
 		}
 		else
 		{
@@ -605,16 +613,21 @@ bool Server::handle_client_event(int &request_fd)
 			int curr_port = get_curr_port(obj);
 			curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
 
+			r = get_matching_route(obj, curr_conf);
 			// -------- HTTP REDIRECTION ---------
-			route r = get_matching_route(obj, curr_conf);
 			if (r.redirection.length() > 0)
 				return (this->manage_http_redirection(r, request_fd, curr_conf, obj));
 
-			// -------- DEFAULT INDEX FILE ---------
-			manage_default_file_if_needed(obj, curr_conf);
 
-			bool body_too_large;
+			// -------- ROOT ---------
+			add_root_to_file(r, obj);
+
+			// -------- DEFAULT INDEX FILE ---------
+			manage_default_file_if_needed(r, obj, curr_conf);
+
+
 			// -------- MAX CLIENT BODY SIZE ---------
+			bool body_too_large;
 			if ((body_too_large = this->is_body_too_large(request_fd, obj, curr_conf)))
 				return (true);
 		}
@@ -625,7 +638,7 @@ bool Server::handle_client_event(int &request_fd)
 			this->ready_map[request_fd] = true;
 
 		if (this->ready_map[request_fd])
-			this->extract_info_and_prepare_response(curr_conf, request_fd, obj);
+			this->extract_info_and_prepare_response(r, curr_conf, request_fd, obj);
 	}
 	std::cout << "\t\t" << ready_map[request_fd] << std::endl;
 	return (ready_map[request_fd]);
