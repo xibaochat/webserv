@@ -2,7 +2,7 @@ COUNTER=0
 
 while [ 1 ]
 do
-	if [ $COUNTER -eq "1000" ]
+	if [ $COUNTER -eq "100" ]
 	then
 		exit
 	fi
