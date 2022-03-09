@@ -33,14 +33,10 @@ http://localhost:8080/images/d5v.gif
 
 ## Static upload
 
-1. Create the destination directory
-```
-mkdir -p /tmp/upload_file/
-```
-2. Go to http://localhost:9000/html/static_upload.html
-3. Select from file in `./tests/files/`
-4. Click upload
-5. Validate the file was upload in `/tmp/upload_file/`
+1. Go to http://localhost:9000/html/static_upload.html
+2. Select from file in `./tests/files/`
+3. Click upload
+4. Validate the file was upload in `/tmp/upload_file/`
 
 ## Static upload with multiple fields
 
@@ -67,6 +63,16 @@ mkdir -p /tmp/upload_file/
 4. Click upload
 5. Validate the response is dynamically generated based on your inputs
 6. Validate the file was upload in `/tmp/upload_file/`
+
+
+## Test error pages with different requests
+
+
+## Stress tests
+1. Try 'siege' on an empty page: `siege -b http://localhost:8080/html/empty.html`
+2. Try 'siege' on a page with content: `siege -b http://localhost:8080/html/cute_cat.html`
+
+
 
 ## Server Name
 
@@ -210,6 +216,24 @@ curl -X POST http://localhost:7067/html/max_body_size.html --data "{\"kitten\": 
   </body>
 </html>
 ```
+
+## Status code 
+1. Compile server and test client: `make test_setup`
+2. Launch server `./webserv`
+3. Launch client and try all the different combinations you'd like `./client`
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Status code
 

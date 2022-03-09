@@ -1,4 +1,4 @@
-DELETE /test/index_permission.html HTTP/1.1
+DELETE /tests/root/index_permission.html HTTP/1.1
 User-Agent: custom-client
 Host: weebserv
 Accept-Language: en-US

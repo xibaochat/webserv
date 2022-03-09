@@ -1,4 +1,4 @@
-POST /test/index_nofile.html HTTP/1.1
+GET/test/tmp_dir_for_php/index.php?truc=machin&foo=bar&jean-michel=francis HTTP1.1
 User-Agent: custom-client
 Host: weebserv
 Accept-Language: en-US
