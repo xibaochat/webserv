@@ -27,15 +27,16 @@ fclean: clean
 	@/bin/rm -f *~
 	@/bin/rm -f *#
 	@/bin/rm -f client
-	@/bin/rm -rf test_this/root
+	@/bin/rm -rf tests/root
 
 test_setup: all
-	@rm -rf test_this/root
-	@mkdir -p test_this/root
-	@cp test_this/index/* test_this/root/
-	@cp test_this/root/index_example.html test_this/root/index_permission.html
-	@chmod 000 test_this/root/index_permission.html
-	@clang++ -o client test_this/client.cpp
+	@rm -rf tests/root
+	@mkdir -p tests/root
+	@cp tests/index/* tests/root/
+	@cp tests/root/index_example.html tests/root/index_permission.html
+	@chmod 777 tests/root/index_example.html
+	@chmod 000 tests/root/index_permission.html
+	@clang++ -o client tests/client.cpp
 
 re: fclean all
 .PHONY: all clean fclean re

@@ -20,16 +20,16 @@ int		which_port(void)
 
 	std::cout << YELLOW << "Which PORT :" << std::endl;
 	std::cout << "(a) 8000" << std::endl;
-	std::cout << "(b) 8001" << std::endl;
-	std::cout << "(c) 8080" << RESET << std::endl;
+	std::cout << "(b) 5566" << std::endl;
+	std::cout << "(c) 9000" << RESET << std::endl;
 	getline(std::cin, choice);
 
 	if (choice == "a")
 		return (8000);
 	else if (choice == "b")
-		return (8001);
+		return (5566);
 	else if (choice == "c")
-		return (8080);
+		return (9000);
 	return (8000);
 }
 
@@ -52,7 +52,7 @@ std::string		which_method(void)
 	return ("get/GET");
 }
 
-std::string		which_target(int cgi)
+std::string		which_target(int not_implemented)
 {
 	std::string		choice;
 
@@ -61,8 +61,8 @@ std::string		which_target(int cgi)
 	std::cout << "(b) Doesn't exist" << std::endl;
 	std::cout << "(c) Wrong permissions" << std::endl;
 	std::cout << "(d) Bad request" << RESET << std::endl;
-	if (cgi)
-		std::cout << YELLOW << "(e) CGI (on)" << RESET << std::endl;
+	if (not_implemented)
+		std::cout << YELLOW << "(e) Not Implemented" << RESET << std::endl;
 
 	getline(std::cin, choice);
 
@@ -74,8 +74,8 @@ std::string		which_target(int cgi)
 		return ("_permission");
 	else if (choice == "d")
 		return ("_bad");
-	else if (cgi && choice == "e")
-		return ("_cgi");
+	else if (not_implemented && choice == "e")
+		return ("_php");
 	return ("_example");
 }
 
@@ -83,7 +83,7 @@ void	send(int port, std::string filename)
 {
 	int					sock;
 	struct sockaddr_in	serv_addr;
-	char				buffer[4096] = {0};
+	char				buffer[1024] = {0};
 	std::fstream		file;
 	std::string			content;
 
@@ -111,14 +111,14 @@ void	send(int port, std::string filename)
 
 	content += "\r\n";
 
-	std::cout << std::endl << "Sending :" << std::endl;
+	std::cout << std::endl << "Sending to " << port << ":" << std::endl;
 	std::cout << "[" << RED << content << RESET << "]" << std::endl << std::endl;
 
 	send(sock, content.c_str(), content.size(), 0);
-	read(sock, buffer, 4095);
+	read(sock, buffer, 1023);
 
 	std::cout << std::endl << "Response :" << std::endl;
-	std::cout << "[" << GREEN << std::string(buffer) << RESET << "]" << std::endl << std::endl;
+	std::cout << "[" << GREEN << std::string(buffer) << "\n(...)\n" << RESET << "]" << std::endl << std::endl;
 
 	close(sock);
 
@@ -133,7 +133,7 @@ int		main()
 	while (true)
 	{
 		port = which_port();
-		filename = "test_this/request/";
+		filename = "tests/request/";
 		filename += which_method();
 		if (filename.find("get") != std::string::npos || filename.find("post") != std::string::npos || filename.find("put") != std::string::npos)
 			filename += which_target(1);

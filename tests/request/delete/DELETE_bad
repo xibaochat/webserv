@@ -1,6 +1,6 @@
-POST /test/index_permission.html HTTP/1.1
+POST/test/tmp_dir_for_php/index.php?truc=machin&foo=bar&jean-michel=francis HTTP1.1
 User-Agent: custom-client
-Host: weebserv
+Host: localhost
 Accept-Language: en-US
 Connection: Keep-Alive
 Content-type: text/html

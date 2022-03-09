@@ -1,6 +1,6 @@
-POST /test/index.php?truc=machin&foo=bar&jean-michel=francis HTTP/1.1
+POST /tests/root/index_example.html HTTP/1.1
 User-Agent: custom-client
-Host: weebserv
+Host: localhost:8000
 Accept-Language: en-US
 Connection: Keep-Alive
 Content-type: text/html

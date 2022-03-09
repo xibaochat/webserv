@@ -33,14 +33,10 @@ http://localhost:8080/images/d5v.gif
 
 ## Static upload
 
-1. Create the destination directory
-```
-mkdir -p /tmp/upload_file/
-```
-2. Go to http://localhost:9000/html/static_upload.html
-3. Select from file in `./tests/files/`
-4. Click upload
-5. Validate the file was upload in `/tmp/upload_file/`
+1. Go to http://localhost:9000/html/static_upload.html
+2. Select from file in `./tests/files/`
+3. Click upload
+4. Validate the file was upload in `/tmp/upload_file/`
 
 ## Static upload with multiple fields
 
@@ -68,6 +64,16 @@ mkdir -p /tmp/upload_file/
 5. Validate the response is dynamically generated based on your inputs
 6. Validate the file was upload in `/tmp/upload_file/`
 
+
+## Test error pages with different requests
+
+
+## Stress tests
+1. Try 'siege' on an empty page: `siege -b http://localhost:8080/html/empty.html`
+2. Try 'siege' on a page with content: `siege -b http://localhost:8080/html/cute_cat.html`
+
+
+
 ## Server Name
 
 1. `Curl` the webserver using a domain name
@@ -75,22 +81,6 @@ mkdir -p /tmp/upload_file/
 curl --resolve bao.com:7000:127.0.0.1 http://bao.com:7000/html/server_name.html
 ```
 2. Validate the reponse is the content of the file `./html/server_name.html`
-
-## AllowMethods
-
-1. Check the config file and validate the server `bao.com:7000` only accept `GET` requests
-2. `Curl` the webserver with a `POST` request
-```sh
-curl --resolve bao.com:7000:127.0.0.1 http://bao.com:7000/html/allowMethods.html -X POST
-```
-3. Validate the answer being
-```
-Error 405 Method Not Allowed
-```
-4. Validate a `GET` request is valid
-```sh
-curl --resolve bao.com:7000:127.0.0.1 http://bao.com:7000/html/allowMethods.html -X POST
-```
 
 ## Ports
 
@@ -211,63 +201,28 @@ curl -X POST http://localhost:7067/html/max_body_size.html --data "{\"kitten\": 
 </html>
 ```
 
+## Status code 
+1. Compile server and test client: `make test_setup`
+2. Launch server `./webserv`
+3. Launch client and try all the different combinations you'd like `./client`
+4. To check the "Method not Allowed" try different methods on port 5566, modify default.conf, and try again
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## Status code
 
-1. Basic `Curl` -> 200
-```
-curl -v http://localhost:8080/html/permission_tests.html
-```
-```
-[...]
-< HTTP/1.1 200 OK
-[...]
-```
-2. No `READ` permission
-```
-chmod -r ./html/permission_tests.html
-curl -v http://localhost:8080/html/permission_tests.html
-```
-```
-[...]
-< HTTP/1.1 403 Forbidden
-[...]
-```
-3. Empty response
-```
-curl -v http://localhost:5566/html/empty.html
-```
-```
-[...]
-< HTTP/1.1 204 No Content
-[...]
-```
-4. Not implemented
-```
-curl -v http://localhost:5566/html/not_implemented.php
-```
-```
-[...]
-< HTTP/1.1 501 Not Implemented
-[...]
-```
-4. Method not allowed
-```
-curl -X POST http://localhost:5566
-```
-```
-[...]
-< HTTP/1.1 405 Method Not Allowed
-[...]
-```
-5. Not Found
-```
-curl -v http://localhost:5566/html/does_not_exist.html
-```
-```
-[...]
-< HTTP/1.1 404 Not Found
-[...]
-```
+
 6. Internal Server Error (CGI)
 ```
 curl -v http://localhost:5566/python_files/file_upload.py
