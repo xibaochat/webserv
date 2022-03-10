@@ -205,8 +205,6 @@ curl -X POST http://localhost:7067/html/max_body_size.html --data "{\"kitten\": 
 
 ### Using Curl
 
-## Status code
-
 1. Basic `Curl` -> 200
 ```
 curl -v http://localhost:8080/html/permission_tests.html
