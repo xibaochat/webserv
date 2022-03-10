@@ -1,5 +1,9 @@
 # CORRECTION
 
+## Welcome
+
+http://localhost:9000
+
 ## Configuration path
 
 1. Launch the server without argument
