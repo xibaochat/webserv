@@ -40,7 +40,10 @@ int file_no_read_permission(route &r, Client_Request &obj)
 {
 	struct stat sb;
 	std::string file = obj.get_client_ask_file();
-	stat(file.c_str(), &sb);
+
+	//check in case it doesn't exist
+	if (stat(file.c_str(), &sb) == -1)
+		return (1);
 
 	if (!S_ISREG(sb.st_mode))//directory
 	{

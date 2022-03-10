@@ -190,7 +190,7 @@ int	manage_executable_file(Client_Request &obj, route &r, cl_response &fd_rep)
 		obj = fd_rep.obj;
 
 	arr[0] = strdup("/usr/bin/python3");
-	std::string asked_file = "." + obj.get_client_ask_file();
+	std::string asked_file = obj.get_client_ask_file();
 	arr[1] = strdup(asked_file.c_str());
 	arr[2] = NULL;
 
