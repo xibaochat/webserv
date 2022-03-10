@@ -147,7 +147,7 @@ curl http://localhost:6670/root/root_test.html
 ```
 curl -X POST http://localhost:6670
 ```
-5. Validate the response is an `error 403` as follow
+5. Validate the response is an `error 405` as follow
 ```
 Error 405 Method Not Allowed
 ```
