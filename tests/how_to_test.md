@@ -25,7 +25,7 @@ Cannot open config file
 
 1. Go to redirectable url:
 http://localhost:8080/images/d5v.gif
-
+http://localhost:8080//life/pets/a34774573/girl-cat-names/
 ## Default HTML index file
 
 1. Go to http://localhost:4670/html/
@@ -201,7 +201,7 @@ curl -X POST http://localhost:7067/html/max_body_size.html --data "{\"kitten\": 
 </html>
 ```
 
-## Status code 
+## Status code
 1. Compile server and test client: `make test_setup`
 2. Launch server `./webserv`
 3. Launch client and try all the different combinations you'd like `./client`

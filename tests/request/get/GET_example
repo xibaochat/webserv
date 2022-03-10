@@ -1,5 +1,5 @@
 GET /tests/root/index_example.html HTTP/1.1
 User-Agent: custom-client
-Host: localhost
+Host: localhost:8000
 Accept-Language: fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5
 Connection: Keep-Alive

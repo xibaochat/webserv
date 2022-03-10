@@ -153,7 +153,9 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count)
 		else if (ev & EPOLLIN)
 			this->ready_map[sockfd] = this->clean_handle_client_event(sockfd);
 		else if (ev & EPOLLOUT)// && this->ready_map[sockfd])/*send content to request*/
+		{
 			this->send_content_to_request(sockfd);
+		}
 	}
 }
 
@@ -562,7 +564,14 @@ bool Server::is_body_too_large(int &request_fd, Client_Request &obj, Conf &curr_
 			c_len = this->fd_responses_map[request_fd].content_length;
 
 		if (is_body_size_too_based_on_conf(c_len, curr_conf))
-			return (this->prepare_error_response(request_fd, 413, curr_conf, obj));
+		{
+			this->prepare_error_response(request_fd, 413, curr_conf, obj);
+			struct epoll_event ev;
+			ev.events = EPOLLOUT;
+			epoll_ctl(this->epfd, EPOLL_CTL_MOD, request_fd, &ev);
+			this->send_content_to_request(request_fd);
+			return true;
+		}
 	}
 	return (false);
 }
@@ -576,6 +585,7 @@ bool Server::handle_client_event(int &request_fd)
 	char tmp_buffer[max_nb];
 	memset(tmp_buffer, 0, max_nb);
 	long nb_read = recv(request_fd, tmp_buffer, sizeof(tmp_buffer), 0);
+
 	std::string buffer(tmp_buffer, nb_read);
 	Conf default_conf = this->web_conf_vector.at(0);
 	Conf curr_conf = default_conf;
@@ -586,6 +596,7 @@ bool Server::handle_client_event(int &request_fd)
 
 	if (this->fd_responses_map.find(request_fd) == this->fd_responses_map.end())
 		this->ready_map.insert(std::pair<int, bool> (request_fd, true));
+
 
 	// Add what we just read from the buffer
 	std::map<int, std::string> curr_request;
@@ -607,31 +618,27 @@ bool Server::handle_client_event(int &request_fd)
 		}
 		else
 		{
-			// -------- SERVER CONF MANGEMENT ---------
 			this->extract_info_from_buffer(obj, buffer);
+			// -------- SERVER CONF MANGEMENT ---------
 			std::string curr_server_name = get_curr_server_name(obj);
 			int curr_port = get_curr_port(obj);
 			curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
+
+			// -------- MAX CLIENT BODY SIZE ---------
+			if (this->is_body_too_large(request_fd, obj, curr_conf))
+				return true;
 
 			r = get_matching_route(obj, curr_conf);
 			// -------- HTTP REDIRECTION ---------
 			if (r.redirection.length() > 0)
 				return (this->manage_http_redirection(r, request_fd, curr_conf, obj));
 
-
 			// -------- ROOT ---------
 			add_root_to_file(r, obj);
 
 			// -------- DEFAULT INDEX FILE ---------
 			manage_default_file_if_needed(r, obj, curr_conf);
-
-
-			// -------- MAX CLIENT BODY SIZE ---------
-			bool body_too_large;
-			if ((body_too_large = this->is_body_too_large(request_fd, obj, curr_conf)))
-				return (true);
 		}
-
 		if (is_chunked_request(request_fd, obj))
 			this->ready_map[request_fd] = this->chunkManagement(request_fd, obj, curr_conf);
 		else
