@@ -33,7 +33,7 @@ std::string response_str(Client_Request &obj)
 	response_header["Connection"] = "keep-alive";
 	response_header["Content-Type"] = get_file_type(obj);
 	response_header["Date"] = get_time();
-	response_header["Server"] = "nginx/1.18.0 (Ubuntu)";
+	response_header["Server"] = "kitten party web server";
 	response_header["Transfer-Encoding"] = "identity";
 
 	//ecrazer the map frommcgi ouput
