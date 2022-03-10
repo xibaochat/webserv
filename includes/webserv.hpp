@@ -42,6 +42,7 @@
 
 # define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location", "client_max_body_size", "index"}
 
+#define DEFAULT_MAX_BODY_SIZE 10485760
 using namespace std;
 
 class Client_Request;
@@ -129,7 +130,7 @@ public:
 	std::map<int, std::string>conf_map;//status code, error_page_path
 	std::map<std::string, route> m_location;
 	std::string default_file;
-	Conf(): default_file("index.html"){};
+	Conf(): client_max_body_size(0), default_file("index.html"){};
 	~Conf(){};
 	Conf(Conf const &s){*this = s;}
 	Conf &operator=(Conf const &src)

@@ -172,7 +172,7 @@ int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 	std::vector<std::string>::iterator it;
 	std::stringstream ss;
 	std::string message_error;
-	int nb;
+	int nb = -1;
 
 	if ((it = std::find(vec.begin(), vec.end(), key)) != vec.end())
 	{
@@ -185,7 +185,8 @@ int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 				show_err_message_and_quite(message_error);
 			}
 			nb = get_transfered_value(ss, it);
-			if ((nb >= 1 && nb <= 65535) || (key == "client_max_body_size" && nb <= 20 * 1024))
+			if ((key == "listen" && nb >= 1 && nb <= 65535)
+				|| (key == "client_max_body_size" && nb <= DEFAULT_MAX_BODY_SIZE && nb > 0))
 			{
 				vec.erase(it, it + 2);
 				return nb;
@@ -227,9 +228,11 @@ void manage_client_max_body_size(std::vector<std::string> &vec, Conf &web_conf)
 	std::vector<std::string>::iterator it;
 	std::string key("client_max_body_size");
 	int client_max_body_size  = manage_key_correspond_value(key,  vec);
+	//no client_max_body_zie or the nb is too large
 	if (client_max_body_size == -1)
-		show_err_message_and_quite("[Error]The clinet_max_body_size is not in the range");
-	web_conf.set_client_max_body_size(client_max_body_size);
+		web_conf.set_client_max_body_size(DEFAULT_MAX_BODY_SIZE);
+	else
+		web_conf.set_client_max_body_size(client_max_body_size);
 }
 
 /*
@@ -518,7 +521,6 @@ Conf manage_config_file(std::stringstream &file)
 	Conf web_conf;
 	std::vector<std::string> vec;  // store each word in vec
 	std::string conf_file;
-	std::vector<std::string>::iterator it;
 	std::map<std::string, route> m;
 
 	store_elem_in_vec(file, vec, m);

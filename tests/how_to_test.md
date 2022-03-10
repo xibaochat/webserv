@@ -79,9 +79,13 @@ http://localhost:8080//life/pets/a34774573/girl-cat-names/
 1. `Curl` the webserver using a domain name
 ```sh
 curl --resolve bao.com:7000:127.0.0.1 http://bao.com:7000/html/server_name.html
-```
+	```
 2. Validate the reponse is the content of the file `./html/server_name.html`
 
+```
+curl --resolve localhost:7066:127.0.0.1 http://localhost:7066/html/server_name.html
+```
+should show status code 405, because we define only post
 ## Ports
 
 1. Check all ports in the config file
