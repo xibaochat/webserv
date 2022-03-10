@@ -29,6 +29,7 @@ public:
 	std::map<int, bool> ready_map;
 
 public:
+	Conf get_current_conf(Client_Request &obj, Conf &default_conf) ;
 	int fd_is_in_listener(int fd);
 	bool clean_handle_client_event(int &request_fd);
 	bool handle_client_event(int &clientfd);

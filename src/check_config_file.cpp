@@ -185,7 +185,7 @@ int manage_key_correspond_value(std::string &key, std::vector<std::string> &vec)
 				show_err_message_and_quite(message_error);
 			}
 			nb = get_transfered_value(ss, it);
-			if ((nb >= 1 && nb <= 65535) || key == "client_max_body_size")
+			if ((nb >= 1 && nb <= 65535) || (key == "client_max_body_size" && nb <= 20 * 1024))
 			{
 				vec.erase(it, it + 2);
 				return nb;
@@ -227,8 +227,8 @@ void manage_client_max_body_size(std::vector<std::string> &vec, Conf &web_conf)
 	std::vector<std::string>::iterator it;
 	std::string key("client_max_body_size");
 	int client_max_body_size  = manage_key_correspond_value(key,  vec);
-	if (client_max_body_size == 0)
-		show_err_message_and_quite("[Error]The clinet_max_body_size can't be 0");
+	if (client_max_body_size == -1)
+		show_err_message_and_quite("[Error]The clinet_max_body_size is not in the range");
 	web_conf.set_client_max_body_size(client_max_body_size);
 }
 

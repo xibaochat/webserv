@@ -576,6 +576,14 @@ bool Server::is_body_too_large(int &request_fd, Client_Request &obj, Conf &curr_
 	return (false);
 }
 
+Conf Server::get_current_conf(Client_Request &obj, Conf &default_conf)
+{
+	std::string curr_server_name = get_curr_server_name(obj);
+	int curr_port = get_curr_port(obj);
+	Conf curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
+	return curr_conf;
+}
+
 /*read from the buffer and store the request fd and reponse in the map
  */
 bool Server::handle_client_event(int &request_fd)
@@ -620,14 +628,10 @@ bool Server::handle_client_event(int &request_fd)
 		{
 			this->extract_info_from_buffer(obj, buffer);
 			// -------- SERVER CONF MANGEMENT ---------
-			std::string curr_server_name = get_curr_server_name(obj);
-			int curr_port = get_curr_port(obj);
-			curr_conf = get_curr_conf(curr_server_name, curr_port, this->web_conf_vector, default_conf);
-
+			curr_conf = get_current_conf(obj, default_conf);
 			// -------- MAX CLIENT BODY SIZE ---------
 			if (this->is_body_too_large(request_fd, obj, curr_conf))
 				return true;
-
 			r = get_matching_route(obj, curr_conf);
 			// -------- HTTP REDIRECTION ---------
 			if (r.redirection.length() > 0)
