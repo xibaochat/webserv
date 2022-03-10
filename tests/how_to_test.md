@@ -149,7 +149,7 @@ curl -X POST http://localhost:6670
 ```
 5. Validate the response is an `error 403` as follow
 ```
-Error 403 Forbidden
+Error 405 Method Not Allowed
 ```
 
 ## AutoIndexing
