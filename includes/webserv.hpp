@@ -100,7 +100,6 @@ void delete_request(Client_Request &obj);
 void set_request_status_nb_message(int status_nb, Client_Request &obj);
 
 void set_error(Client_Request &obj, Conf &web_conf, int status_code_nb);
-void send_response(Client_Request &obj, int &new_socket);
 void manage_route(std::stringstream &file, std::string &line, std::map<std::string, route> &m);
 int method_is_not_allow(route &r, Client_Request &obj);
 int extension_is_not_exist(std::string *mylist, std::string extension, int size);
@@ -160,9 +159,6 @@ public:
 		this->conf_map = src;}
 	void display_conf_file_debug()
 	{
-
-
-		std::cout << MAGENTA << "##### PARSING SERVER CONF #####\n\n" << NC;
 		for (std::set<int>::iterator it=port.begin(); it!=port.end(); ++it)
 			std::cout << "port " << *it << std::endl;
 		std::cout << "server_name " << this->server_name << std::endl;

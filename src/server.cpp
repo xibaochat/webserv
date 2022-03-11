@@ -185,10 +185,7 @@ void Server::Start()
 			continue ;
 		}
 		if (epoll_event_count == 0)
-		{
-			std::cout << GREEN << "NO REQUEST\n" << NC;
 			continue;
-		}
 		/* `epoll_event_count` will most likely always be equal to 1, since `epoll_wait`
 		   will return immediatly after receiving an event */
 		this->manage_event(events, epoll_event_count);
@@ -206,7 +203,6 @@ void Server::addfd(int fd, bool enable_et)
 		ev.events = EPOLLIN | EPOLLOUT;
 	if (epoll_ctl(this->epfd, EPOLL_CTL_ADD, fd, &ev) < 0)
 		throw("[ERROR]Failed to in epoll_ctl");
-	// std::cout << "fd added to epoll" << std::endl;
 }
 
 /*create a new fd and add to the interest list
@@ -599,9 +595,6 @@ bool Server::handle_client_event(int &request_fd)
 	Conf curr_conf = default_conf;
 	route r;
 
-	std::cout << GREEN << buffer << NC << "\n";
-	std::cout << YELLOW << "#########################################" << NC << "\n";
-
 	if (this->fd_responses_map.find(request_fd) == this->fd_responses_map.end())
 		this->ready_map.insert(std::pair<int, bool> (request_fd, true));
 
@@ -651,6 +644,5 @@ bool Server::handle_client_event(int &request_fd)
 		if (this->ready_map[request_fd])
 			this->extract_info_and_prepare_response(r, curr_conf, request_fd, obj);
 	}
-	std::cout << "\t\t" << ready_map[request_fd] << std::endl;
 	return (ready_map[request_fd]);
 }

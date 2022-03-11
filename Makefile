@@ -15,7 +15,7 @@ CC = clang++
 
 HEADER_DIR = includes
 
-CFLAGS = -g -std=c++98 # -Wall -Wextra -Werror
+CFLAGS = -std=c++98  -Wall -Wextra -Werror
 
 OBJS_DIR    = ./objects
 

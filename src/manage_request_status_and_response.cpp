@@ -170,7 +170,6 @@ int	get_cgi_response(Client_Request &obj, int &cgi_out)
 	}
 	std::string ret(foo, nb_read);
 	close(cgi_out);
-	std::cout << ret << "\n";
 	//tract header and its value from output of the file
 	f_header_map = extract_header_from_str(ret);
 	obj.set_cgi_output_map(f_header_map);

@@ -113,10 +113,7 @@ bool has_extra_elem_in_line(std::string &key, int &i)
 	if (key == "location")
 		return false;
 	if ((key == "error_page" && i != 3) || ((key != "error_page") && i != 2))
-	{
-		cout << YELLOW << key << " " << i << NC << "\n";
 		return true;
-	}
 	return false;
 }
 

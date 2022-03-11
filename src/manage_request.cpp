@@ -1,17 +1,5 @@
 #include "webserv.hpp"
 
-void send_response(Client_Request &obj, int &new_socket)
-{
-	std::string response = response_str(obj);
-	const char *new_str = response.c_str();
-	std::cout << "Start sending repond for `" << RED << new_socket << NC << "`\n";
-	int res = send(new_socket , new_str , strlen(new_str), 0);
-	if (res < 0)
-		std::cout << RED << ERR_SEND << NC << std::endl;
-	std::cout << res << endl;
-	std::cout << "End sending repond for `" << RED << new_socket << NC << "`\n";
-}
-
 void	delete_request(Client_Request &obj)
 {
 	int msg;
