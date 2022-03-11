@@ -51,7 +51,7 @@ ${OBJS_DIR}/%.o: ${SRCS_PATH}/%.cpp
 		@printf "${BLUE}WEBSERV${NC}:        ${DARK_YELLOW}Compilation...      ${YELLOW}%-40.40s${NC}\r" $(notdir $<)
 		@${CC} ${FLAGS}  -I ${HEADER_DIR}  -c $< -o $@
 
-${NAME}: header  ${OBJS}
+${NAME}: header  ${OBJS} nyancat
 	@printf "${BLUE}WEBSERV${NC}:    ${GREEN}Completed         ${YELLOW}------いいですね------${NC}\r\n"
 	@$(CC) $(OBJS) -o $(NAME)
 	@printf "\n${NC}⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤\n"
@@ -65,7 +65,7 @@ ${NAME}: header  ${OBJS}
 	@echo "${PURPLE}╚═╝     ╚═╝╚═╝╚═╝  ╚═╝ ╚═════╝    ╚═╝     ╚═╝╚═╝╚═╝  ╚═╝ ╚═════╝ ${NC}\n\n"
 
 
-all: ${NAME} nyancat
+all: ${NAME}
 
 nyancat:
 	@ echo "$(MAGENTA)                             "
