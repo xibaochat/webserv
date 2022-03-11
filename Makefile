@@ -44,7 +44,7 @@ ARC_GREEN   = \e[102m
 ARC_BLUE    = \e[44m
 ARC_MAGENTA = \e[45m
 ARC_NC      = \e[49m
-
+ARC_PURPLE  = \e[30;48;5;57m
 
 ${OBJS_DIR}/%.o: ${SRCS_PATH}/%.cpp
 	    @mkdir -p ${OBJS_DIR}
@@ -77,7 +77,7 @@ nyancat:
 	@ echo "$(ARC_YELLOW) $(ARC_NC)██▄▀██$(ARC_YELLOW)▄$(ARC_NC)█░░░▄░░░░░░░██░░░░▀▀▀▀▀░░░░██  "
 	@ echo "$(ARC_GREEN)  ▀$(ARC_NC)██▄▀██░░░░░░░░▀░██▀░░░░░░░░░░░░░▀██ "
 	@ echo "$(ARC_BLUE)    ▀$(ARC_NC)████░▀░░░░▄░░░██░░░$(GREEN)▄█$(MAGENTA)░░░░▄░$(GREEN)▄█$(MAGENTA)░░██ "
-	@ echo "$(ARGC_MAGENTA)       ▀$(ARC_NC)█░░░░▄░░░░░██░░░░▄░░░▄░░▄░░░██ "
+	@ echo "$(ARC_PURPLE)      $(MAGENTA) ▀$(ARC_NC)█░░░░▄░░░░░██░░░░▄░░░▄░░▄░░░██ "
 	@ echo "       ▄█▄░░░░░░░░░░░▀▄░░▀▀▀▀▀▀▀▀░░▄▀  "
 	@ echo "      █▀▀█████████▀▀▀▀████████████▀    "
 	@ echo "      ████▀   ███▀      ▀███  ▀██▀     "
