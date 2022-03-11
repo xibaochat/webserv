@@ -632,7 +632,6 @@ bool Server::handle_client_event(int &request_fd)
 
 			// -------- ROOT ---------
 			add_root_to_file(r, obj);
-
 			// -------- DEFAULT INDEX FILE ---------
 			manage_default_file_if_needed(r, obj, curr_conf);
 		}

@@ -58,6 +58,7 @@ std::string get_file_output(Client_Request &obj)
 	std::string dir_output;//we need to show directory first in auto_index list
 	std::string file_output;
 	struct dirent *ent;
+	std::string file_whole_path;
 	std::string index_output("<html>\n<head><title>Index of " + path + "</title></head>\n<body>\n<h1>Index of " + path + "</h1><hr><pre><a href=\"../\">../</a>\n");
 
 	if ((dir = opendir (path.c_str())) != NULL)//can open the directory
@@ -66,9 +67,12 @@ std::string get_file_output(Client_Request &obj)
 		{
 			if (ent->d_name[0] && ent->d_name[0] != '.')
 			{
-				std::string file_whole_path(path + "/" + ent->d_name);//whole path
+				file_whole_path = path + "/" + ent->d_name;//whole path
 				std::string file_link(ent->d_name);//href link
-				file_link = "./" + file_link;
+				if (path.back() != '/')
+					file_link = path + "/" + file_link;
+				else
+					file_link = "./" + file_link;
 				std::string time = getFileCreationTime(file_whole_path);//time
 				std::string file_size = GetFileSize(file_whole_path);//size
 				std::string full_d_name = ent->d_name;
