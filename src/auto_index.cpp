@@ -67,6 +67,8 @@ std::string get_file_output(Client_Request &obj)
 			if (ent->d_name[0] && ent->d_name[0] != '.')
 			{
 				std::string file_whole_path(path + "/" + ent->d_name);//whole path
+				std::string file_link(ent->d_name);//href link
+				file_link = "./" + file_link;
 				std::string time = getFileCreationTime(file_whole_path);//time
 				std::string file_size = GetFileSize(file_whole_path);//size
 				std::string full_d_name = ent->d_name;
@@ -86,7 +88,7 @@ std::string get_file_output(Client_Request &obj)
 				}
 				std::string spaces(51 - d_name.length(), ' ');
 				std::string space_filler(20 - file_size.length(), ' ');
-				std::string str = "<a href=\"" + file_whole_path + "\">" + d_name + "</a> " + spaces + time + space_filler + file_size + "\n";
+				std::string str = "<a href=\"" + file_link + "\">" + d_name + "</a> " + spaces + time + space_filler + file_size + "\n";
 				if (file_size == "-")
 					dir_output += str;
 				else
