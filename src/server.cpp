@@ -149,9 +149,9 @@ void Server::manage_event(struct epoll_event *events, int &epoll_event_count)
 			this->fd_responses_map.erase(sockfd);
 			this->Close(sockfd);
 		}
-		// A request is now ready to receive a response
 		else if (ev & EPOLLIN)
 			this->ready_map[sockfd] = this->clean_handle_client_event(sockfd);
+		// A request is now ready to receive a response
 		else if (ev & EPOLLOUT)// && this->ready_map[sockfd])/*send content to request*/
 		{
 			this->send_content_to_request(sockfd);
@@ -334,11 +334,10 @@ void Server::extract_info_and_prepare_response(route &r, Conf &curr_conf, int &f
 
 bool no_specific_file_asked(Client_Request &obj)
 {
-	// return ((obj.clean_relative_path == "" || obj.clean_relative_path == "/")
-	// 		&& (obj.file == "" || obj.file == "/"));
 	struct stat sb;
 	stat(obj.file.c_str(), &sb);
-	return(!S_ISREG(sb.st_mode));
+	//it is a directory
+	return S_ISDIR(sb.st_mode);
 }
 
 void manage_default_file_if_needed(route &r, Client_Request &obj, Conf &curr_conf)

@@ -69,10 +69,10 @@ std::string get_file_output(Client_Request &obj)
 			{
 				file_whole_path = path + "/" + ent->d_name;//whole path
 				std::string file_link(ent->d_name);//href link
-				if (path.back() != '/')
-					file_link = path + "/" + file_link;
-				else
-					file_link = "./" + file_link;
+					if (path.back() != '/')
+						file_link = path + "/" + file_link;
+					else
+						file_link = "./" + file_link;
 				std::string time = getFileCreationTime(file_whole_path);//time
 				std::string file_size = GetFileSize(file_whole_path);//size
 				std::string full_d_name = ent->d_name;
