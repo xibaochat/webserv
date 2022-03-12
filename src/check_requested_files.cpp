@@ -19,8 +19,8 @@ int extension_is_not_exist(std::string *mylist, std::string extension, int size)
 
 int file_is_text_based(std::string type)
 {
-	std::string mylist[]={"html", "css", "js", "json", "xml", "csv"};
-	if (!extension_is_not_exist(mylist, type, 6))
+	std::string mylist[]={"html", "css", "js"};
+	if (!extension_is_not_exist(mylist, type, 3))
 		return (1);
 	return (0);
 }

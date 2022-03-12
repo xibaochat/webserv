@@ -332,4 +332,6 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 		if (manage_executable_file(obj, r, fd_rep))
 			set_error(obj, web_conf, 500);
 	}
+	else
+		set_error(obj, web_conf, 501);
 }
