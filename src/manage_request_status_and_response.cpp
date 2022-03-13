@@ -166,11 +166,11 @@ void	execute_cgi_file(int cgi_out[2], char *arr[3], char **env)
 // get cgi print from cgi_out
 int	get_cgi_response(Client_Request &obj, int &cgi_out)
 {
-	char foo[4096] = {0};
+	char foo[40960] = {0};
 	int nb_read = read(cgi_out, foo, sizeof(foo));
 	std::map<std::string, std::string> f_header_map;
 
-	if (nb_read == -1)
+	if (nb_read <= 0)
 	{
 		std::cerr << "read error" << std::endl;
 		return (1);
