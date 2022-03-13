@@ -58,13 +58,14 @@ int file_no_read_permission(route &r, Client_Request &obj)
 {
 	struct stat sb;
 	std::string file = obj.get_client_ask_file();
-
 	//check in case it doesn't exist
 	if (stat(file.c_str(), &sb) == -1)
 		return (1);
 
 	if (!S_ISREG(sb.st_mode))//directory
 	{
+		if (obj.method == "DELETE")
+			return 0;
 		//it is a dir, auto is off
 		if (r.auto_index == false)
 			return 1;

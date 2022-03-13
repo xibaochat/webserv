@@ -315,20 +315,21 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 
 	/*error file, if error html in Conf cannot be open and read, we send a static error
 	 message */
-
-	if (file_not_exist(obj) && !fd_rep.boundary.size())
+	if (method_is_not_allow(r, obj) && !fd_rep.boundary.size())
+		set_error(obj, web_conf, 405);
+	else if (file_not_exist(obj) && !fd_rep.boundary.size()
+		&& obj.method != "DELETE")
 	{
 		if (obj.dir_list == false)
 			set_error(obj, web_conf, 404);
 		else
 			set_error(obj, web_conf, 403);
 	}
-	else if (file_no_read_permission(r, obj) && !fd_rep.boundary.size())
+	else if (file_no_read_permission(r, obj) && !fd_rep.boundary.size()
+		&& obj.method != "DELETE")
 	{
 		set_error(obj, web_conf, 403);
 	}
-	else if (method_is_not_allow(r, obj) && !fd_rep.boundary.size())
-		set_error(obj, web_conf, 405);
 	else if (manage_cgi_based_file(obj) && !fd_rep.boundary.size())
 		set_error(obj, web_conf, 501);
 	else if (obj.dir_list == true  && !fd_rep.boundary.size() && r.auto_index == true) //dir listing

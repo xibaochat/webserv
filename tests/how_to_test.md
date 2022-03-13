@@ -277,10 +277,14 @@ curl -v http://localhost:5566/python_files/file_upload.py
 < HTTP/1.1 500 Internal Server Error
 [...]
 ```
-
-### Using C++ client
-
-1. Compile server and test client: `make test_setup`
-2. Launch server `./webserv`
-3. Launch client and try all the different combinations you'd like `./client`
-4. To check the "Method not Allowed" try different methods on port 5566, modify default.conf, and try again
+```
+DELETE TEST
+1.touch a
+curl -X DELETE http://localhost:5566/a
+```
+it should return 405
+```
+2.mkdir a
+curl -X DELETE http://localhost:8000/a
+```
+it should delete the directory a

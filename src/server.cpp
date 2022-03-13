@@ -354,6 +354,7 @@ void manage_default_file_if_needed(route &r, Client_Request &obj, Conf &curr_con
 	if (r.auto_index == false && obj.method == "GET" &&
 		no_specific_file_asked(obj))
 	{
+		obj.origin_path = curr_conf.default_file;
 		obj.clean_relative_path = curr_conf.default_file;
 		obj.file += curr_conf.default_file;
 		std::size_t index = obj.file.find_last_of(".");
