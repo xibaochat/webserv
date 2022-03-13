@@ -69,10 +69,21 @@ http://localhost:8080//life/pets/a34774573/girl-cat-names/
 6. Validate the file was upload in `/tmp/upload_file/`
 
 
-## Test error pages with different requests
-
-
 ## Stress tests
+
+### Installation
+
+```sh
+curl -O http://download.joedog.org/siege/siege-latest.tar.gz
+tar xzvpf siege-latest.tar.gz
+cd `ls -1d */ | grep siege- | sort -r | head -1`
+./configure
+make
+sudo make install
+```
+
+### Test
+
 1. Try 'siege' on an empty page: `siege -b http://localhost:8080/html/empty.html`
 2. Try 'siege' on a page with content: `siege -b http://localhost:8080/html/cute_cat.html`
 
@@ -277,14 +288,13 @@ curl -v http://localhost:5566/python_files/file_upload.py
 < HTTP/1.1 500 Internal Server Error
 [...]
 ```
+7. Delete file
 ```
-DELETE TEST
-1.touch a
-curl -X DELETE http://localhost:5566/a
-```
-it should return 405
-```
-2.mkdir a
+mkdir -p a
 curl -X DELETE http://localhost:8000/a
 ```
-it should delete the directory a
+```
+[...]
+< HTTP/1.1 200 OK
+[...]
+```
