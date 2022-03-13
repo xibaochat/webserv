@@ -68,6 +68,21 @@ http://localhost:8080//life/pets/a34774573/girl-cat-names/
 5. Validate the response is dynamically generated based on your inputs
 6. Validate the file was upload in `/tmp/upload_file/`
 
+## Delete file/dir
+
+```
+mkdir -p a
+curl -X DELETE http://localhost:8000/a
+```
+```
+[...]
+< HTTP/1.1 200 OK
+[...]
+```
+```
+ls ./a
+ls: cannot access './a': No such file or directory
+```
 
 ## Stress tests
 
@@ -287,14 +302,6 @@ curl -v http://localhost:5566/python_files/file_upload.py
 [...]
 < HTTP/1.1 500 Internal Server Error
 [...]
-```
-7. Delete file
-```
-mkdir -p a
-curl -X DELETE http://localhost:8000/a
-```
-```
-[...]
-< HTTP/1.1 200 OK
-[...]
+etant donne dans le fichier , on a fait:  raise Exception('No data provided')
+
 ```
