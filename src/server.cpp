@@ -241,7 +241,7 @@ route get_matching_route(Client_Request &obj, Conf &web_conf)
 
 void add_root_to_file(route &r, Client_Request &obj)
 {
-		std::string full_path("/");
+	std::string full_path;//("/");
 		std::string file = obj.get_client_ask_file();
 
 		// If `root` is defined in current `location` in conf file
@@ -255,12 +255,20 @@ void add_root_to_file(route &r, Client_Request &obj)
 					full_path += "/";
 			}
 		}
+		else
+		{
+			r.path_root = "./";
+			full_path = r.path_root + file;
+		}
 		obj.clean_relative_path = full_path;
 		full_path = r.path_root + file;
-		struct stat buffer;
-		if (stat (full_path.c_str(), &buffer) != 0 &&
-			full_path.length() - file.length() == 0)
-			full_path = "." + full_path;
+		// struct stat buffer;
+		// if (stat (full_path.c_str(), &buffer) != 0 &&
+		// 	full_path.length() - file.length() == 0)
+		// {
+		// 	cout << "full_path " << full_path << "file " << file << "\n";
+		// 	full_path = "." + full_path;
+		// }
 		obj.set_client_file(full_path);
 }
 
@@ -628,7 +636,6 @@ bool Server::handle_client_event(int &request_fd)
 			// -------- HTTP REDIRECTION ---------
 			if (r.redirection.length() > 0)
 				return (this->manage_http_redirection(r, request_fd, curr_conf, obj));
-
 			// -------- ROOT ---------
 			add_root_to_file(r, obj);
 			// -------- DEFAULT INDEX FILE ---------
