@@ -1,16 +1,15 @@
 #include "webserv.hpp"
 
-void	delete_request(Client_Request &obj)
+void	delete_request(Client_Request &obj, Conf &curr_conf)
 {
 	int msg;
 	std::string file = obj.get_client_ask_file();
 
 	if (remove(file.c_str()) == 0)
-		msg = 204;
+		msg = 200;
 	else
 		msg = 403;
-	obj.set_status_code_nb(msg);
-	set_request_status_nb_message(msg, obj);
+	set_error(obj, curr_conf, msg);
 }
 
 

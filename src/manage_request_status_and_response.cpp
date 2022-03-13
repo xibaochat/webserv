@@ -325,8 +325,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 		else
 			set_error(obj, web_conf, 403);
 	}
-	else if (file_no_read_permission(r, obj) && !fd_rep.boundary.size()
-		&& obj.method != "DELETE")
+	else if (file_no_read_permission(r, obj) && !fd_rep.boundary.size())
 	{
 		set_error(obj, web_conf, 403);
 	}
@@ -349,7 +348,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 		}
 	}
 	else if (obj.get_client_method() == "DELETE" && !fd_rep.boundary.size())
-		delete_request(obj);
+		delete_request(obj, web_conf);
 	else if (fd_rep.file_extension != "py" && fd_rep.boundary.size())
 		manage_static_upload(r, obj, web_conf, fd_rep);
 	//readable file

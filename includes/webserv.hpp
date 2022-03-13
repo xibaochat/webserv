@@ -101,7 +101,7 @@ std::vector<Conf> get_all_server_conf(int ac, char **av);
 void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_response &fd_rep);
 
 void set_length_and_content(std::ifstream &myfile, Client_Request &obj);
-void delete_request(Client_Request &obj);
+void delete_request(Client_Request &obj, Conf &c);
 void set_request_status_nb_message(int status_nb, Client_Request &obj);
 
 void set_error(Client_Request &obj, Conf &web_conf, int status_code_nb);

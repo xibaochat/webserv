@@ -17,7 +17,11 @@ std::set<int> get_all_port_nb_in_set(std::vector<Conf> &v)
 	{
 		std::set<int> p = (*it).port;
 		for (std::set<int>::iterator it_set = p.begin() ; it_set != p.end(); ++it_set)
+		{
+			if (port.count(*it_set) != 0)
+				throw("[ERROR]Same port appear multiple times");
 			port.insert(*it_set);
+		}
 	}
 	return port;
 }
@@ -27,7 +31,15 @@ Server::Server(std::vector<Conf> &web_conf_vector)
 {
 	//get a set of port from multi server
 	this->web_conf_vector = web_conf_vector;
-	this->port = get_all_port_nb_in_set(this->web_conf_vector);
+	try
+	{
+		this->port = get_all_port_nb_in_set(this->web_conf_vector);
+	}
+	catch(const char *s)
+	{
+		std::cerr << s << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
 	this->serverAddr = new struct sockaddr_in[this->port.size()];
 	std::set<int>::iterator it=this->port.begin();
