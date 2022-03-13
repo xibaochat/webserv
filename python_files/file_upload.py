@@ -19,15 +19,7 @@ if not description:
   description = "empty"
 
 if (len(data) == 0):
-	print('Content-Type:text/html\r\n\r\n')
-	print('<html>\n')
-	print('<head>\n')
-	print('<title>ERROR - First CGI Program</title>\n')
-	print('</head>\n')
-	print('<body>\n')
-	print('<h2>Error' + ' This is my first CGI program</h2>\n')
-	print('</body>\n')
-	print('</html>\n')
+  raise Exception('No data provided')
 else:
 	fileitem = data['upload_file']
 	upload_dir = os.getenv("UPLOAD_DIR")
