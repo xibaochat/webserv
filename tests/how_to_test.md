@@ -52,7 +52,7 @@ http://localhost:8080//life/pets/a34774573/girl-cat-names/
 
 ## CGI Upload
 
-1. Go to http://localhost:9000/html/cgi_upload.html
+1. Go to http://localhost:8000/html/cgi_upload.html
 2. Fill the `File Description` field
 3. Select a file from `./tests/files/`
 4. Click upload
@@ -61,7 +61,7 @@ http://localhost:8080//life/pets/a34774573/girl-cat-names/
 
 ## CGI Upload with multiple fields
 
-1. Go to http://localhost:9000/html/cgi_upload_with_multi_fields.html
+1. Go to http://localhost:8000/html/cgi_upload_with_multi_fields.html
 2. Fill all the fields
 3. Select a file from `./tests/files/`
 4. Click upload
