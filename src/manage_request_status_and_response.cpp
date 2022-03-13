@@ -240,10 +240,18 @@ void    set_error(Client_Request &obj, Conf &web_conf, int status_code_nb)
 	std::map<int, std::string> error_map = web_conf.get_conf_err_page_map();
 	int ret = 0;
 
+	if (status_code_nb == 204)
+	{
+		std::string emp;
+		obj.set_status_code_nb(status_code_nb);
+		obj.set_total_nb(0);
+		set_request_status_nb_message(status_code_nb, obj);
+		obj.set_body_response(emp);
+		return ;
+	}
 	ret = open_file(myfile, error_map[status_code_nb]);
 	if (ret)
 	{
-
 		obj.set_status_code_nb(status_code_nb);
 		set_request_status_nb_message(status_code_nb, obj);
 		std::string str = string("Error ") +  obj.get_status_code_message();
