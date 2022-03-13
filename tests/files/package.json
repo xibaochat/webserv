@@ -1,0 +1,37 @@
+{
+  "name": "filters",
+  "version": "1.5.6",
+  "description": "Neteven filter package",
+  "devDependencies": {
+    "grunt-contrib-watch": "~0.6.1",
+    "grunt-contrib-cssmin": "~0.14.0",
+    "grunt-contrib-uglify": "~0.11.1",
+    "grunt-contrib-concat": "~0.5.1",
+    "grunt-ng-annotate": "~1.0.1",
+    "@types/jasmine": "2.5.36",
+    "@types/node": "^6.0.45",
+    "jasmine-core": "^2.4.1",
+    "karma": "^1.2.0",
+    "karma-chrome-launcher": "^2.0.0",
+    "karma-jasmine": "^1.0.2",
+    "karma-sourcemap-loader": "^0.3.7",
+    "rimraf": "^2.5.2",
+    "typescript": "~2.0.10"
+  },
+  "dependencies": {
+    "@angular/common": "^2.4.4",
+    "@angular/compiler": "~2.4.4",
+    "@angular/core": "^2.4.4",
+    "@angular/forms": "~2.4.4",
+    "@angular/http": "~2.4.4",
+    "@angular/router": "~3.4.4",
+    "core-js": "^2.4.1",
+    "install": "^0.8.7",
+    "karma-webpack": "^2.0.3",
+    "npm": "^4.4.1",
+    "rxjs": "5.0.1",
+    "tslint": "^4.5.1",
+    "webpack-stats-plugin": "^0.1.4",
+    "zone.js": "^0.7.8"
+  }
+}

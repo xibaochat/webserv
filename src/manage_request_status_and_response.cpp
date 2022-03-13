@@ -58,10 +58,17 @@ void set_request_status_nb_message(int status_nb, Client_Request &obj)
 //if it is not python, ex:php && file exist, status code is 501
 int manage_cgi_based_file(Client_Request &obj)
 {
+	std::string extension;
 	std::string f_extension_list[1]={"php"};
 	//"html", "css", "png", "bmp", "js", "jpeg", "jpg"};
-	std::string file = obj.get_client_ask_file();
-	std::string extension = file.substr(file.find_last_of(".") + 1);
+	std::string file = obj.origin_path;
+
+	int i_last_dot = file.find_last_of(".");
+	if (i_last_dot != string::npos && i_last_dot != -1)
+		extension = file.substr(i_last_dot + 1);
+	else
+		extension = "";
+
 	obj.set_file_extension(extension);
 	if (!extension_is_not_exist(f_extension_list, extension, 1))
 	{
@@ -272,13 +279,38 @@ void manage_static_upload(route &r, Client_Request &obj, Conf &curr_conf, cl_res
 
 }
 
+void manage_all_whitelisted_extensions(Client_Request &obj, Conf &web_conf)
+{
+	std::ifstream myfile;
+	std::string extension(obj.get_file_extension());
+	std::string header_value;
+
+	open_file(myfile, obj.get_client_ask_file());
+	set_length_and_content(myfile, obj);
+	if (obj.body_response.length() == 0)
+		set_error(obj, web_conf, 204);
+
+	if (file_is_text_based(extension))
+	{
+		if (file_is_app_based(extension))
+			header_value = "application/" + extension;
+		else if (extension == "js")
+			header_value = "text/javascript";
+		else
+			header_value = "text/" + extension;
+	}
+	else
+		header_value = "application/octet-stream";
+	obj.custom_headers["Content-Type"] = header_value;
+}
+
+
 /*
 **check file is valid or not; by default, status_nb_message is "200 OK"in the constructor;
 **if file has unaccepted extension->501, if file not exist, ->404; if exist but no open right, ->503; and from map to obtain status error message
 */
 void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_response &fd_rep)
 {
-	std::ifstream myfile;
 	std::map<int, std::string> error_map = web_conf.get_conf_err_page_map();
 
 	/*error file, if error html in Conf cannot be open and read, we send a static error
@@ -321,20 +353,7 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 		manage_static_upload(r, obj, web_conf, fd_rep);
 	//readable file
 	else if (file_extension_is_managed(obj.get_file_extension()))
-	{
-		open_file(myfile, obj.get_client_ask_file());
-		set_length_and_content(myfile, obj);
-		if (obj.body_response.length() == 0)
-			set_error(obj, web_conf, 204);
-
-		if (file_is_web_based(obj.get_file_extension()))
-			obj.custom_headers["Content-Type"] = "text/html";
-		else if (file_is_text_based(obj.get_file_extension()))
-			obj.custom_headers["Content-Type"] = "text/plain";
-		else
-			obj.custom_headers["Content-Type"] = "application/octet-stream";
-
-	}
+		manage_all_whitelisted_extensions(obj, web_conf);
 	else if (obj.get_file_extension() == "py" || fd_rep.file_extension == "py")
 	{
 		if (manage_executable_file(obj, r, fd_rep))
