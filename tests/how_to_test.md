@@ -37,14 +37,14 @@ http://localhost:8080//life/pets/a34774573/girl-cat-names/
 
 ## Static upload
 
-1. Go to http://localhost:9000/html/static_upload.html
+1. Go to http://localhost:9000/static_upload.html
 2. Select from file in `./tests/files/`
 3. Click upload
 4. Validate the file was upload in `/tmp/upload_file/`
 
 ## Static upload with multiple fields
 
-1. Go to http://localhost:9000/html/multi_fields_input_static_upload.html
+1. Go to http://localhost:9000/multi_fields_input_static_upload.html
 2. Fill the all the field
 3. Select a file from `./tests/files/`
 4. Click upload
@@ -119,13 +119,13 @@ curl --resolve localhost:7066:127.0.0.1 http://localhost:7066/html/server_name.h
 ## Ports
 
 1. Check all ports in the config file
-2. `Curl` all ports and validate receiving a valid answer from the open ports
+2. [ ] `Curl` all ports and validate receiving a valid answer from the open ports
 ```sh
 curl http://localhost:8000/html/ports.html
 curl http://localhost:8080/html/ports.html
 curl http://localhost:8088/html/ports.html
 curl http://localhost:7000/html/ports.html
-curl http://localhost:9000/html/ports.html
+curl http://localhost:9000/ports.html
 curl http://localhost:9090/html/ports.html
 curl http://localhost:9092/html/ports.html
 curl http://localhost:9093/html/ports.html
