@@ -42,6 +42,11 @@
 
 # define VALID_CONF_KEYWORDS {"listen", "server_name", "error_page", "location", "client_max_body_size", "index"}
 
+# define MANAGED_FILE_EXTENSIONS {"html", "css", "js", "txt", "xml", "json", "hpp", "cpp", "c", "sh", "txt", "md"}
+# define TEXT_BASED_EXTENSIONS {"txt", "xml", "json", "hpp", "cpp", "c", "sh", "txt", "md"}
+# define WEB_BASED_EXTENSIONS {"html", "css", "js"}
+
+
 #define DEFAULT_MAX_BODY_SIZE 10485760
 using namespace std;
 
@@ -106,6 +111,8 @@ int extension_is_not_exist(std::string *mylist, std::string extension, int size)
 int file_no_read_permission(route &r, Client_Request &obj);
 int file_no_write_permission(std::string filepath, std::string path);
 int file_not_exist(Client_Request &obj);
+int file_is_web_based(std::string type);
+int file_extension_is_managed(std::string type);
 int file_is_text_based(std::string type);
 std::string get_file_output(Client_Request &o);
 std::vector<size_t> get_occurences_end_indexes(std::string s, std::string sub);

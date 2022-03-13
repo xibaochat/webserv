@@ -320,12 +320,20 @@ void manage_request_status(route &r, Client_Request &obj, Conf &web_conf, cl_res
 	else if (fd_rep.file_extension != "py" && fd_rep.boundary.size())
 		manage_static_upload(r, obj, web_conf, fd_rep);
 	//readable file
-	else if (file_is_text_based(obj.get_file_extension()))
+	else if (file_extension_is_managed(obj.get_file_extension()))
 	{
 		open_file(myfile, obj.get_client_ask_file());
 		set_length_and_content(myfile, obj);
 		if (obj.body_response.length() == 0)
 			set_error(obj, web_conf, 204);
+
+		if (file_is_web_based(obj.get_file_extension()))
+			obj.custom_headers["Content-Type"] = "text/html";
+		else if (file_is_text_based(obj.get_file_extension()))
+			obj.custom_headers["Content-Type"] = "text/plain";
+		else
+			obj.custom_headers["Content-Type"] = "application/octet-stream";
+
 	}
 	else if (obj.get_file_extension() == "py" || fd_rep.file_extension == "py")
 	{

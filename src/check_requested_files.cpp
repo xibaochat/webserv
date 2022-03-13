@@ -17,13 +17,30 @@ int extension_is_not_exist(std::string *mylist, std::string extension, int size)
     return (1);
 }
 
-int file_is_text_based(std::string type)
+int file_is_web_based(std::string type)
 {
-	std::string mylist[]={"html", "css", "js"};
-	if (!extension_is_not_exist(mylist, type, 3))
+	std::string mylist[] = WEB_BASED_EXTENSIONS;
+	if (!extension_is_not_exist(mylist, type, sizeof(mylist) / sizeof(std::string)))
 		return (1);
 	return (0);
 }
+
+int file_extension_is_managed(std::string type)
+{
+	std::string mylist[] = MANAGED_FILE_EXTENSIONS;
+	if (!extension_is_not_exist(mylist, type, sizeof(mylist) / sizeof(std::string)))
+		return (1);
+	return (0);
+}
+
+int file_is_text_based(std::string type)
+{
+	std::string mylist[] = TEXT_BASED_EXTENSIONS;
+	if (!extension_is_not_exist(mylist, type, sizeof(mylist) / sizeof(std::string)))
+		return (1);
+	return (0);
+}
+
 
 int file_not_exist(Client_Request &obj)
 {
