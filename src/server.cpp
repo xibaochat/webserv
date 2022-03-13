@@ -254,11 +254,17 @@ route get_matching_route(Client_Request &obj, Conf &web_conf)
 void add_root_to_file(route &r, Client_Request &obj)
 {
 	std::string full_path;//("/");
-		std::string file = obj.get_client_ask_file();
+	std::string file = obj.get_client_ask_file();
+	std::string tmp_path = "." + file;
 
-		// If `root` is defined in current `location` in conf file
-		if (r.path_root.size() > 0)
-		{
+        // If `root` is defined in current `location` in conf file
+        if (r.path_root.size() > 0)
+        {
+            if (tmp_path.find(r.path_root) == 0)
+            {
+                obj.set_client_file(tmp_path);
+                return ;
+            }
 			std::vector<std::string> v = extract_words_in_vector(file);
 			for (std::vector<std::string>::iterator it = v.begin() ; it != v.end(); ++it)
 			{

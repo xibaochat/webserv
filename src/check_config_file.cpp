@@ -214,7 +214,13 @@ void manage_port(std::vector<std::string> &vec, Conf &web_conf)
 		show_err_message_and_quite(message_error);
 	}
 	while ((nb_port = manage_key_correspond_value(key, vec)) != -1)
-		web_conf.port.insert(nb_port);
+	{
+		ss << nb_port;
+		if (std::find(vec.begin(), vec.end(), ss.str()) != vec.end())
+			show_err_message_and_quite("Same port used multiple time.");
+		else
+			web_conf.port.insert(nb_port);
+	}
 }
 
 /*
