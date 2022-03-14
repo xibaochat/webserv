@@ -88,13 +88,10 @@ ls: cannot access './a': No such file or directory
 
 ### Installation
 
-```sh
-curl -O http://download.joedog.org/siege/siege-latest.tar.gz
-tar xzvpf siege-latest.tar.gz
-cd `ls -1d */ | grep siege- | sort -r | head -1`
-./configure
-make
-sudo make install
+```
+rm -rf $HOME/.brew && git clone --depth=1 https://github.com/Homebrew/brew $HOME/.brew && echo 'export PATH=$HOME/.brew/bin:$PATH' >> $HOME/.zshrc && source $HOME/.zshrc && brew update
+
+brew install siege
 ```
 
 ### Test
@@ -126,9 +123,9 @@ curl http://localhost:8080/html/ports.html
 curl http://localhost:8088/html/ports.html
 curl http://localhost:7000/html/ports.html
 curl http://localhost:9000/ports.html
-curl http://localhost:9090/html/ports.html
-curl http://localhost:9092/html/ports.html
-curl http://localhost:9093/html/ports.html
+curl http://localhost:9090/ports.html
+curl http://localhost:9092/ports.html
+curl http://localhost:9093/ports.html
 ```
 ```html
 <html>
