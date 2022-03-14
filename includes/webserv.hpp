@@ -47,7 +47,7 @@
 # define APP_BASED_EXTENSIONS {"json", "xml"}
 
 
-#define DEFAULT_MAX_BODY_SIZE 10485760
+#define DEFAULT_MAX_BODY_SIZE 104857600
 using namespace std;
 
 class Client_Request;
