@@ -39,6 +39,6 @@ make
 ![Minion](https://github.com/xibaochat/webserve/blob/master/webserv_scheme.svg)
 
 ### epoll utilisation schema
-![Stormtroopocat] (https://github.com/xibaochat/webserve/edit/master/README.md)
+![Minion](https://github.com/xibaochat/webserve/blob/master/http_server_epoll.png)
 
 
