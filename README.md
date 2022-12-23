@@ -36,5 +36,9 @@ To launch the website, run this command at the root of the repo:
 make
 ```
 ### project scheme
-[:point_right:click here](https://github.com/xibaochat/webserve/blob/master/webserv_scheme.svg)
+![Minion](https://github.com/xibaochat/webserve/blob/master/webserv_scheme.svg)
+
+### epoll utilisation schema
+![Stormtroopocat] (https://github.com/xibaochat/webserve/edit/master/README.md)
+
 
