@@ -35,10 +35,18 @@ To launch the website, run this command at the root of the repo:
 ```bash
 make
 ```
-### project scheme
-![Minion](https://github.com/xibaochat/webserve/blob/master/webserv_scheme.svg)
+---
+
+### How to test
+:heart:  [test](https://github.com/xibaochat/webserve/blob/master/tests/how_to_test.md)
+
 
 ### epoll utilisation schema
 ![Minion](https://github.com/xibaochat/webserve/blob/master/http_server_epoll.png)
+
+### project scheme
+![Minion](https://github.com/xibaochat/webserve/blob/master/webserv_scheme.svg)
+
+---
 
 
