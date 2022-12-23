@@ -38,7 +38,9 @@ make
 ---
 
 ### How to test
-:heart:  [test](https://github.com/xibaochat/webserve/blob/master/tests/how_to_test.md)
+![upload file test] (https://github.com/xibaochat/webserve/blob/master/Static%20Upload.gif)
+
+* [click to access more test](https://github.com/xibaochat/webserve/blob/master/tests/how_to_test.md)
 
 
 ### epoll utilisation schema
