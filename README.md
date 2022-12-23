@@ -38,7 +38,10 @@ make
 ---
 
 ### How to test
-![upload file test] (https://github.com/xibaochat/webserve/blob/master/Static%20Upload.gif)
+
+#### upload file test
+
+![upload file test](https://github.com/xibaochat/webserve/blob/master/Static%20Upload.gif)
 
 * [click to access more test](https://github.com/xibaochat/webserve/blob/master/tests/how_to_test.md)
 
