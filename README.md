@@ -25,8 +25,8 @@
 </table>
 
 ### Subject
-#### EN [en_ft_transcendance.pdf](https://github.com/xibaochat/webserve/blob/master/webserver_en.subject.pdf)
-#### FR [fr_ft_transcendance.pdf](https://github.com/xibaochat/webserve/blob/master/webserver_fr.subject.pdf)
+#### EN [en_webserve.pdf](https://github.com/xibaochat/webserve/blob/master/webserver_en.subject.pdf)
+#### FR [fr_webserve.pdf](https://github.com/xibaochat/webserve/blob/master/webserver_fr.subject.pdf)
 
 
 ### Installation:
