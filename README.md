@@ -16,7 +16,7 @@
 </td>
 <td>
 
-| interest                     | number of team          | difficulty                        |ownership og the code |
+| interest                     | number of team          | difficulty                        |ownership of the code |
 | ---------------------------- | ----------              | ----------                        |----------------------|
 |    :star::star::star::star:  |   :cat: :cat: :cat:     |  :star::star::star::star::star:   | 90%                |
 
