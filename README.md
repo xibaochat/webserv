@@ -50,7 +50,7 @@ make
 ### epoll utilisation schema
 ![Minion](https://github.com/xibaochat/webserve/blob/master/http_server_epoll.png)
 
-### project scheme
+### project schema
 ![Minion](https://github.com/xibaochat/webserve/blob/master/webserv_scheme.svg)
 
 ---
